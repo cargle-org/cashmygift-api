@@ -23,13 +23,21 @@ const createVoucherValidation = Joi.object({
   title: Joi.string().min(2).required(),
   thumbnail: Joi.object().required(),
   description: Joi.string().min(4).required(),
+  voucherKey: Joi.string().min(3).max(3).required(),
   totalNumberOfVouchers: Joi.number().required(),
-  amountPerVoucher: Joi.string().required(),
+  amountPerVoucher: Joi.number().required(),
   totalAmount: Joi.number().required(),
+  voucherCoupons: Joi.array().required(),
+});
+
+const cashoutVoucherValidation = Joi.object({
+  fullName: Joi.string().min(2).required(),
+  voucherCode: Joi.string().min(13).max(13).required(),
 });
 
 module.exports = {
   registerValidation,
   loginValidation,
   createVoucherValidation,
+  cashoutVoucherValidation,
 };

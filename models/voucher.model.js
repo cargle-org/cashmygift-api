@@ -25,18 +25,40 @@ const voucherSchema = new Schema(
       type: String,
       required: true,
     },
+    voucherKey: {
+      type: String,
+      required: true,
+      min: 3,
+      max: 3,
+    },
     totalNumberOfVouchers: {
       type: Number,
+      default: 0,
       required: true,
     },
     amountPerVoucher: {
-      type: String,
+      type: Number,
+      default: 0,
       required: true,
     },
     totalAmount: {
       type: Number,
+      default: 0,
       required: true,
     },
+    totalCashedAmount: {
+      type: Number,
+      default: 0,
+    },
+    cashedPercentage: {
+      type: Number,
+      default: 0,
+    },
+    vouchersCashed: {
+      type: Number,
+      default: 0,
+    },
+    voucherCoupons: [],
   },
   {
     timestamps: true,

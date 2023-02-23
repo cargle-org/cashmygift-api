@@ -15,10 +15,13 @@ const router = express.Router();
 // Routes
 router.get("/ping", authenticate, utils.getPingController);
 router.post(
-  "/voucher/create",
-  authenticate,
-  multerUploads.single("thumbnail"),
-  utils.postCreateVoucherController
+    "/voucher/create",
+    authenticate,
+    multerUploads.single("thumbnail"),
+    utils.postCreateVoucherController
 );
+router.post("/voucher/claim", authenticate, utils.postCashoutVoucherController);
+router.post("/wallet/fund", authenticate, utils.postFundWalletController);
+router.get("/wallet/verifyTrx", authenticate, utils.getVerifyController);
 
 module.exports = router;
