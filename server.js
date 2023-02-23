@@ -6,7 +6,8 @@ const mongoose = require("mongoose");
 
 // ENV Variables
 const port = process.env.PORT;
-const MONGODB_URI = process.env.MDB_COMPASS;
+// const MONGODB_URI = process.env.MDB_COMPASS;
+const MONGODB_URI = process.env.MDB_ATLAS;
 
 // Don't ask
 const app = express();
@@ -19,14 +20,14 @@ require("./routes/index.routes")(app);
 
 // Connect to DB and start server
 mongoose
-  .connect(MONGODB_URI, {
-    useUnifiedTopology: true,
-    useNewUrlParser: true,
-  })
-  .then(() => {
-    console.log("***Database Connected***");
-    app.listen(port, () => {
-      console.log(`<<<Server running on ${port}>>>`);
-    });
-  })
-  .catch((err) => console.log("Connection Error: ", err.message));
+    .connect(MONGODB_URI, {
+        useUnifiedTopology: true,
+        useNewUrlParser: true,
+    })
+    .then(() => {
+        console.log("***Database Connected***");
+        app.listen(port, () => {
+            console.log(`<<<Server running on ${port}>>>`);
+        });
+    })
+    .catch((err) => console.log("Connection Error: ", err.message));
