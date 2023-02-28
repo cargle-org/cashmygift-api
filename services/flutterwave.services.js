@@ -24,7 +24,7 @@ const options = {
 const initiateTransaction = async(payload) => {
     try {
         const response = await axios.post(`${baseURL}/payments`, payload, options);
-        console.log(`Bearer ${FLW_secKey}`);
+        // console.log(`Bearer ${FLW_secKey}`);
         return response.data.data.link;
     } catch (err) {
         console.log(err);
@@ -46,19 +46,31 @@ const verifyTransaction = async(id) => {
 
 const transferMoney = async(payload) => {
     try {
-        const response = await flw.Transfer.initiate(payload);
+        console.log("Processing Transfer...");
+        const response = await axios.post(`${baseURL}/transfers`, payload, options);
         console.log(
-            "🚀 ~ file: flutterwave.services.js:50 ~ transferMoney ~ response:",
+            "🚀 ~ file: flutterwave.services.js:52 ~ transferMoney ~ response:",
             response
         );
-        return response.data;
+        return response.data.data.data;
     } catch (err) {
         console.log(err);
-        return res.status(400).send({
-            success: false,
-            message: "Couldn't process transfer",
-        });
     }
+
+    // try {
+    //     const response = await flw.Transfer.initiate(payload);
+    //     console.log(
+    //         "🚀 ~ file: flutterwave.services.js:50 ~ transferMoney ~ response:",
+    //         response
+    //     );
+    //     return response.data;
+    // } catch (err) {
+    //     console.log(err);
+    //     return res.status(400).send({
+    //         success: false,
+    //         message: "Couldn't process transfer",
+    //     });
+    // }
 };
 
 module.exports = {

@@ -1,5 +1,5 @@
 const voucherClaimMail = (winner, code, creator, title) => {
-  return `
+    return `
        
 	<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
@@ -354,7 +354,7 @@ ul.social li{
 							<h3>Hi <b>${creator}</b>,
 							</h3>
 							
-							<h4>One of your vouchers from '${title}' has been claimed;
+							<h4>One of your vouchers from <b>'${title}'</b> has been claimed;
 							<br/>
 							 <h5>Recipient : <b>${winner}</b> </h5>
 							 <h5>Coupon Code : <b>${code}</b> </h5>

@@ -4,7 +4,9 @@ const axios = require("axios");
 require("dotenv").config();
 
 // Flutterwave stuff
+const Flutterwave = require("flutterwave-node-v3");
 const baseURL = process.env.FLUTTERWAVE_BASE_URL;
+const FLW_pubKey = process.env.FLUTTERWAVE_PUBLIC_KEY;
 const FLW_secKey = process.env.FLUTTERWAVE_SECRET_KEY;
 
 // Models
@@ -331,7 +333,7 @@ module.exports = {
 
     // Cashout voucher
     postCashoutVoucherController: asyncHandler(async(req, res, next) => {
-        const { fullName, voucherCode } = req.body;
+        const { fullName, voucherCode, bankCode, accountNumber } = req.body;
 
         const body = {...req.body };
 
@@ -343,6 +345,10 @@ module.exports = {
         const foundVoucher = await voucherModel.findOne({
             voucherKey: voucherCode.slice(0, 3),
         });
+        console.log(
+            "🚀 ~ file: utils.controller.js:348 ~ postCashoutVoucherController:asyncHandler ~ foundVoucher:",
+            foundVoucher.amountPerVoucher
+        );
 
         if (!foundVoucher) {
             return res.status(400).send({
@@ -397,14 +403,11 @@ module.exports = {
             (100 / 1)
         ).toFixed(2);
 
-        await foundVoucher.save();
-
         // Send mail to Voucher creator that <<fullName>> just cashed their voucher
-
         // find user Email
         const creator = await userModel.findOne({ _id: foundVoucher.userId });
 
-        // Send password to admin's email
+        // Send email
         const mailOptions = {
             to: creator.email,
             subject: "Voucher Claim Mail",
@@ -415,14 +418,36 @@ module.exports = {
                 foundVoucher.title
             ),
         };
-        sendMail(mailOptions);
+
+        const transREf = await tx_ref.get_Tx_Ref();
+        console.log(
+            "🚀 ~ file: utils.controller.js:417 ~ postCashoutVoucherController:asyncHandler ~ transREf:",
+            transREf
+        );
 
         // withdraw money to <<fullName>>
+        const payload = {
+            account_bank: bankCode,
+            account_number: accountNumber,
+            amount: foundVoucher.amountPerVoucher,
+            narration: "Voucher Redemption at CMG.co",
+            currency: "NGN",
+            // reference: transREf,
+            // reference: "dfs23fhr7ntg0293039_PMCK",
+            callback_url: "https://topapp.ng/utility/verify",
+            debit_currency: "NGN",
+        };
+
+        const transfer = await FLW_services.transferMoney(payload);
+
+        sendMail(mailOptions);
+        await foundVoucher.save();
 
         return res.status(200).send({
             success: true,
             data: {
                 voucher: foundVoucher,
+                transfer,
             },
             message: "Claimed Coupon from Voucher.",
         });

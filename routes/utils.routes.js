@@ -20,7 +20,7 @@ router.post(
     multerUploads.single("thumbnail"),
     utils.postCreateVoucherController
 );
-router.post("/voucher/claim", authenticate, utils.postCashoutVoucherController);
+router.post("/voucher/claim", utils.postCashoutVoucherController);
 router.post("/wallet/fund", authenticate, utils.postFundWalletController);
 router.get("/wallet/verifyTrx", authenticate, utils.getVerifyController);
 router.get("/banks/all", authenticate, utils.getAllBanksController);
