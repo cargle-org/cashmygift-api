@@ -1,6 +1,7 @@
 // Dependencies
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const moment = require("moment");
 
 // Models
 const User = require("../models/user.model");
@@ -12,6 +13,12 @@ const {
 } = require("../middlewares/validate");
 const { uploadImageSingle } = require("../middlewares/cloudinary.js");
 const asyncHandler = require("../middlewares/asyncHandler");
+
+// Services
+const sendMail = require("../services/mailer.services");
+
+// Templates
+const emailVerifyMail = require("../templates/emailVerifyMail.templates");
 
 module.exports = {
     //   Test API connection
@@ -63,11 +70,77 @@ module.exports = {
         //   Hash password
         const hashedPassword = await bcrypt.hash(password, 12);
 
+        const alphabets = [
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "g",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l",
+            "m",
+            "n",
+            "o",
+            "p",
+            "q",
+            "r",
+            "s",
+            "t",
+            "u",
+            "v",
+            "w",
+            "x",
+            "y",
+            "z",
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G",
+            "H",
+            "I",
+            "J",
+            "K",
+            "L",
+            "M",
+            "N",
+            "O",
+            "P",
+            "Q",
+            "R",
+            "S",
+            "T",
+            "U",
+            "V",
+            "W",
+            "X",
+            "Y",
+            "Z",
+        ];
+
+        const rand = Math.floor(Math.random() * 48);
+        const rand2 = Math.floor(Math.random() * 48);
+        const rand3 = Math.floor(Math.random() * 48);
+        const rand4 = Math.floor(Math.random() * 48);
+
+        const time = moment().format("yy-MM-DD hh:mm:ss");
+        const ref = time.replace(/[\-]|[\s]|[\:]/g, "");
+
+        emailVerificationToken = `${alphabets[rand]}${alphabets[rand3]}${alphabets[rand2]}_${ref}${rand4}`;
+
         // create user
         const user = new User({
             firstName,
             lastName,
             email,
+            emailVerificationToken,
             phone,
             password: hashedPassword,
             companyName,
@@ -82,6 +155,15 @@ module.exports = {
             user
         );
 
+        // Send email
+        const mailOptions = {
+            to: user.email,
+            subject: "Email verification mail",
+            html: emailVerifyMail(user._id, user.firstName, emailVerificationToken),
+        };
+
+        sendMail(mailOptions);
+
         return res.status(200).send({
             success: true,
             data: {
@@ -91,24 +173,77 @@ module.exports = {
         });
     }),
 
+    // verify email
+    getVerifyEmailController: asyncHandler(async(req, res, next) => {
+        const { id, emailToken } = req.query;
+
+        //   check if user exist
+        const user = await User.findOne({ _id: id });
+        if (!user) {
+            return res.status(400).send({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        // verify token
+        if (user.emailVerificationToken === emailToken) {
+            user.emailVerificationToken = "verified";
+            user.verifiedEmail = true;
+            await user.save();
+
+            return res.status(200).send({
+                success: true,
+                data: {
+                    user: user,
+                },
+                message: "Email verification successful.",
+            });
+        } else {
+            return res.status(400).send({
+                success: false,
+                message: "Email Verification failed",
+            });
+        }
+    }),
+
     // Login
     postLoginController: asyncHandler(async(req, res, next) => {
         const { email, password } = req.body;
 
         // Run Hapi/Joi validation
         const { error } = await loginValidation.validateAsync(req.body);
-        if (error) return res.status(400).send(error.details[0].message);
+        if (error) {
+            return res.status(400).send({
+                success: false,
+                message: error.details[0].message,
+            });
+        }
 
         //   check if user exist
         const user = await User.findOne({ email: email });
         if (!user) {
-            return res.status(400).send("Invalid email or password.");
+            return res.status(400).send({
+                success: false,
+                message: "Invalid email or password.",
+            });
+        }
+        // check if email is verified
+        if (!user.verifiedEmail) {
+            return res.status(400).send({
+                success: false,
+                message: "Email not verified",
+            });
         }
 
         // validate password
         const validatePassword = await bcrypt.compare(password, user.password);
-        if (!validatePassword)
-            return res.status(400).send("Invalid email or password.");
+        if (!validatePassword) {
+            return res.status(400).send({
+                success: false,
+                message: "Invalid email or password.",
+            });
+        }
 
         //   Generate JWT Token
         const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);

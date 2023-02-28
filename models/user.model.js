@@ -18,6 +18,14 @@ const userSchema = new Schema({
         type: String,
         required: true,
     },
+    emailVerificationToken: {
+        type: String,
+        required: true,
+    },
+    verifiedEmail: {
+        type: Boolean,
+        default: false,
+    },
     phone: {
         type: String,
         required: true,

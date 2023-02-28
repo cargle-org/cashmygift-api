@@ -15,10 +15,11 @@ const router = express.Router();
 // Routes
 router.get("/ping", auth.getPingController);
 router.post(
-  "/register",
-  multerUploads.single("companyLogo"),
-  auth.postRegisterController
+    "/register",
+    multerUploads.single("companyLogo"),
+    auth.postRegisterController
 );
+router.get("/verify", auth.getVerifyEmailController);
 router.post("/login", auth.postLoginController);
 
 module.exports = router;
