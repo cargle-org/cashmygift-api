@@ -1,5 +1,11 @@
 // Dependecies
 const moment = require("moment");
+const axios = require("axios");
+require("dotenv").config();
+
+// Flutterwave stuff
+const baseURL = process.env.FLUTTERWAVE_BASE_URL;
+const FLW_secKey = process.env.FLUTTERWAVE_SECRET_KEY;
 
 // Models
 const voucherModel = require("../models/voucher.model");
@@ -423,5 +429,34 @@ module.exports = {
     }),
 
     // Fetch all banks in Nigeria {{FOR FLUTTERWAVE}}
+    getAllBanksController: asyncHandler(async(req, res, next) => {
+        const options = {
+            timeout: 1000 * 60,
+            headers: {
+                "content-type": "application/json",
+                Authorization: `Bearer ${FLW_secKey}`,
+            },
+        };
 
+        try {
+            const response = await axios.get(`${baseURL}/banks/NG`, options);
+            return res.status(200).send({
+                success: true,
+                data: {
+                    banks: response.data.data,
+                },
+                message: "Banks fetched successflly",
+            });
+        } catch (err) {
+            console.log(
+                "🚀 ~ file: utils.controller.js:453 ~ getAllBanksController:asyncHandler ~ err:",
+                err
+            );
+            return res.status(500).send({
+                success: false,
+                message: "Couldn't fetch banks",
+                errMessage: err,
+            });
+        }
+    }),
 };

@@ -23,5 +23,6 @@ router.post(
 router.post("/voucher/claim", authenticate, utils.postCashoutVoucherController);
 router.post("/wallet/fund", authenticate, utils.postFundWalletController);
 router.get("/wallet/verifyTrx", authenticate, utils.getVerifyController);
+router.get("/banks/all", authenticate, utils.getAllBanksController);
 
 module.exports = router;
