@@ -421,4 +421,7 @@ module.exports = {
             message: "Claimed Coupon from Voucher.",
         });
     }),
+
+    // Fetch all banks in Nigeria {{FOR FLUTTERWAVE}}
+
 };
