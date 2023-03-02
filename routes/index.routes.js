@@ -1,5 +1,6 @@
 // Import Routes
 const authRouter = require("./auth.routes");
+const userRouter = require("./user.routes");
 const utilsRouter = require("./utils.routes");
 
 module.exports = function (app) {
@@ -12,5 +13,6 @@ module.exports = function (app) {
   });
 
   app.use("/api/auth", authRouter);
+  app.use("/api/user", userRouter);
   app.use("/api/utils", utilsRouter);
 };
