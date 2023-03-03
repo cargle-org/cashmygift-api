@@ -58,7 +58,7 @@ module.exports = {
             amount,
             currency,
             payment_options: "card",
-            redirect_url: "https://topapp.ng/utility/verify",
+            redirect_url: "https://cmg-three.vercel.app/payment/depositecompleted",
             customer: {
                 email: req.user.email,
                 phonenumber: req.user.phone,
