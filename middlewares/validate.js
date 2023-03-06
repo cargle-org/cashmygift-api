@@ -26,7 +26,7 @@ const createVoucherValidation = Joi.object({
     voucherKey: Joi.string().min(3).max(3).required(),
     totalNumberOfVouchers: Joi.number().required(),
     amountPerVoucher: Joi.number().required(),
-    totalAmount: Joi.number().required(),
+    // totalAmount: Joi.number().required(),
     voucherCoupons: Joi.array().required(),
 });
 
