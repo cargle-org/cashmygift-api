@@ -161,8 +161,9 @@ module.exports = {
             voucherKey,
             totalNumberOfVouchers,
             amountPerVoucher,
-            totalAmount,
         } = req.body;
+
+        const totalAmount = parseInt((totalNumberOfVouchers * amountPerVoucher) + 10);
 
         // Do simple maths to know if numbers match
         if (req.user.walletBalance < totalNumberOfVouchers * amountPerVoucher) {
@@ -172,21 +173,21 @@ module.exports = {
             });
         }
 
-        // Do simple maths to know if numbers match again just to be safe
-        if (totalNumberOfVouchers * amountPerVoucher != totalAmount) {
-            return res.status(400).send({
-                success: false,
-                message: "Error! please check numbers and try again",
-            });
-        }
+        // // Do simple maths to know if numbers match again just to be safe
+        // if (totalNumberOfVouchers * amountPerVoucher != totalAmount) {
+        //     return res.status(400).send({
+        //         success: false,
+        //         message: "Error! please check numbers and try again",
+        //     });
+        // }
 
-        // Check walletBalance before transaction
-        if (req.user.walletBalance < totalAmount) {
-            return res.status(400).send({
-                success: false,
-                message: "Insufficient wallet balance, please fund wallet",
-            });
-        }
+        // // Check walletBalance before transaction
+        // if (req.user.walletBalance < totalAmount) {
+        //     return res.status(400).send({
+        //         success: false,
+        //         message: "Insufficient wallet balance, please fund wallet",
+        //     });
+        // }
 
         // Check if voucherKEy already exists
         const foundVoucherKey = await voucherModel.findOne({
@@ -445,11 +446,11 @@ module.exports = {
 
         return res.status(200).send({
             success: true,
-            data: {
-                voucher: foundVoucher,
-                transfer,
-            },
-            message: "Claimed Coupon from Voucher.",
+            // data: {
+            //     voucher: foundVoucher,
+            //     transfer,
+            // },
+            message: "Claimed Coupon from Voucher successfully.",
         });
     }),
 

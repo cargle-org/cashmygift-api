@@ -356,7 +356,7 @@ ul.social li{
 							
 							<h4>You recently began registration on CMG.co, please use the link below to complete your registration.
 							<br/>
-							 <h5><a href='cmg-three.vercel.app/user/accountverified?id=${id}&emailToken=${token}'>Click here to complete registration</a></h5>
+							 <h5><a href='cmg-three.vercel.app/accountverified?id=${id}&emailToken=${token}'>Click here to complete registration</a></h5>
 							<br><br>						
             			</div>
             		</td>
