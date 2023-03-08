@@ -163,7 +163,7 @@ module.exports = {
             amountPerVoucher,
         } = req.body;
 
-        const totalAmount = parseInt((totalNumberOfVouchers * amountPerVoucher) + 10);
+        const totalAmount = parseInt(totalNumberOfVouchers * amountPerVoucher + 10);
 
         // Do simple maths to know if numbers match
         if (req.user.walletBalance < totalNumberOfVouchers * amountPerVoucher) {
@@ -466,6 +466,10 @@ module.exports = {
 
         try {
             const response = await axios.get(`${baseURL}/banks/NG`, options);
+            console.log(
+                "🚀 ~ file: utils.controller.js:470 ~ getAllBanksController:asyncHandler ~ response:",
+                response
+            );
             return res.status(200).send({
                 success: true,
                 data: {

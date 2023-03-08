@@ -36,16 +36,16 @@ const userSchema = new Schema({
     },
     companyName: {
         type: String,
-        required: true,
+        // required: true,
     },
     companyLogo: {
         type: String,
         default: "",
-        required: false,
+        // required: false,
     },
     companyEmail: {
         type: String,
-        required: true,
+        // required: true,
     },
     companyPhone: {
         type: String,

@@ -8,10 +8,10 @@ const registerValidation = Joi.object({
     email: Joi.string().min(6).required().email(),
     phone: Joi.string().min(5).required(),
     password: Joi.string().min(4).required(),
-    companyName: Joi.string().min(2).required(),
-    companyLogo: Joi.object().required(),
-    companyEmail: Joi.string().min(6).required().email(),
-    companyPhone: Joi.string().min(5).required(),
+    companyName: Joi.string().min(2),
+    companyLogo: Joi.object(),
+    companyEmail: Joi.string().min(6).email(),
+    companyPhone: Joi.string().min(5),
 });
 
 const loginValidation = Joi.object({
@@ -23,7 +23,7 @@ const createVoucherValidation = Joi.object({
     title: Joi.string().min(2).required(),
     thumbnail: Joi.object().required(),
     description: Joi.string().min(4).required(),
-    voucherKey: Joi.string().min(3).max(3).required(),
+    voucherKey: Joi.string().min(5).max(5).required(),
     totalNumberOfVouchers: Joi.number().required(),
     amountPerVoucher: Joi.number().required(),
     // totalAmount: Joi.number().required(),
