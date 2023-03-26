@@ -14,7 +14,6 @@ const voucherModel = require("../models/voucher.model");
 const transactionModel = require("../models/transaction.model");
 const userModel = require("../models/user.model");
 
-
 // Middlewares
 const {
     createVoucherValidation,
@@ -199,7 +198,10 @@ module.exports = {
         };
 
         const transfer = await FLW_services.transferMoney(payload);
-        console.log("🚀 ~ file: utils.controller.js:202 ~ postWithdrawFromWalletController:asyncHandler ~ transfer:", transfer)
+        console.log(
+            "🚀 ~ file: utils.controller.js:202 ~ postWithdrawFromWalletController:asyncHandler ~ transfer:",
+            transfer
+        );
 
         return res.status(200).send({
             success: true,
@@ -398,11 +400,11 @@ module.exports = {
 
         // find voucher using voucherCode
         const foundVoucher = await voucherModel.findOne({
-            voucherKey: voucherCode.slice(0, 3),
+            voucherKey: voucherCode.slice(0, 5),
         });
         console.log(
             "🚀 ~ file: utils.controller.js:348 ~ postCashoutVoucherController:asyncHandler ~ foundVoucher:",
-            foundVoucher.amountPerVoucher
+            foundVoucher
         );
 
         if (!foundVoucher) {
