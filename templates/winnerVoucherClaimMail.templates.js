@@ -1,4 +1,4 @@
-const voucherClaimMail = (winner, code, creator, title, amount) => {
+const winnerVoucherClaimMail = (winner, code, title, amount) => {
     return `
        
 	<!DOCTYPE html>
@@ -351,16 +351,14 @@ ul.social li{
                   
             		<td>
             			<div class="text" style="padding: 0 2.5em; text-align: left;">
-							<h3>Hi <b>${creator}</b>,
+							<h3>Hi <b>${winner}</b>,
 							</h3>
 							
-							<h4>One of your vouchers from <b>'${title}'</b> has been claimed;
+							<h4>Congratulations, you just claimed a voucher from <b>'${title}'</b> on CMG, here are the details ;
 							<br/>
-							 <h5>Recipient : <b>${winner}</b> </h5>
 							 <h5>Coupon Code : <b>${code}</b> </h5>
 							 <h5>Amount : <b>${amount}</b> </h5>
-							<br />
-							<h6>Head over to your dashboard to see more info.</h6>
+							<br/>
 							<br><br>						
             			</div>
             		</td>
@@ -377,4 +375,4 @@ ul.social li{
     `;
 };
 
-module.exports = voucherClaimMail;
+module.exports = winnerVoucherClaimMail;

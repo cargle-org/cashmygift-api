@@ -1,4 +1,4 @@
-const voucherClaimMail = (winner, code, creator, title, amount) => {
+const resetPasswordMail = (id, user, token) => {
     return `
        
 	<!DOCTYPE html>
@@ -344,23 +344,19 @@ ul.social li{
 				<tr>
 					<!-- <div class="text" style="padding: 0 0 0.5em 0; padding-top: 2rem; text-align: center;"> -->
 					<div class="text" style="padding: 2rem 2.5em; ">
-						<h2>Voucher Claim Mail</h2>
+						<h2>Reset Password Mail</h2>
 					</div>
 				</tr>
             	<tr>
                   
             		<td>
             			<div class="text" style="padding: 0 2.5em; text-align: left;">
-							<h3>Hi <b>${creator}</b>,
+							<h3>Hi <b>${user}</b>,
 							</h3>
 							
-							<h4>One of your vouchers from <b>'${title}'</b> has been claimed;
+							<h4>It seems you had issues remembering your last password, use this link to reset your password, and do well to remember it this time. 😉
 							<br/>
-							 <h5>Recipient : <b>${winner}</b> </h5>
-							 <h5>Coupon Code : <b>${code}</b> </h5>
-							 <h5>Amount : <b>${amount}</b> </h5>
-							<br />
-							<h6>Head over to your dashboard to see more info.</h6>
+							 <h5><a href='cmg-three.vercel.app/accountverified?id=${id}&resetToken=${token}'>Click here to reset password</a></h5>
 							<br><br>						
             			</div>
             		</td>
@@ -377,4 +373,4 @@ ul.social li{
     `;
 };
 
-module.exports = voucherClaimMail;
+module.exports = resetPasswordMail;

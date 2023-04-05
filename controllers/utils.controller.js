@@ -29,6 +29,7 @@ const FLW_services = require("../services/flutterwave.services");
 
 // Templates
 const voucherClaimMail = require("../templates/voucherClaimMail.templates");
+const winnerVoucherClaimMail = require("../templates/winnerVoucherClaimMail.templates");
 
 module.exports = {
     //   Test API connection
@@ -499,7 +500,7 @@ module.exports = {
         // find user Email
         const creator = await userModel.findOne({ _id: foundVoucher.userId });
 
-        // Send email
+        // Send email to Voucher creator
         const mailOptions = {
             to: creator.email,
             subject: "Voucher Claim Mail",
@@ -507,7 +508,20 @@ module.exports = {
                 fullName,
                 voucherCode,
                 creator.firstName,
-                foundVoucher.title
+                foundVoucher.title,
+                foundVoucher.amountPerVoucher
+            ),
+        };
+
+        // Send email to Voucher winner
+        const winnerMailOptions = {
+            to: creator.email,
+            subject: "Voucher Claim Mail",
+            html: winnerVoucherClaimMail(
+                fullName,
+                voucherCode,
+                foundVoucher.title,
+                foundVoucher.amountPerVoucher
             ),
         };
 
@@ -544,6 +558,7 @@ module.exports = {
         }
 
         sendMail(mailOptions);
+        sendMail(winnerMailOptions);
         await foundVoucher.save();
 
         return res.status(200).send({
