@@ -21,7 +21,7 @@ const loginValidation = Joi.object({
 
 const createVoucherValidation = Joi.object({
     title: Joi.string().min(2).required(),
-    thumbnail: Joi.object().required(),
+    thumbnail: Joi.object(),
     description: Joi.string().min(4).required(),
     voucherKey: Joi.string().min(5).max(5).required(),
     totalNumberOfVouchers: Joi.number().required(),
