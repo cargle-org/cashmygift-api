@@ -410,6 +410,71 @@ module.exports = {
         });
     }),
 
+    // find voucher
+    postFindVoucherController: asyncHandler(async(req, res, next) => {
+        try {
+            const { voucherCode } = req.body;
+
+            // find voucher using voucherCode
+            const foundVoucher = await voucherModel.findOne({
+                voucherKey: voucherCode.slice(0, 5),
+            });
+
+            if (!foundVoucher) {
+                return res.status(400).send({
+                    success: false,
+                    message: "This coupon does not exist, please try another.",
+                });
+            }
+
+            let matchingCoupon;
+
+            // search voucher coupons for matching code
+            foundVoucher.voucherCoupons.map((item) => {
+                if (item.couponCode === voucherCode) {
+                    if (item.status === "cashed") {
+                        return res.status(400).send({
+                            success: false,
+                            message: "This coupon has already been claimed, please try another",
+                        });
+                    }
+                    matchingCoupon = item;
+                }
+            });
+
+            if (!matchingCoupon) {
+                return res.status(400).send({
+                    success: false,
+                    message: "This coupon does not exist, please try another.",
+                });
+            }
+
+            return res.status(200).send({
+                success: true,
+                data: {
+                    voucher: {
+                        title: foundVoucher.title,
+                        thumbnail: foundVoucher.thumbnail,
+                        description: foundVoucher.description,
+                        amount: foundVoucher.amountPerVoucher,
+                        description: foundVoucher.description,
+                        coupon: matchingCoupon,
+                    },
+                },
+                message: "Claimed Coupon from Voucher successfully.",
+            });
+        } catch (error) {
+            console.log(
+                "🚀 ~ file: utils.controller.js:430 ~ postFindVoucherController:asyncHandler ~ error:",
+                error
+            );
+            return res.status(400).send({
+                success: false,
+                message: "Couldn't find voucher.",
+            });
+        }
+    }),
+
     // Cashout voucher
     postCashoutVoucherController: asyncHandler(async(req, res, next) => {
         const { fullName, voucherCode, bankCode, accountNumber } = req.body;

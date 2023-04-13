@@ -41,14 +41,11 @@ module.exports = {
     //   SignUp
     postRegisterController: asyncHandler(async(req, res, next) => {
         const {
-            firstName,
-            lastName,
+            name,
             email,
             phone,
             password,
-            companyName,
-            companyEmail,
-            companyPhone,
+            confirmPassword,
         } = req.body;
 
         const body = await {...req.body, companyLogo: req.file };
@@ -68,6 +65,13 @@ module.exports = {
 
         // send image to Cloudinary
         const companyLogo = await uploadImageSingle(req, res, next);
+
+        if (password !== confirmPassword) {
+            return res.status(400).send({
+                success: false,
+                message: "Password does not match.",
+            });
+        }
 
         //   Hash password
         const hashedPassword = await bcrypt.hash(password, 12);
@@ -139,16 +143,17 @@ module.exports = {
 
         // create user
         const user = new User({
-            firstName,
-            lastName,
+            name,
             email,
             emailVerificationToken,
             phone,
             password: hashedPassword,
-            companyName,
             companyLogo,
-            companyEmail,
-            companyPhone,
+            // companyName,
+            // firstName,
+            // lastName,
+            // companyEmail,
+            // companyPhone,
         });
         await user.save();
 
@@ -161,7 +166,7 @@ module.exports = {
         const mailOptions = {
             to: user.email,
             subject: "Email verification mail",
-            html: emailVerifyMail(user._id, user.firstName, emailVerificationToken),
+            html: emailVerifyMail(user._id, user.name, emailVerificationToken),
         };
 
         sendMail(mailOptions);
@@ -290,7 +295,7 @@ module.exports = {
             const mailOptions = {
                 to: user.email,
                 subject: "Password Reset Mail",
-                html: resetPasswordMail(user._id, user.firstName, resetToken),
+                html: resetPasswordMail(user._id, user.name, resetToken),
             };
 
             sendMail(mailOptions);

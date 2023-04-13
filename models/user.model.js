@@ -6,11 +6,15 @@ const Schema = mongoose.Schema;
 
 // User Schema
 const userSchema = new Schema({
-    firstName: {
-        type: String,
-        required: true,
-    },
-    lastName: {
+    // firstName: {
+    //     type: String,
+    //     required: true,
+    // },
+    // lastName: {
+    //     type: String,
+    //     required: true,
+    // },
+    name: {
         type: String,
         required: true,
     },
@@ -26,30 +30,30 @@ const userSchema = new Schema({
         type: Boolean,
         default: false,
     },
-    phone: {
-        type: String,
-        required: true,
-    },
+    // phone: {
+    //     type: String,
+    //     required: true,
+    // },
     password: {
         type: String,
         required: true,
     },
-    companyName: {
-        type: String,
-        // required: true,
-    },
+    // companyName: {
+    //     type: String,
+    //     // required: true,
+    // },
     companyLogo: {
         type: String,
         default: "",
         // required: false,
     },
-    companyEmail: {
-        type: String,
-        // required: true,
-    },
-    companyPhone: {
-        type: String,
-    },
+    // companyEmail: {
+    //     type: String,
+    //     // required: true,
+    // },
+    // companyPhone: {
+    //     type: String,
+    // },
     walletBalance: {
         type: Number,
         default: 0,
