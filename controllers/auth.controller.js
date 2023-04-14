@@ -45,7 +45,7 @@ module.exports = {
             email,
             phone,
             password,
-            confirmPassword,
+            // confirmPassword,
         } = req.body;
 
         const body = await {...req.body, companyLogo: req.file };
@@ -66,12 +66,12 @@ module.exports = {
         // send image to Cloudinary
         const companyLogo = await uploadImageSingle(req, res, next);
 
-        if (password !== confirmPassword) {
-            return res.status(400).send({
-                success: false,
-                message: "Password does not match.",
-            });
-        }
+        // if (password !== confirmPassword) {
+        //     return res.status(400).send({
+        //         success: false,
+        //         message: "Password does not match.",
+        //     });
+        // }
 
         //   Hash password
         const hashedPassword = await bcrypt.hash(password, 12);
