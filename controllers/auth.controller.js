@@ -48,7 +48,10 @@ module.exports = {
             // confirmPassword,
         } = req.body;
 
-        const body = await {...req.body, companyLogo: req.file };
+        let companyLogo = "";
+
+        // const body = await {...req.body, companyLogo: req.file };
+        const body = await {...req.body };
 
         // Run Hapi/Joi validation
         const { error } = await registerValidation.validateAsync(body);
@@ -63,8 +66,10 @@ module.exports = {
             });
         }
 
-        // send image to Cloudinary
-        const companyLogo = await uploadImageSingle(req, res, next);
+        if (req.file) {
+            // send image to Cloudinary
+            companyLogo = await uploadImageSingle(req, res, next);
+        }
 
         // if (password !== confirmPassword) {
         //     return res.status(400).send({
@@ -285,11 +290,16 @@ module.exports = {
 
             const resetToken = uuidv4();
             const expire = moment().add(15, "minutes").format("YYYY-MM-DD hh:mm:ss");
+            console.log(
+                "🚀 ~ file: auth.controller.js:293 ~ postForgotPasswordController:async ~ expire:",
+                expire
+            );
 
             user.resetPasswordToken = resetToken;
             user.resetPasswordExpires = expire;
 
             await user.save();
+            console.log("user`: ", user);
 
             // Send email
             const mailOptions = {
@@ -345,12 +355,12 @@ module.exports = {
             const t = moment().format("YYYY-MM-DD hh:mm:ss");
             const time = new Date(t).getTime();
 
-            if (time > new Date(user.resetPasswordExpires).getTime()) {
-                return res.status(400).send({
-                    success: false,
-                    message: "Oops, link has expired",
-                });
-            }
+            // if (time > new Date(user.resetPasswordExpires).getTime()) {
+            //     return res.status(400).send({
+            //         success: false,
+            //         message: "Oops, link has expired",
+            //     });
+            // }
 
             user.password = newPassword;
             user.resetPasswordToken = null;
