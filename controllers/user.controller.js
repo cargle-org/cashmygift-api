@@ -51,17 +51,27 @@ module.exports = {
       vouchers
     );
 
+    let totalVouchers = 0;
+    let totalAmountCashed = 0;
+    let activeVouchers = 0;
+    let cashedVouchers = 0;
+
     vouchers.map((item) => {
-      user.totalVouchers = user.totalVouchers + item.totalNumberOfVouchers;
-      user.totalAmountCashed = user.totalAmountCashed + item.totalCashedAmount;
+      totalVouchers = totalVouchers + item.totalNumberOfVouchers;
+      totalAmountCashed = totalAmountCashed + item.totalCashedAmount;
       item.voucherCoupons.map((voucher) => {
         if (voucher.status === "pending") {
-          user.activeVouchers = user.activeVouchers + 1;
+          activeVouchers = activeVouchers + 1;
         } else if (voucher.status === "cashed") {
-          user.pendingVouchers = user.pendingVouchers + 1;
+          cashedVouchers = cashedVouchers + 1;
         }
       });
     });
+
+    user.totalVouchers = totalVouchers;
+    user.totalAmountCashed = totalAmountCashed;
+    user.activeVouchers = activeVouchers;
+    user.cashedVouchers = cashedVouchers;
 
     await user.save();
 
