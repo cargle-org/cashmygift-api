@@ -36,34 +36,12 @@ module.exports = {
       "🚀 ~ file: user.controller.js:34 ~ getUserController:asyncHandler ~ user:",
       user
     );
-
     if (!user) {
       return res.status(400).send({
         success: false,
         message: "user not found.",
       });
     }
-
-    // get all vouchers
-    const vouchers = await voucherModel.find({ userId: userId });
-    console.log(
-      "🚀 ~ file: user.controller.js:49 ~ getUserController:asyncHandler ~ vouchers:",
-      vouchers
-    );
-
-    vouchers.map((item) => {
-      user.totalVouchers = user.totalVouchers + item.totalNumberOfVouchers;
-      user.totalAmountCashed = user.totalAmountCashed + item.totalCashedAmount;
-      item.voucherCoupons.map((voucher) => {
-        if (voucher.status === "pending") {
-          user.activeVouchers = user.activeVouchers + 1;
-        } else if (voucher.status === "cashed") {
-          user.pendingVouchers = user.pendingVouchers + 1;
-        }
-      });
-    });
-
-    await user.save();
 
     return res.status(200).send({
       success: true,
@@ -75,11 +53,9 @@ module.exports = {
   }),
 
   //   get all user vouchers
-  getAllUserVouchersController: asyncHandler(async (req, res, next) => {
-    const { userId } = req.query;
-
+  getAllVouchersController: asyncHandler(async (req, res, next) => {
     //   check if user exist
-    const vouchers = await voucherModel.find({ userId: userId });
+    const vouchers = await voucherModel.find();
 
     if (!vouchers) {
       return res.status(400).send({
