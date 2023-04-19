@@ -86,9 +86,11 @@ module.exports = {
 
   //   get all user vouchers
   getAllUserVouchersController: asyncHandler(async (req, res, next) => {
-    const { userId } = req.query;
+    const { userId, from, to, amount, status } = req.query;
+    console.log("🚀req.query:", req.query);
+    let sortVouchers = [];
 
-    //   check if user exist
+    //   check if voucher exist
     const vouchers = await voucherModel.find({ userId: userId });
 
     if (!vouchers) {
@@ -97,6 +99,53 @@ module.exports = {
         message: "no vouchers found.",
       });
     }
+
+    // DEFAULT...no needed params? return all vouchers
+    if (!from && !to && !amount && !status) {
+      return res.status(200).send({
+        success: true,
+        data: {
+          vouchers: vouchers,
+        },
+        message: "fetched vouchers successfully.",
+      });
+    }
+
+    // sort by date
+    if (from && to && !amount && !status) {
+      const dateVouchers = await voucherModel.find({
+        userId: userId,
+        createdAt: { $gte: from, $lte: to },
+      });
+      console.log("🚀dateVouchers:", dateVouchers);
+
+      return res.status(200).send({
+        success: true,
+        data: {
+          vouchers: dateVouchers,
+        },
+        message: "fetched vouchers successfully.",
+      });
+    }
+
+    // sort then by amount
+    if (from && to && amount && !status) {
+      const dateVouchers = await voucherModel.find({
+        userId: userId,
+        amountPerVoucher: amount,
+      });
+      console.log("🚀dateVouchers:", dateVouchers);
+
+      return res.status(200).send({
+        success: true,
+        data: {
+          vouchers: dateVouchers,
+        },
+        message: "fetched vouchers successfully.",
+      });
+    }
+
+    // sort by status
 
     return res.status(200).send({
       success: true,

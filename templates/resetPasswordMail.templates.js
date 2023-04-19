@@ -1,5 +1,5 @@
 const resetPasswordMail = (id, user, token) => {
-    return `
+  return `
        
 	<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
@@ -356,7 +356,7 @@ ul.social li{
 							
 							<h4>It seems you had issues remembering your last password, use this link to reset your password, and do well to remember it this time. 😉
 							<br/>
-							 <h5><a href='cmg-three.vercel.app/signin/resetpassword?resetToken=${token}'>Click here to reset password</a></h5>
+							 <h5><a href='cmg-three.vercel.app/signin/resetpassword?id=${id}&resetToken=${token}'>Click here to reset password</a></h5>
 							<br><br>						
             			</div>
             		</td>
