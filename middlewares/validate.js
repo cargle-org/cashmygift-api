@@ -34,7 +34,8 @@ const createVoucherValidation = Joi.object({
 
 const cashoutVoucherValidation = Joi.object({
     fullName: Joi.string().min(2).required(),
-    // voucherCode: Joi.string().min(10).max(16).required(),
+    email: Joi.string().min(6).required().email(),
+    voucherCode: Joi.string().required(),
     bankCode: Joi.string().min(3).required(),
     accountNumber: Joi.string().required(),
 });
