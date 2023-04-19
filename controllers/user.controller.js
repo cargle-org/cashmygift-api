@@ -11,171 +11,312 @@ const voucherModel = require("../models/voucher.model");
 const asyncHandler = require("../middlewares/asyncHandler");
 
 module.exports = {
-  //   Test API connection
-  getPingController: (req, res) => {
-    try {
-      return res.status(200).send({
-        success: true,
-        message: "Pong",
-      });
-    } catch (err) {
-      return res.status(500).send({
-        success: false,
-        message: err.message,
-      });
-    }
-  },
-
-  //   get user
-  getUserController: asyncHandler(async (req, res, next) => {
-    const { userId } = req.query;
-
-    //   check if user exist
-    const user = await User.findOne({ _id: userId });
-    console.log(
-      "🚀 ~ file: user.controller.js:34 ~ getUserController:asyncHandler ~ user:",
-      user
-    );
-
-    if (!user) {
-      return res.status(400).send({
-        success: false,
-        message: "user not found.",
-      });
-    }
-
-    // get all vouchers
-    const vouchers = await voucherModel.find({ userId: userId });
-    console.log(
-      "🚀 ~ file: user.controller.js:49 ~ getUserController:asyncHandler ~ vouchers:",
-      vouchers
-    );
-
-    let totalVouchers = 0;
-    let totalAmountCashed = 0;
-    let activeVouchers = 0;
-    let cashedVouchers = 0;
-
-    vouchers.map((item) => {
-      totalVouchers = totalVouchers + item.totalNumberOfVouchers;
-      totalAmountCashed = totalAmountCashed + item.totalCashedAmount;
-      item.voucherCoupons.map((voucher) => {
-        if (voucher.status === "pending") {
-          activeVouchers = activeVouchers + 1;
-        } else if (voucher.status === "cashed") {
-          cashedVouchers = cashedVouchers + 1;
+    //   Test API connection
+    getPingController: (req, res) => {
+        try {
+            return res.status(200).send({
+                success: true,
+                message: "Pong",
+            });
+        } catch (err) {
+            return res.status(500).send({
+                success: false,
+                message: err.message,
+            });
         }
-      });
-    });
+    },
 
-    user.totalVouchers = totalVouchers;
-    user.totalAmountCashed = totalAmountCashed;
-    user.activeVouchers = activeVouchers;
-    user.cashedVouchers = cashedVouchers;
+    //   get user
+    getUserController: asyncHandler(async(req, res, next) => {
+        const { userId } = req.query;
 
-    await user.save();
+        //   check if user exist
+        const user = await User.findOne({ _id: userId });
+        console.log(
+            "🚀 ~ file: user.controller.js:34 ~ getUserController:asyncHandler ~ user:",
+            user
+        );
 
-    return res.status(200).send({
-      success: true,
-      data: {
-        user: user,
-      },
-      message: "fetched user successfully.",
-    });
-  }),
+        if (!user) {
+            return res.status(400).send({
+                success: false,
+                message: "user not found.",
+            });
+        }
 
-  //   get all user vouchers
-  getAllUserVouchersController: asyncHandler(async (req, res, next) => {
-    const { userId, from, to, amount, status } = req.query;
-    console.log("🚀req.query:", req.query);
-    let sortVouchers = [];
+        // get all vouchers
+        const vouchers = await voucherModel.find({ userId: userId });
+        console.log(
+            "🚀 ~ file: user.controller.js:49 ~ getUserController:asyncHandler ~ vouchers:",
+            vouchers
+        );
 
-    //   check if voucher exist
-    const vouchers = await voucherModel.find({ userId: userId });
+        let totalVouchers = 0;
+        let totalAmountCashed = 0;
+        let activeVouchers = 0;
+        let cashedVouchers = 0;
 
-    if (!vouchers) {
-      return res.status(400).send({
-        success: false,
-        message: "no vouchers found.",
-      });
-    }
+        vouchers.map((item) => {
+            totalVouchers = totalVouchers + item.totalNumberOfVouchers;
+            totalAmountCashed = totalAmountCashed + item.totalCashedAmount;
+            item.voucherCoupons.map((voucher) => {
+                if (voucher.status === "pending") {
+                    activeVouchers = activeVouchers + 1;
+                } else if (voucher.status === "cashed") {
+                    cashedVouchers = cashedVouchers + 1;
+                }
+            });
+        });
 
-    // DEFAULT...no needed params? return all vouchers
-    if (!from && !to && !amount && !status) {
-      return res.status(200).send({
-        success: true,
-        data: {
-          vouchers: vouchers,
-        },
-        message: "fetched vouchers successfully.",
-      });
-    }
+        user.totalVouchers = totalVouchers;
+        user.totalAmountCashed = totalAmountCashed;
+        user.activeVouchers = activeVouchers;
+        user.cashedVouchers = cashedVouchers;
 
-    // sort by date
-    if (from && to && !amount && !status) {
-      const dateVouchers = await voucherModel.find({
-        userId: userId,
-        createdAt: { $gte: from, $lte: to },
-      });
-      console.log("🚀dateVouchers:", dateVouchers);
+        await user.save();
 
-      return res.status(200).send({
-        success: true,
-        data: {
-          vouchers: dateVouchers,
-        },
-        message: "fetched vouchers successfully.",
-      });
-    }
+        return res.status(200).send({
+            success: true,
+            data: {
+                user: user,
+            },
+            message: "fetched user successfully.",
+        });
+    }),
 
-    // sort then by amount
-    if (from && to && amount && !status) {
-      const dateVouchers = await voucherModel.find({
-        userId: userId,
-        amountPerVoucher: amount,
-      });
-      console.log("🚀dateVouchers:", dateVouchers);
+    //   get all user vouchers
+    getAllUserVouchersController: asyncHandler(async(req, res, next) => {
+        const { userId, from, to, amount, status } = req.query;
+        console.log("🚀req.query:", req.query);
+        let sortVouchers = [];
+        let fromDate = new Date(from);
+        let toDate = new Date(to);
 
-      return res.status(200).send({
-        success: true,
-        data: {
-          vouchers: dateVouchers,
-        },
-        message: "fetched vouchers successfully.",
-      });
-    }
+        //   check if voucher exist
+        const vouchers = await voucherModel.find({ userId: userId });
 
-    // sort by status
+        if (!vouchers) {
+            return res.status(400).send({
+                success: false,
+                message: "no vouchers found.",
+            });
+        }
 
-    return res.status(200).send({
-      success: true,
-      data: {
-        vouchers: vouchers,
-      },
-      message: "fetched vouchers successfully.",
-    });
-  }),
+        if (to && !from || !to && from) {
+            return res.status(400).send({
+                success: false,
+                message: "Date should be a range.",
+            });
+        }
 
-  //   get one  vouchers
-  getOneVouchersController: asyncHandler(async (req, res, next) => {
-    const { voucherId } = req.query;
+        // DEFAULT...no needed params? return all vouchers
+        if (!from && !to && !amount && !status) {
+            return res.status(200).send({
+                success: true,
+                data: {
+                    vouchers: vouchers,
+                },
+                message: "fetched vouchers successfully.",
+            });
+        }
 
-    //   check if user exist
-    const voucher = await voucherModel.findOne({ _id: voucherId });
+        // sort by date
+        if (from && to && !amount && !status) {
+            const dateVouchers = await voucherModel.find({
+                userId: userId,
+                createdAt: { $gte: fromDate, $lt: toDate },
+            });
+            console.log("🚀dateVouchers:", dateVouchers);
 
-    if (!voucher) {
-      return res.status(400).send({
-        success: false,
-        message: "voucher not found.",
-      });
-    }
+            return res.status(200).send({
+                success: true,
+                data: {
+                    vouchers: dateVouchers,
+                },
+                message: "fetched vouchers successfully.",
+            });
+        }
 
-    return res.status(200).send({
-      success: true,
-      data: {
-        voucher: voucher,
-      },
-      message: "fetched voucher successfully.",
-    });
-  }),
+        // sort then by date & amount
+        if (from && to && amount && !status) {
+            const amountVouchers = await voucherModel.find({
+                userId: userId,
+                amountPerVoucher: amount,
+                createdAt: { $gte: fromDate, $lt: toDate },
+            });
+            console.log("🚀amountVouchers:", amountVouchers);
+
+            return res.status(200).send({
+                success: true,
+                data: {
+                    vouchers: amountVouchers,
+                },
+                message: "fetched vouchers successfully.",
+            });
+        }
+
+        // sort by date & status
+        if (from && to && status) {
+            const statusVouchers = await voucherModel.find({
+                userId: userId,
+                createdAt: { $gte: fromDate, $lt: toDate },
+            });
+
+            statusVouchers.map((item) => {
+                item.voucherCoupons.map((voucher) => {
+                    if (voucher.status === status) {
+                        const data = {
+                            title: item.title,
+                            description: item.description,
+                            voucherKey: item.voucherKey,
+                            amount: item.amountPerVoucher,
+                            couponData: voucher,
+                        };
+                        sortVouchers.push(data);
+                    }
+                });
+            });
+
+            return res.status(200).send({
+                success: true,
+                data: {
+                    vouchers: sortVouchers,
+                },
+                message: "fetched vouchers successfully.",
+            });
+        }
+
+        // sort by amount
+        if (!from && !to && amount) {
+            const amountVouchers = await voucherModel.find({
+                userId: userId,
+                amountPerVoucher: amount,
+            });
+            console.log("🚀amountVouchers:", amountVouchers);
+
+            return res.status(200).send({
+                success: true,
+                data: {
+                    vouchers: amountVouchers,
+                },
+                message: "fetched vouchers successfully.",
+            });
+        }
+
+        // sort by status
+        if (!from && !to && status) {
+            const statusVouchers = await voucherModel.find({
+                userId: userId,
+            });
+
+            statusVouchers.map((item) => {
+                item.voucherCoupons.map((voucher) => {
+                    if (voucher.status === status) {
+                        const data = {
+                            title: item.title,
+                            description: item.description,
+                            voucherKey: item.voucherKey,
+                            amount: item.amountPerVoucher,
+                            couponData: voucher,
+                        };
+                        sortVouchers.push(data);
+                    }
+                });
+            });
+
+            return res.status(200).send({
+                success: true,
+                data: {
+                    vouchers: sortVouchers,
+                },
+                message: "fetched vouchers successfully.",
+            });
+        }
+
+        // sort by date, amount & status
+        if (from && to && amount && status) {
+            const statusVouchers = await voucherModel.find({
+                userId: userId,
+                amountPerVoucher: amount,
+                createdAt: { $gte: fromDate, $lt: toDate },
+            });
+
+            statusVouchers.map((item) => {
+                item.voucherCoupons.map((voucher) => {
+                    if (voucher.status === status) {
+                        const data = {
+                            title: item.title,
+                            description: item.description,
+                            voucherKey: item.voucherKey,
+                            amount: item.amountPerVoucher,
+                            couponData: voucher,
+                        };
+                        sortVouchers.push(data);
+                    }
+                });
+            });
+
+            return res.status(200).send({
+                success: true,
+                data: {
+                    vouchers: sortVouchers,
+                },
+                message: "fetched vouchers successfully.",
+            });
+        }
+
+        // sort by amount & status
+        if (from && to && amount && status) {
+            const statusVouchers = await voucherModel.find({
+                userId: userId,
+                amountPerVoucher: amount,
+            });
+
+            statusVouchers.map((item) => {
+                item.voucherCoupons.map((voucher) => {
+                    if (voucher.status === status) {
+                        const data = {
+                            title: item.title,
+                            description: item.description,
+                            voucherKey: item.voucherKey,
+                            amount: item.amountPerVoucher,
+                            couponData: voucher,
+                        };
+                        sortVouchers.push(data);
+                    }
+                });
+            });
+
+            return res.status(200).send({
+                success: true,
+                data: {
+                    vouchers: sortVouchers,
+                },
+                message: "fetched vouchers successfully.",
+            });
+        }
+    }),
+
+    //   get one  vouchers
+    getOneVouchersController: asyncHandler(async(req, res, next) => {
+        const { voucherId } = req.query;
+
+        //   check if user exist
+        const voucher = await voucherModel.findOne({ _id: voucherId });
+
+        if (!voucher) {
+            return res.status(400).send({
+                success: false,
+                message: "voucher not found.",
+            });
+        }
+
+        return res.status(200).send({
+            success: true,
+            data: {
+                voucher: voucher,
+            },
+            message: "fetched voucher successfully.",
+        });
+    }),
 };
