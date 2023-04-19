@@ -356,7 +356,7 @@ module.exports = {
       if (resetToken !== user.resetPasswordToken) {
         return res.status(400).send({
           success: false,
-          message: "Error: e43, token parse error",
+          message: "Error: E43, token parse error",
         });
       }
 
