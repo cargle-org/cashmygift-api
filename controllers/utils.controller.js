@@ -26,6 +26,7 @@ const tx_ref = require("../middlewares/tx_ref");
 // Services
 const sendMail = require("../services/mailer.services");
 const FLW_services = require("../services/flutterwave.services");
+const monnify = require("../services/monnify.services");
 
 // Templates
 const voucherClaimMail = require("../templates/voucherClaimMail.templates");
@@ -239,9 +240,11 @@ module.exports = {
             totalNumberOfVouchers,
             amountPerVoucher,
         } = req.body;
+        console.log("🚀 ~ file: utils.controller.js:243 ~ postCreateVoucherController:asyncHandler ~ req.body:", req.body)
 
         const cmgFee = parseInt(totalNumberOfVouchers * 10);
         const totalAmount = parseInt(totalNumberOfVouchers * amountPerVoucher);
+        let thumbnail = '';
 
         // Do simple maths to know if numbers match
         if (req.user.walletBalance < totalAmount + cmgFee) {
@@ -378,8 +381,12 @@ module.exports = {
             });
         }
 
-        // send image to Cloudinary
-        const thumbnail = await uploadImageSingle(req, res, next);
+
+        if(req.file) {
+            // send image to Cloudinary
+            const thumbnail = await uploadImageSingle(req, res, next);
+        }
+
 
         // create voucher
         const voucher = new voucherModel({
@@ -590,7 +597,7 @@ module.exports = {
 
         // Send email to Voucher winner
         const winnerMailOptions = {
-            to: creator.email,
+            to: email,
             subject: "Voucher Claim Mail",
             html: winnerVoucherClaimMail(
                 fullName,
