@@ -9,6 +9,7 @@ const voucherModel = require("../models/voucher.model");
 
 // Middlewares
 const asyncHandler = require("../middlewares/asyncHandler");
+const { editProfileValidation } = require("../middlewares/validate");
 
 module.exports = {
   //   Test API connection
@@ -348,6 +349,60 @@ module.exports = {
         voucher: voucher,
       },
       message: "fetched voucher successfully.",
+    });
+  }),
+
+  //   edit profile controller
+  postEditProfileController: asyncHandler(async (req, res, next) => {
+    const { id } = req.query;
+    let { name, email, phone } = req.body;
+
+    const body = { ...req.body };
+
+    // Run Hapi/Joi validation
+    const { error } = await editProfileValidation.validateAsync(body);
+    if (error) {
+      return res.status(400).send({
+        success: false,
+        message: "Validation failed",
+        errMessage: error.details[0].message,
+      });
+    }
+
+    //   check if user exist
+    const user = await User.findOne({ _id: id });
+
+    if (!user) {
+      return res.status(400).send({
+        success: false,
+        message: "user not found.",
+      });
+    }
+
+    // update name
+    if (name) {
+      user.name = name;
+      await user.save();
+    }
+
+    // update email
+    if (email) {
+      user.email = email;
+      await user.save();
+    }
+
+    // update phone number
+    if (phone) {
+      user.phone = phone;
+      await user.save();
+    }
+
+    return res.status(200).send({
+      success: true,
+      data: {
+        user: user,
+      },
+      message: "Updated user successfully.",
     });
   }),
 };

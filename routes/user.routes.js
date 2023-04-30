@@ -15,6 +15,7 @@ const router = express.Router();
 // Routes
 router.get("/ping", user.getPingController);
 router.get("/one", authenticate, user.getUserController);
+router.post("/edit", authenticate, user.postEditProfileController);
 router.get("/vouchers/all", authenticate, user.getAllUserVouchersController);
 router.get("/vouchers/one", authenticate, user.getOneVouchersController);
 
