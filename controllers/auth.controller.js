@@ -424,7 +424,10 @@ module.exports = {
         });
       }
 
-      user.password = newPassword;
+      //   Hash password
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+      user.password = hashedPassword;
 
       await user.save();
 
