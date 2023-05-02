@@ -405,7 +405,7 @@ module.exports = {
   // Change password
   postChangePasswordController: async (req, res, next) => {
     try {
-      const { newPassword, confirmPassword } = req.body;
+      const { oldPassword, newPassword, confirmPassword } = req.body;
 
       const { userId } = req.query;
 
@@ -415,6 +415,15 @@ module.exports = {
         return res.status(400).send({
           success: false,
           message: "User not found",
+        });
+      }
+
+      // validate password
+      const validatePassword = await bcrypt.compare(oldPassword, user.password);
+      if (!validatePassword) {
+        return res.status(400).send({
+          success: false,
+          message: "Previous password does not match, can't perform operation.",
         });
       }
 
