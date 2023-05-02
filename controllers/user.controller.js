@@ -397,6 +397,21 @@ module.exports = {
       await user.save();
     }
 
+    // update image
+    if (req.file) {
+      if (user.isCompany) {
+        // send image to Cloudinary
+        companyLogo = await uploadImageSingle(req, res, next);
+        user.companyLogo = companyLogo;
+        await user.save();
+      } else {
+        return res.status(400).send({
+          success: false,
+          message: "Only companies can have companyLogo",
+        });
+      }
+    }
+
     return res.status(200).send({
       success: true,
       data: {

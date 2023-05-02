@@ -45,6 +45,7 @@ module.exports = {
       email,
       phone,
       password,
+      isCompany,
       // confirmPassword,
     } = req.body;
 
@@ -154,6 +155,7 @@ module.exports = {
       phone,
       password: hashedPassword,
       companyLogo,
+      isCompany,
       // companyName,
       // firstName,
       // lastName,

@@ -48,6 +48,10 @@ const userSchema = new Schema(
       default: "",
       // required: false,
     },
+    isCompany: {
+      type: Boolean,
+      default: false,
+    },
     // companyEmail: {
     //     type: String,
     //     // required: true,
