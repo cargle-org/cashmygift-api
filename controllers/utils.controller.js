@@ -13,6 +13,8 @@ const FLW_secKey = process.env.FLUTTERWAVE_SECRET_KEY;
 const voucherModel = require("../models/voucher.model");
 const transactionModel = require("../models/transaction.model");
 const userModel = require("../models/user.model");
+const winnerModel = require("../models/winner.model");
+const contactModel = require("../models/contact.model");
 
 // Middlewares
 const {
@@ -31,7 +33,7 @@ const monnify = require("../services/monnify.services");
 // Templates
 const voucherClaimMail = require("../templates/voucherClaimMail.templates");
 const winnerVoucherClaimMail = require("../templates/winnerVoucherClaimMail.templates");
-const winnerModel = require("../models/winner.model");
+const contactUsMail = require("../templates/contactUsMail.templates");
 
 module.exports = {
   //   Test API connection
@@ -696,6 +698,43 @@ module.exports = {
       return res.status(500).send({
         success: false,
         message: "Couldn't fetch banks",
+        errMessage: err,
+      });
+    }
+  }),
+
+  // Fetch all banks in Nigeria {{FOR FLUTTERWAVE}}
+  postContactUsController: asyncHandler(async (req, res, next) => {
+    const { name, email, message } = req.body;
+    try {
+      const contact = new contactModel({
+        name,
+        email,
+        message,
+      });
+
+      // Send email
+      const mailOptions = {
+        to: process.env.MAIL_USER,
+        subject: "Contact us mail",
+        html: contactUsMail(name, email, message),
+      };
+
+      sendMail(mailOptions);
+      await contact.save();
+
+      return res.status(200).send({
+        success: true,
+        message: "Message sent successflly",
+      });
+    } catch (err) {
+      console.log(
+        "🚀 ~ file: utils.controller.js:731 ~ postContactUsController:asyncHandler ~ err:",
+        err
+      );
+      return res.status(400).send({
+        success: false,
+        message: "Couldn't process request",
         errMessage: err,
       });
     }
