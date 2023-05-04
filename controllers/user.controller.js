@@ -356,6 +356,10 @@ module.exports = {
   postEditProfileController: asyncHandler(async (req, res, next) => {
     const { id } = req.query;
     let { name, email, phone } = req.body;
+    console.log(
+      "🚀 ~ file: user.controller.js:359 ~ postEditProfileController:asyncHandler ~ req.body:",
+      req.body
+    );
 
     const body = { ...req.body };
 
