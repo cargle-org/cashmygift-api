@@ -9,6 +9,8 @@ const baseURL = process.env.FLUTTERWAVE_BASE_URL;
 const FLW_pubKey = process.env.FLUTTERWAVE_PUBLIC_KEY;
 const FLW_secKey = process.env.FLUTTERWAVE_SECRET_KEY;
 
+// Monnify
+
 // Models
 const voucherModel = require("../models/voucher.model");
 const transactionModel = require("../models/transaction.model");
@@ -57,30 +59,44 @@ module.exports = {
 
     const currency = "NGN";
     const transREf = await tx_ref.get_Tx_Ref();
+    // const tx_ref = "" + Math.floor(Math.random() * 1000000000 + 1);
+
+    // const payload = {
+    //   tx_ref: transREf,
+    //   amount,
+    //   currency,
+    //   payment_options: "card",
+    //   redirect_url: "https://cmg-three.vercel.app/payment/depositecompleted",
+    //   customer: {
+    //     email: req.user.email,
+    //     phonenumber: req.user.phone,
+    //     name: `${req.user.firstName} ${req.user.lastName}`,
+    //   },
+    //   meta: {
+    //     customer_id: req.user._id,
+    //   },
+    //   customizations: {
+    //     title: "CMG",
+    //     description: "Pay with card",
+    //     logo: "#",
+    //   },
+    // };
 
     const payload = {
-      tx_ref: transREf,
       amount,
-      currency,
-      payment_options: "card",
-      redirect_url: "https://cmg-three.vercel.app/payment/depositecompleted",
-      customer: {
-        email: req.user.email,
-        phonenumber: req.user.phone,
-        name: `${req.user.firstName} ${req.user.lastName}`,
-      },
-      meta: {
-        customer_id: req.user._id,
-      },
-      customizations: {
-        title: "CMG",
-        description: "Pay with card",
-        logo: "#",
-      },
+      name: req.user.name,
+      email: req.user.email,
+      description: "Funding Usepays wallet",
+      tx_ref: transREf,
     };
 
+    // const response = await FLW_services.initiateTransaction(payload);
+    const token = await monnify.obtainAccessToken();
+    const makePayment = await monnify.initializePayment(payload, token);
+
     const transaction = await new transactionModel({
-      tx_ref: transREf,
+      paymentReference: transREf,
+      transactionReference: makePayment.transactionReference,
       userId: req.user._id,
       amount,
       currency,
@@ -90,33 +106,49 @@ module.exports = {
 
     await transaction.save();
 
-    const response = await FLW_services.initiateTransaction(payload);
-
     return res.status(200).send({
       success: true,
-      data: {
-        response,
-      },
+      data: makePayment.checkoutUrl,
       message: "Payment Initiated",
     });
   }),
 
   // Verify "Fund wallet transaction"
   getVerifyController: asyncHandler(async (req, res, next) => {
-    const id = req.query.transaction_id;
-    const tx_ref = req.query.tx_ref;
+    // const id = req.query.paymentReference;
+    const paymentReference = req.query.paymentReference;
 
-    const verify = await FLW_services.verifyTransaction(id);
+    const transaction = await transactionModel.findOne({
+      paymentReference: paymentReference,
+    });
+    console.log(
+      "🚀 ~ file: utils.controller.js:124 ~ getVerifyController:asyncHandler ~ transaction:",
+      transaction
+    );
 
-    if (verify.status === "successful") {
-      const transaction = await transactionModel.findOne({ tx_ref: tx_ref });
+    if (!transaction) {
+      return res.status(400).send({
+        success: false,
+        message: "transaction not found.",
+      });
+    }
 
-      if (!transaction) {
-        return res.status(400).send({
-          success: false,
-          message: "Transaction not found",
-        });
-      }
+    // const verify = await FLW_services.verifyTransaction(id);
+    const token = await monnify.obtainAccessToken();
+    const verify = await monnify.verifyPayment(
+      transaction.transactionReference,
+      token
+    );
+
+    if (verify.paymentStatus === "PAID") {
+      // const transaction = await transactionModel.findOne({ tx_ref: tx_ref });
+
+      // if (!transaction) {
+      //   return res.status(400).send({
+      //     success: false,
+      //     message: "Transaction not found",
+      //   });
+      // }
 
       if (transaction.status === "successful") {
         return res.status(400).send({
@@ -158,17 +190,45 @@ module.exports = {
         },
         message: "Transaction Successful",
       });
+    } else if (verify.paymentStatus === "PENDING") {
+      transaction.status = verify.paymentStatus;
+      await transaction.save();
+      return res.status(200).send({
+        success: true,
+        data: {
+          transaction,
+        },
+        message: "Transaction Pending",
+      });
+    } else if (verify.paymentStatus === "EXPIRED") {
+      transaction.status = verify.paymentStatus;
+      await transaction.save();
+      return res.status(200).send({
+        success: true,
+        data: {
+          transaction,
+        },
+        message: "Transaction Expired",
+      });
     } else {
+      transaction.status = verify.paymentStatus;
+      await transaction.save();
       return res.status(400).send({
         success: false,
         message: "Transaction was not successful",
+        errMessage: verify,
       });
     }
   }),
 
   // Withdraw from wallet
   postWithdrawFromWalletController: asyncHandler(async (req, res, next) => {
-    const { amount, bankCode, accountNumber } = req.body;
+    const {
+      amount,
+      destinationBankCode,
+      destinationAccountNumber,
+      destinationAccountName,
+    } = req.body;
 
     // const body = {...req.body };
 
@@ -200,23 +260,26 @@ module.exports = {
     }
 
     // withdraw money to user
-    const payload = {
-      account_bank: bankCode,
-      account_number: accountNumber,
-      amount: amount,
-      narration: "Withdrawal from CMG.co wallet",
-      currency: "NGN",
-      callback_url: "https://cmg-three.vercel.app/",
-      debit_currency: "NGN",
-    };
+    // const payload = {
+    //   account_bank: bankCode,
+    //   account_number: accountNumber,
+    //   amount: amount,
+    //   narration: "Withdrawal from CMG.co wallet",
+    //   currency: "NGN",
+    //   callback_url: "https://cmg-three.vercel.app/",
+    //   debit_currency: "NGN",
+    // };
 
-    const transfer = await FLW_services.transferMoney(payload);
-    console.log(
-      "🚀 ~ file: utils.controller.js:202 ~ postWithdrawFromWalletController:asyncHandler ~ transfer:",
-      transfer
-    );
+    // const transfer = await FLW_services.transferMoney(payload);
+    // console.log(
+    //   "🚀 ~ file: utils.controller.js:202 ~ postWithdrawFromWalletController:asyncHandler ~ transfer:",
+    //   transfer
+    // );
 
-    if (!transfer) {
+    const token = await monnify.obtainAccessToken();
+    const withdrawMoney = await monnify.withdraw(req.body, token);
+
+    if (withdrawMoney.status !== "SUCCESS") {
       return res.status(400).send({
         success: false,
         message: "Transfer was not successful.",
@@ -498,19 +561,27 @@ module.exports = {
 
   // Cashout voucher
   postCashoutVoucherController: asyncHandler(async (req, res, next) => {
-    const { fullName, email, voucherCode, bankCode, accountNumber } = req.body;
+    const {
+      fullName,
+      email,
+      voucherCode,
+      amount,
+      destinationBankCode,
+      destinationAccountNumber,
+      destinationAccountName,
+    } = req.body;
 
-    const body = { ...req.body };
+    // const body = { ...req.body };
 
-    // Run Hapi/Joi validation
-    const { error } = await cashoutVoucherValidation.validateAsync(body);
-    if (error) {
-      return res.status(400).send({
-        success: false,
-        message: "Validation failed",
-        errMessage: error.details[0].message,
-      });
-    }
+    // // Run Hapi/Joi validation
+    // const { error } = await cashoutVoucherValidation.validateAsync(body);
+    // if (error) {
+    //   return res.status(400).send({
+    //     success: false,
+    //     message: "Validation failed",
+    //     errMessage: error.details[0].message,
+    //   });
+    // }
 
     // find voucher using voucherCode
     const foundVoucher = await voucherModel.findOne({
@@ -611,32 +682,42 @@ module.exports = {
       ),
     };
 
-    const transREf = await tx_ref.get_Tx_Ref();
-    console.log(
-      "🚀 ~ file: utils.controller.js:417 ~ postCashoutVoucherController:asyncHandler ~ transREf:",
-      transREf
-    );
+    // const transREf = await tx_ref.get_Tx_Ref();
+    // console.log(
+    //   "🚀 ~ file: utils.controller.js:417 ~ postCashoutVoucherController:asyncHandler ~ transREf:",
+    //   transREf
+    // );
 
     // withdraw money to <<fullName>>
-    const payload = {
-      account_bank: bankCode,
-      account_number: accountNumber,
-      amount: foundVoucher.amountPerVoucher,
-      narration: "Voucher Redemption at CMG.co",
-      currency: "NGN",
-      // reference: transREf,
-      // reference: "dfs23fhr7ntg0293039_PMCK",
-      callback_url: "https://cmg-three.vercel.app/",
-      debit_currency: "NGN",
+    // const payload = {
+    //   account_bank: bankCode,
+    //   account_number: accountNumber,
+    //   amount: foundVoucher.amountPerVoucher,
+    //   narration: "Voucher Redemption at CMG.co",
+    //   currency: "NGN",
+    //   // reference: transREf,
+    //   // reference: "dfs23fhr7ntg0293039_PMCK",
+    //   callback_url: "https://cmg-three.vercel.app/",
+    //   debit_currency: "NGN",
+    // };
+
+    // const transfer = await FLW_services.transferMoney(payload);
+    // console.log(
+    //   "🚀 ~ file: utils.controller.js:499 ~ postCashoutVoucherController:asyncHandler ~ transfer:",
+    //   transfer
+    // );
+
+    payload = {
+      amount,
+      destinationBankCode,
+      destinationAccountNumber,
+      destinationAccountName,
     };
 
-    const transfer = await FLW_services.transferMoney(payload);
-    console.log(
-      "🚀 ~ file: utils.controller.js:499 ~ postCashoutVoucherController:asyncHandler ~ transfer:",
-      transfer
-    );
+    const token = await monnify.obtainAccessToken();
+    const withdrawMoney = await monnify.withdraw(payload, token);
 
-    if (!transfer) {
+    if (withdrawMoney.status !== "SUCCESS") {
       return res.status(400).send({
         success: false,
         message: "Transfer was not successful.",
@@ -678,15 +759,23 @@ module.exports = {
     };
 
     try {
-      const response = await axios.get(`${baseURL}/banks/NG`, options);
+      const token = await monnify.obtainAccessToken();
+      const banks = await monnify.getBanks(token);
       console.log(
-        "🚀 ~ file: utils.controller.js:470 ~ getAllBanksController:asyncHandler ~ response:",
-        response
+        "🚀 ~ file: utils.controller.js:685 ~ getAllBanksController:asyncHandler ~ banks:",
+        banks
       );
+
+      // const response = await axios.get(`${baseURL}/banks/NG`, options);
+      // console.log(
+      //   "🚀 ~ file: utils.controller.js:470 ~ getAllBanksController:asyncHandler ~ response:",
+      //   response
+      // );
       return res.status(200).send({
         success: true,
         data: {
-          banks: response.data.data,
+          banks: banks,
+          // banks: response.data.data,
         },
         message: "Banks fetched successflly",
       });
