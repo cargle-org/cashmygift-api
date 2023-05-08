@@ -682,7 +682,7 @@ module.exports = {
       ),
     };
 
-    // const transREf = await tx_ref.get_Tx_Ref();
+    const transREf = await tx_ref.get_Tx_Ref();
     // console.log(
     //   "🚀 ~ file: utils.controller.js:417 ~ postCashoutVoucherController:asyncHandler ~ transREf:",
     //   transREf
@@ -708,14 +708,19 @@ module.exports = {
     // );
 
     payload = {
-      amount,
+      amount: foundVoucher.amountPerVoucher,
       destinationBankCode,
       destinationAccountNumber,
       destinationAccountName,
+      tx_ref: transREf,
     };
 
     const token = await monnify.obtainAccessToken();
     const withdrawMoney = await monnify.withdraw(payload, token);
+    console.log(
+      "🚀 ~ file: utils.controller.js:720 ~ postCashoutVoucherController:asyncHandler ~ withdrawMoney:",
+      withdrawMoney
+    );
 
     if (withdrawMoney.status !== "SUCCESS") {
       return res.status(400).send({
@@ -733,8 +738,8 @@ module.exports = {
       fullName,
       email,
       claimedVoucherCode: voucherCode,
-      bankCode,
-      accountNumber,
+      bankCode: destinationBankCode,
+      accountNumber: destinationAccountNumber,
     });
     await winner.save();
 
@@ -742,7 +747,8 @@ module.exports = {
       success: true,
       data: {
         voucher: foundVoucher,
-        transfer,
+        winner,
+        details: withdrawMoney,
       },
       message: "Claimed Coupon from Voucher successfully.",
     });
