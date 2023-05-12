@@ -59,11 +59,11 @@ const transferMoney = async(payload) => {
         return response.data.data;
     } catch (err) {
         console.log("Transfer error: ", err.response);
-        // return res.status(400).send({
-        //   success: false,
-        //   message: "Error, couldn't process transfer",
-        //   errMessage: err.message,
-        // });
+        return res.status(400).send({
+          success: false,
+          message: "Error, couldn't process transfer",
+          errMessage: err.message,
+        });
     }
 
     // try {

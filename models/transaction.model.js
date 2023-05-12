@@ -9,16 +9,16 @@ const TransactionSchema = new Schema(
       ref: "User",
       required: true,
     },
-    paymentReference: {
+    tx_ref: {
       type: String,
       required: true,
       unique: true,
     },
-    transactionReference: {
-      type: String,
-      required: true,
-      unique: true,
-    },
+    // transactionReference: {
+    //   type: String,
+    //   required: true,
+    //   unique: true,
+    // },
     flw_ref: {
       type: String,
     },
