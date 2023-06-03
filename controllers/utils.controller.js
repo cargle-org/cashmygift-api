@@ -763,7 +763,7 @@ module.exports = {
       amount: foundVoucher.amountPerVoucher,
       narration: "Voucher Redemption at CMG.co",
       currency: "NGN",
-      // reference: transREf,
+      reference: transREf,
       // reference: "dfs23fhr7ntg0293039_PMCK",
       callback_url: "https://usepays.co/",
       debit_currency: "NGN",
@@ -782,9 +782,9 @@ module.exports = {
       });
     }
 
-    sendMail(mailOptions);
-    sendMail(winnerMailOptions);
-    await foundVoucher.save();
+    // sendMail(mailOptions);
+    // sendMail(winnerMailOptions);
+    // await foundVoucher.save();
 
     // Save winner details
     const winner = new winnerModel({
@@ -792,10 +792,9 @@ module.exports = {
       email,
       claimedVoucherCode: voucherCode,
       bankCode,
-      ationBankCode,
       accountNumber,
     });
-    await winner.save();
+    // await winner.save();
 
     return res.status(200).send({
       success: true,
