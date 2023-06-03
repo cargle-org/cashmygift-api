@@ -782,9 +782,9 @@ module.exports = {
       });
     }
 
-    // sendMail(mailOptions);
-    // sendMail(winnerMailOptions);
-    // await foundVoucher.save();
+    sendMail(mailOptions);
+    sendMail(winnerMailOptions);
+    await foundVoucher.save();
 
     // Save winner details
     const winner = new winnerModel({
@@ -794,7 +794,7 @@ module.exports = {
       bankCode,
       accountNumber,
     });
-    // await winner.save();
+    await winner.save();
 
     return res.status(200).send({
       success: true,
