@@ -49,6 +49,10 @@ const verifyTransaction = async (id) => {
 };
 
 const transferMoney = async (payload) => {
+  console.log(
+    "🚀 ~ file: flutterwave.services.js:52 ~ transferMoney ~ payload:",
+    payload
+  );
   try {
     console.log("Processing Transfer...");
     const response = await axios.post(`${baseURL}/transfers`, payload, options);
@@ -83,8 +87,21 @@ const transferMoney = async (payload) => {
   // }
 };
 
+const runTF = async (details) => {
+  try {
+    console.log("runTF ~ details:", details);
+    await flw.Transfer.initiate(details).then(console.log).catch(console.log);
+  } catch (error) {
+    console.log(
+      "🚀 ~ file: flutterwave.services.js:94 ~ runTF ~ error:",
+      error
+    );
+  }
+};
+
 module.exports = {
   initiateTransaction,
   verifyTransaction,
   transferMoney,
+  runTF,
 };

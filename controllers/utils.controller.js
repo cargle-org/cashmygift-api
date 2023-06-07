@@ -635,6 +635,167 @@ module.exports = {
     }
   }),
 
+  // // Cashout voucher
+  // postCashoutVoucherController: asyncHandler(async (req, res, next) => {
+  //   const { fullName, voucherCode, bankCode, accountNumber } = req.body;
+
+  //   const body = { ...req.body };
+
+  //   // Run Hapi/Joi validation
+  //   const { error } = await cashoutVoucherValidation.validateAsync(body);
+  //   if (error) {
+  //     return res.status(400).send({
+  //       success: false,
+  //       message: "Validation failed",
+  //       errMessage: error.details[0].message,
+  //     });
+  //   }
+
+  //   // find voucher using voucherCode
+  //   const foundVoucher = await voucherModel.findOne({
+  //     voucherKey: voucherCode.slice(0, 5),
+  //   });
+  //   console.log(
+  //     "🚀 ~ file: utils.controller.js:348 ~ postCashoutVoucherController:asyncHandler ~ foundVoucher:",
+  //     foundVoucher
+  //   );
+
+  //   if (!foundVoucher) {
+  //     return res.status(400).send({
+  //       success: false,
+  //       message: "This coupon does not exist, please try another.",
+  //     });
+  //   }
+
+  //   let matchingCoupon;
+
+  //   // search voucher coupons for matching code
+  //   foundVoucher.voucherCoupons.map((item) => {
+  //     if (item.couponCode === voucherCode) {
+  //       if (item.status === "cashed") {
+  //         return res.status(400).send({
+  //           success: false,
+  //           message: "This coupon has already been claimed, please try another",
+  //         });
+  //       }
+  //       matchingCoupon = item;
+  //       // remove coupon from array if found so we can add it later after editing
+  //       // foundVoucher.voucherCoupons.pop(item);
+  //     }
+  //   });
+
+  //   if (!matchingCoupon) {
+  //     return res.status(400).send({
+  //       success: false,
+  //       message: "This coupon does not exist, please try another.",
+  //     });
+  //   }
+
+  //   const time = moment().format("yy-MM-DD hh:mm:ss");
+
+  //   // Edit coupon details then add to array
+  //   matchingCoupon.status = "cashed";
+  //   matchingCoupon.cashedBy = fullName;
+  //   matchingCoupon.cashedDate = time.split(" ")[0];
+  //   matchingCoupon.cashedTime = time.split(" ")[1];
+
+  //   // foundVoucher.voucherCoupons.push(matchingCoupon);
+
+  //   const index = foundVoucher.voucherCoupons.indexOf(matchingCoupon);
+  //   console.log(
+  //     "🚀 ~ file: utils.controller.js:475 ~ postCashoutVoucherController:asyncHandler ~ index:",
+  //     index
+  //   );
+
+  //   foundVoucher.voucherCoupons.splice(index, 1, matchingCoupon);
+
+  //   // Add every other needed calculation stuff then save
+  //   foundVoucher.totalCashedAmount =
+  //     parseInt(foundVoucher.totalCashedAmount) +
+  //     parseInt(foundVoucher.amountPerVoucher);
+
+  //   foundVoucher.vouchersCashed = parseInt(foundVoucher.vouchersCashed) + 1;
+  //   foundVoucher.cashedPercentage = (
+  //     (parseInt(foundVoucher.vouchersCashed) /
+  //       parseInt(foundVoucher.totalNumberOfVouchers)) *
+  //     (100 / 1)
+  //   ).toFixed(2);
+
+  //   // Send mail to Voucher creator that <<fullName>> just cashed their voucher
+  //   // find user Email
+  //   const creator = await userModel.findOne({ _id: foundVoucher.userId });
+
+  //   // Send email to Voucher creator
+  //   const mailOptions = {
+  //     to: creator.email,
+  //     subject: "Voucher Claim Mail",
+  //     html: voucherClaimMail(
+  //       fullName,
+  //       voucherCode,
+  //       creator.firstName,
+  //       foundVoucher.title,
+  //       foundVoucher.amountPerVoucher
+  //     ),
+  //   };
+
+  //   // Send email to Voucher winner
+  //   const winnerMailOptions = {
+  //     to: creator.email,
+  //     subject: "Voucher Claim Mail",
+  //     html: winnerVoucherClaimMail(
+  //       fullName,
+  //       voucherCode,
+  //       foundVoucher.title,
+  //       foundVoucher.amountPerVoucher
+  //     ),
+  //   };
+
+  //   const transREf = await tx_ref.get_Tx_Ref();
+  //   console.log(
+  //     "🚀 ~ file: utils.controller.js:417 ~ postCashoutVoucherController:asyncHandler ~ transREf:",
+  //     transREf
+  //   );
+
+  //   // withdraw money to <<fullName>>
+  //   const payload = {
+  //     account_bank: bankCode,
+  //     account_number: accountNumber,
+  //     amount: foundVoucher.amountPerVoucher,
+  //     narration: "Voucher Redemption at CMG.co",
+  //     currency: "NGN",
+  //     // reference: transREf,
+  //     // reference: "dfs23fhr7ntg0293039_PMCK",
+  //     callback_url: "https://cmg-three.vercel.app/",
+  //     debit_currency: "NGN",
+  //   };
+
+  //   const transfer = await FLW_services.transferMoney(payload);
+  //   console.log(
+  //     "🚀 ~ file: utils.controller.js:499 ~ postCashoutVoucherController:asyncHandler ~ transfer:",
+  //     transfer
+  //   );
+
+  //   if (!transfer) {
+  //     return res.status(400).send({
+  //       success: false,
+  //       message: "Transfer was not successful.",
+  //     });
+  //   }
+
+  //   // sendMail(mailOptions);
+  //   // sendMail(winnerMailOptions);
+  //   // await foundVoucher.save();
+
+  //   return res.status(200).send({
+  //     success: true,
+  //     data: {
+  //       voucher: foundVoucher,
+  //       transfer,
+  //     },
+  //     message: "Claimed Coupon from Voucher successfully.",
+  //   });
+  // }),
+
   // Cashout voucher
   postCashoutVoucherController: asyncHandler(async (req, res, next) => {
     const { fullName, email, voucherCode, bankCode, accountNumber } = req.body;
@@ -763,15 +924,31 @@ module.exports = {
       amount: foundVoucher.amountPerVoucher,
       narration: "Voucher Redemption at CMG.co",
       currency: "NGN",
-      reference: transREf,
+      // reference: transREf,
       // reference: "dfs23fhr7ntg0293039_PMCK",
       callback_url: "https://usepays.co/",
       debit_currency: "NGN",
     };
-
-    const transfer = await FLW_services.transferMoney(payload);
     console.log(
-      "🚀 ~ file: utils.controller.js:499 ~ postCashoutVoucherController:asyncHandler ~ transfer:",
+      "🚀 ~ file: utils.controller.js:932 ~ postCashoutVoucherController:asyncHandler ~ payload:",
+      payload
+    );
+
+    const details = {
+      // account_bank: "044",
+      // account_number: "0768010549",
+      account_bank: bankCode,
+      account_number: accountNumber,
+      amount: 100,
+      currency: "NGN",
+      narration: "Payment for things",
+      // reference: generateTransactionReference(),
+    };
+
+    // const transfer = await FLW_services.transferMoney(payload);
+    const transfer = await FLW_services.runTF(details);
+    console.log(
+      "🚀 ~ file: utils.controller.js:934 ~ postCashoutVoucherController:asyncHandler ~ transfer:",
       transfer
     );
 
@@ -782,9 +959,9 @@ module.exports = {
       });
     }
 
-    sendMail(mailOptions);
-    sendMail(winnerMailOptions);
-    await foundVoucher.save();
+    // sendMail(mailOptions);
+    // sendMail(winnerMailOptions);
+    // await foundVoucher.save();
 
     // Save winner details
     const winner = new winnerModel({
@@ -794,7 +971,7 @@ module.exports = {
       bankCode,
       accountNumber,
     });
-    await winner.save();
+    // await winner.save();
 
     return res.status(200).send({
       success: true,
