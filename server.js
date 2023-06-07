@@ -5,10 +5,11 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const cors = require("cors");
 
+
 // ENV Variables
 const port = process.env.PORT;
-// const MONGODB_URI = process.env.MDB_COMPASS;
-const MONGODB_URI = process.env.MDB_ATLAS;
+const MONGODB_URI = process.env.MDB_COMPASS;
+// const MONGODB_URI = process.env.MDB_ATLAS;
 
 // Don't ask
 const app = express();

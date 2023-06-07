@@ -16,7 +16,7 @@
         "cloudinary": "^1.29.0",
         "cors": "^2.8.5",
         "datauri": "^4.1.0",
-        "dotenv": "^16.0.0",
+        "dotenv": "^16.1.4",
         "express": "^4.17.3",
         "flutterwave-node-v3": "^1.0.9",
         "jsonwebtoken": "^8.5.1",
