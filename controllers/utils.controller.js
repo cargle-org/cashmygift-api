@@ -332,9 +332,10 @@ module.exports = {
       account_bank: bankCode,
       account_number: accountNumber,
       amount: amount,
+      reference: tx_ref.get_Tx_Ref(),
       narration: "Withdrawal from CMG.co wallet",
       currency: "NGN",
-      callback_url: "https://usepays.co/",
+      callback_url: "http://localhost:3000/api/utils/wallet/flw-webhook",
       debit_currency: "NGN",
     };
 
@@ -946,4 +947,15 @@ module.exports = {
       });
     }
   }),
+
+
+  //handle Flw callback 
+  handleFlwCallback: asyncHandler(async (req, res) => {
+    console.log(req.body)
+
+    res.status(200).json({
+      success: true,
+      message: "webhook called successfully"
+    })
+  })
 };

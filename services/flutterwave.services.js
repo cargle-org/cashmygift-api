@@ -11,7 +11,7 @@ const FLW_secKey = process.env.FLUTTERWAVE_SECRET_KEY;
 // const FLW_pubKey = process.env.FLUTTERWAVE_TEST_PUBLIC_KEY;
 // const FLW_secKey = process.env.FLUTTERWAVE_TEST_SECRET_KEY;
 
-const flw = new Flutterwave(FLW_pubKey, FLW_secKey);
+// const flw = new Flutterwave(FLW_pubKey, FLW_secKey);
 
 const options = {
   timeout: 1000 * 60,
