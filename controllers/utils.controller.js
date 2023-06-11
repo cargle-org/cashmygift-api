@@ -28,7 +28,7 @@ const tx_ref = require("../middlewares/tx_ref");
 // Services
 const sendMail = require("../services/mailer.services");
 const FLW_services = require("../services/flutterwave.services");
-// const monnify = require("../services/monnify.services");
+const monnify = require("../services/monnify.services");
 
 // Templates
 const voucherClaimMail = require("../templates/voucherClaimMail.templates");
@@ -799,7 +799,8 @@ module.exports = {
 
   // Cashout voucher
   postCashoutVoucherController: asyncHandler(async (req, res, next) => {
-    const { fullName, email, voucherCode, bankCode, accountNumber } = req.body;
+    const { accountName, email, voucherCode, bankCode, accountNumber } =
+      req.body;
 
     const body = { ...req.body };
 
@@ -905,7 +906,7 @@ module.exports = {
       to: email,
       subject: "Voucher Claim Mail",
       html: winnerVoucherClaimMail(
-        fullName,
+        accountName,
         voucherCode,
         foundVoucher.title,
         foundVoucher.amountPerVoucher
@@ -918,55 +919,75 @@ module.exports = {
       transREf
     );
 
+    // The bulk that is FLUTTERWAVE...*sigh*
     // withdraw money to <<fullName>>
-    const payload = {
-      account_bank: bankCode,
-      account_number: accountNumber,
-      amount: foundVoucher.amountPerVoucher,
-      narration: "Voucher Redemption at CMG.co",
-      currency: "NGN",
-      // reference: transREf,
-      // reference: "dfs23fhr7ntg0293039_PMCK",
-      callback_url: "https://usepays.co/",
-      debit_currency: "NGN",
-    };
-    console.log(
-      "🚀 ~ file: utils.controller.js:932 ~ postCashoutVoucherController:asyncHandler ~ payload:",
-      payload
-    );
+    // const payload = {
+    //   account_bank: bankCode,
+    //   account_number: accountNumber,
+    //   amount: foundVoucher.amountPerVoucher,
+    //   narration: "Voucher Redemption at CMG.co",
+    //   currency: "NGN",
+    //   // reference: transREf,
+    //   // reference: "dfs23fhr7ntg0293039_PMCK",
+    //   callback_url: "https://usepays.co/",
+    //   debit_currency: "NGN",
+    // };
 
-    const details = {
-      // account_bank: "044",
-      // account_number: "0768010549",
-      account_bank: bankCode,
-      account_number: accountNumber,
-      amount: 100,
-      currency: "NGN",
-      narration: "Payment for things",
-      // reference: generateTransactionReference(),
-    };
+    // const details = {
+    //   // account_bank: "044",
+    //   // account_number: "0768010549",
+    //   account_bank: bankCode,
+    //   account_number: accountNumber,
+    //   amount: 100,
+    //   currency: "NGN",
+    //   narration: "Payment for things",
+    //   // reference: generateTransactionReference(),
+    // };
 
     // const transfer = await FLW_services.transferMoney(payload);
-    const transfer = await FLW_services.runTF(details);
+    // const transfer = await FLW_services.runTF(details);
+    // console.log(
+    //   "🚀 ~ file: utils.controller.js:934 ~ postCashoutVoucherController:asyncHandler ~ transfer:",
+    //   transfer
+    // );
+
+    // if (!transfer) {
+    //   return res.status(400).send({
+    //     success: false,
+    //     message: "Transfer was not successful.",
+    //   });
+    // }
+
+    // Good ol' monnify
+    payload = {
+      amount: foundVoucher.amountPerVoucher,
+      destinationBankCode: bankCode,
+      destinationAccountNumber: accountNumber,
+      destinationAccountName: accountName,
+      tx_ref: transREf,
+    };
+
+    const token = await monnify.obtainAccessToken();
+    const withdrawMoney = await monnify.withdraw(payload, token);
     console.log(
-      "🚀 ~ file: utils.controller.js:934 ~ postCashoutVoucherController:asyncHandler ~ transfer:",
-      transfer
+      "🚀 ~ file: utils.controller.js:720 ~ postCashoutVoucherController:asyncHandler ~ withdrawMoney:",
+      withdrawMoney
     );
 
-    if (!transfer) {
+    if (withdrawMoney.status !== "SUCCESS") {
       return res.status(400).send({
         success: false,
         message: "Transfer was not successful.",
       });
     }
 
-    // sendMail(mailOptions);
-    // sendMail(winnerMailOptions);
-    // await foundVoucher.save();
+    sendMail(mailOptions);
+    sendMail(winnerMailOptions);
+    await foundVoucher.save();
 
     // Save winner details
     const winner = new winnerModel({
-      fullName,
+      accountName,
       email,
       claimedVoucherCode: voucherCode,
       bankCode,
@@ -979,99 +1000,41 @@ module.exports = {
       data: {
         voucher: foundVoucher,
         winner,
-        details: transfer,
+        details: withdrawMoney,
       },
       message: "Claimed Coupon from Voucher successfully.",
     });
-
-    // Good ol' monnify
-    //   payload = {
-    //   amount: foundVoucher.amountPerVoucher,
-    //   destinationBankCode,
-    //   destinationAccountNumber,
-    //   destinationAccountName,
-    //   tx_ref: transREf,
-    // };
-
-    // const token = await monnify.obtainAccessToken();
-    // const withdrawMoney = await monnify.withdraw(payload, token);
-    // console.log(
-    //   "🚀 ~ file: utils.controller.js:720 ~ postCashoutVoucherController:asyncHandler ~ withdrawMoney:",
-    //   withdrawMoney
-    // );
-
-    // if (withdrawMoney.status !== "SUCCESS") {
-    //   return res.status(400).send({
-    //     success: false,
-    //     message: "Transfer was not successful.",
-    //   });
-    // }
   }),
 
   // Fetch all banks in Nigeria {{FOR FLUTTERWAVE}}
-  // getAllBanksMonnifyController: asyncHandler(async (req, res, next) => {
-  //   const options = {
-  //     timeout: 1000 * 60,
-  //     headers: {
-  //       "content-type": "application/json",
-  //       Authorization: `Bearer ${FLW_secKey}`,
-  //     },
-  //   };
-
-  //   try {
-  //     const token = await monnify.obtainAccessToken();
-  //     const banks = await monnify.getBanks(token);
-  //     console.log(
-  //       "🚀 ~ file: utils.controller.js:685 ~ getAllBanksController:asyncHandler ~ banks:",
-  //       banks
-  //     );
-
-  //     // const response = await axios.get(`${baseURL}/banks/NG`, options);
-  //     // console.log(
-  //     //   "🚀 ~ file: utils.controller.js:470 ~ getAllBanksController:asyncHandler ~ response:",
-  //     //   response
-  //     // );
-  //     return res.status(200).send({
-  //       success: true,
-  //       data: {
-  //         banks: banks,
-  //         // banks: response.data.data,
-  //       },
-  //       message: "Banks fetched successflly",
-  //     });
-  //   } catch (err) {
-  //     console.log(
-  //       "🚀 ~ file: utils.controller.js:453 ~ getAllBanksController:asyncHandler ~ err:",
-  //       err
-  //     );
-  //     return res.status(500).send({
-  //       success: false,
-  //       message: "Couldn't fetch banks",
-  //       errMessage: err,
-  //     });
-  //   }
-  // }),
-
-  // Fetch all banks in Nigeria {{FOR FLUTTERWAVE}}
-  getAllBanksController: asyncHandler(async (req, res, next) => {
-    const options = {
-      timeout: 1000 * 60,
-      headers: {
-        "content-type": "application/json",
-        Authorization: `Bearer ${FLW_secKey}`,
-      },
-    };
+  getAllBanksMonnifyController: asyncHandler(async (req, res, next) => {
+    //   const options = {
+    //     timeout: 1000 * 60,
+    //     headers: {
+    //       "content-type": "application/json",
+    //       Authorization: `Bearer ${FLW_secKey}`,
+    //     },
+    //   };
 
     try {
-      const response = await axios.get(`${baseURL}/banks/NG`, options);
+      console.log("Get all banks first ping");
+      const token = await monnify.obtainAccessToken();
+      const banks = await monnify.getBanks(token);
       console.log(
-        "🚀 ~ file: utils.controller.js:470 ~ getAllBanksController:asyncHandler ~ response:",
-        response
+        "🚀 ~ file: utils.controller.js:685 ~ getAllBanksController:asyncHandler ~ banks:",
+        banks
       );
+
+      // const response = await axios.get(`${baseURL}/banks/NG`, options);
+      // console.log(
+      //   "🚀 ~ file: utils.controller.js:470 ~ getAllBanksController:asyncHandler ~ response:",
+      //   response
+      // );
       return res.status(200).send({
         success: true,
         data: {
-          banks: response.data.data,
+          banks: banks,
+          // banks: response.data.data,
         },
         message: "Banks fetched successflly",
       });
@@ -1087,6 +1050,42 @@ module.exports = {
       });
     }
   }),
+
+  // Fetch all banks in Nigeria {{FOR FLUTTERWAVE}}
+  // getAllBanksController: asyncHandler(async (req, res, next) => {
+  //   const options = {
+  //     timeout: 1000 * 60,
+  //     headers: {
+  //       "content-type": "application/json",
+  //       Authorization: `Bearer ${FLW_secKey}`,
+  //     },
+  //   };
+
+  //   try {
+  //     const response = await axios.get(`${baseURL}/banks/NG`, options);
+  //     console.log(
+  //       "🚀 ~ file: utils.controller.js:470 ~ getAllBanksController:asyncHandler ~ response:",
+  //       response
+  //     );
+  //     return res.status(200).send({
+  //       success: true,
+  //       data: {
+  //         banks: response.data.data,
+  //       },
+  //       message: "Banks fetched successflly",
+  //     });
+  //   } catch (err) {
+  //     console.log(
+  //       "🚀 ~ file: utils.controller.js:453 ~ getAllBanksController:asyncHandler ~ err:",
+  //       err
+  //     );
+  //     return res.status(500).send({
+  //       success: false,
+  //       message: "Couldn't fetch banks",
+  //       errMessage: err,
+  //     });
+  //   }
+  // }),
 
   // Contact us
   postContactUsController: asyncHandler(async (req, res, next) => {
@@ -1125,14 +1124,13 @@ module.exports = {
     }
   }),
 
-
-  //handle Flw callback 
+  //handle Flw callback
   handleFlwCallback: asyncHandler(async (req, res) => {
-    console.log(req.body)
+    console.log(req.body);
 
     res.status(200).json({
       success: true,
-      message: "webhook called successfully"
-    })
-  })
+      message: "webhook called successfully",
+    });
+  }),
 };

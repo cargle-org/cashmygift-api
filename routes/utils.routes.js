@@ -29,11 +29,8 @@ router.post(
   authenticate,
   utils.postWithdrawFromWalletController
 );
-router.post(
-  "/wallet/flw-webhook",
-  utils.handleFlwCallback
-);
-router.get("/banks/all", utils.getAllBanksController);
+router.post("/wallet/flw-webhook", utils.handleFlwCallback);
+router.get("/banks/all", utils.getAllBanksMonnifyController);
 router.post("/contact-us", utils.postContactUsController);
 
 module.exports = router;

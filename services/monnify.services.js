@@ -29,6 +29,7 @@ exports.obtainAccessToken = asyncHandler(async (payload) => {
 });
 
 exports.getBanks = asyncHandler(async (accessToken) => {
+  console.log("🚀 Fetching banks");
   const response = await axios.get(
     `${process.env.MONNIFY_BASE_URL}/api/v1/banks`,
     {
