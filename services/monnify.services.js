@@ -125,22 +125,33 @@ exports.withdraw = async (details, accessToken) => {
     sourceAccountNumber: process.env.MONNIFY_WALLET_ACCOUNT_NUMBER,
     destinationAccountName: details.destinationAccountName,
   };
-  const response = await axios.post(
-    `${process.env.MONNIFY_BASE_URL}/api/v2/disbursements/single`,
-    requestBody,
-    {
-      timeout: 1000 * 60,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
   console.log(
-    "🚀 ~ file: monnify.services.js:138 ~ exports.withdraw= ~ response:",
-    response
+    "🚀 ~ file: monnify.services.js:128 ~ exports.withdraw= ~ requestBody:",
+    requestBody
   );
-  return response.data.responseBody;
+  try {
+    const response = await axios.post(
+      `${process.env.MONNIFY_BASE_URL}/api/v2/disbursements/single`,
+      requestBody,
+      {
+        // timeout: 1000 * 60,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    console.log(
+      "🚀 ~ file: monnify.services.js:138 ~ exports.withdraw= ~ response:",
+      response.data
+    );
+    return response.data.responseBody;
+  } catch (error) {
+    console.log(
+      "🚀 ~ file: monnify.services.js:146 ~ exports.withdraw= ~ error:",
+      error
+    );
+  }
 };
 
 exports.validateBankAccount = asyncHandler(

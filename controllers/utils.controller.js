@@ -298,6 +298,8 @@ module.exports = {
   postWithdrawFromWalletController: asyncHandler(async (req, res, next) => {
     const { amount, bankCode, accountNumber } = req.body;
 
+    const transREf = await tx_ref.get_Tx_Ref();
+
     // const body = {...req.body };
 
     // // Run Hapi/Joi validation
@@ -328,21 +330,37 @@ module.exports = {
     }
 
     // withdraw money to user
-    const payload = {
-      account_bank: bankCode,
-      account_number: accountNumber,
+    // const payload = {
+    //   account_bank: bankCode,
+    //   account_number: accountNumber,
+    //   amount: amount,
+    //   reference: tx_ref.get_Tx_Ref(),
+    //   narration: "Withdrawal from CMG.co wallet",
+    //   currency: "NGN",
+    //   callback_url: "http://localhost:3000/api/utils/wallet/flw-webhook",
+    //   debit_currency: "NGN",
+    // };
+
+    // const transfer = await FLW_services.transferMoney(payload);
+    // console.log(
+    //   "🚀 ~ file: utils.controller.js:339 ~ postWithdrawFromWalletController:asyncHandler ~ transfer:",
+    //   transfer
+    // );
+
+    // Good ol' monnify
+    payload = {
       amount: amount,
-      reference: tx_ref.get_Tx_Ref(),
-      narration: "Withdrawal from CMG.co wallet",
-      currency: "NGN",
-      callback_url: "http://localhost:3000/api/utils/wallet/flw-webhook",
-      debit_currency: "NGN",
+      destinationBankCode: bankCode,
+      destinationAccountNumber: accountNumber,
+      destinationAccountName: user.name,
+      tx_ref: transREf,
     };
 
-    const transfer = await FLW_services.transferMoney(payload);
+    const token = await monnify.obtainAccessToken();
+    const withdrawToWallet = await monnify.withdraw(payload, token);
     console.log(
-      "🚀 ~ file: utils.controller.js:339 ~ postWithdrawFromWalletController:asyncHandler ~ transfer:",
-      transfer
+      "🚀 ~ file: utils.controller.js:359 ~ postWithdrawFromWalletController:asyncHandler ~ withdrawToWallet:",
+      withdrawToWallet
     );
 
     // remove money from dashboard wallet to it doesn't still appear
@@ -351,7 +369,7 @@ module.exports = {
 
     return res.status(200).send({
       success: true,
-      message: `Successfully withdrawn ${amount} from your CMG wallet`,
+      message: `Successfully withdrawn ${amount} from your 'pays' wallet`,
     });
 
     // Good ol' monnify
@@ -799,8 +817,7 @@ module.exports = {
 
   // Cashout voucher
   postCashoutVoucherController: asyncHandler(async (req, res, next) => {
-    const { accountName, email, voucherCode, bankCode, accountNumber } =
-      req.body;
+    const { fullName, email, voucherCode, bankCode, accountNumber } = req.body;
 
     const body = { ...req.body };
 
@@ -906,7 +923,7 @@ module.exports = {
       to: email,
       subject: "Voucher Claim Mail",
       html: winnerVoucherClaimMail(
-        accountName,
+        fullName,
         voucherCode,
         foundVoucher.title,
         foundVoucher.amountPerVoucher
@@ -963,7 +980,7 @@ module.exports = {
       amount: foundVoucher.amountPerVoucher,
       destinationBankCode: bankCode,
       destinationAccountNumber: accountNumber,
-      destinationAccountName: accountName,
+      destinationAccountName: fullName,
       tx_ref: transREf,
     };
 
@@ -974,7 +991,7 @@ module.exports = {
       withdrawMoney
     );
 
-    if (withdrawMoney.status !== "SUCCESS") {
+    if (withdrawMoney?.status !== "SUCCESS") {
       return res.status(400).send({
         success: false,
         message: "Transfer was not successful.",
@@ -987,13 +1004,13 @@ module.exports = {
 
     // Save winner details
     const winner = new winnerModel({
-      accountName,
+      fullName,
       email,
       claimedVoucherCode: voucherCode,
       bankCode,
       accountNumber,
     });
-    // await winner.save();
+    await winner.save();
 
     return res.status(200).send({
       success: true,
