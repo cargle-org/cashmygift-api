@@ -14,11 +14,11 @@ const TransactionSchema = new Schema(
       required: true,
       unique: true,
     },
-    // transactionReference: {
-    //   type: String,
-    //   required: true,
-    //   unique: true,
-    // },
+    transactionReference: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     flw_ref: {
       type: String,
     },
