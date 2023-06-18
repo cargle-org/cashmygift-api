@@ -105,7 +105,7 @@ module.exports = {
 
     const currency = "NGN";
     const transREf = await tx_ref.get_Tx_Ref();
-    const tx_ref = "" + Math.floor(Math.random() * 1000000000 + 1);
+    // const tx_ref = "" + Math.floor(Math.random() * 1000000000 + 1);
 
     const payload = {
       amount,
@@ -120,6 +120,7 @@ module.exports = {
 
     const transaction = await new transactionModel({
       tx_ref: transREf,
+      paymentReference: makePayment.paymentReference,
       transactionReference: makePayment.transactionReference,
       userId: req.user._id,
       amount,

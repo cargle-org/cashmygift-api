@@ -19,6 +19,9 @@ const TransactionSchema = new Schema(
       required: true,
       unique: true,
     },
+    paymentReference: {
+      type: String,
+    },
     flw_ref: {
       type: String,
     },
