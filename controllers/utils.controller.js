@@ -223,14 +223,14 @@ module.exports = {
     );
 
     if (verify.paymentStatus === "PAID") {
-      const transaction = await transactionModel.findOne({ tx_ref: tx_ref });
+      // const transaction = await transactionModel.findOne({ paymentReference: paymentReference });
 
-      if (!transaction) {
-        return res.status(400).send({
-          success: false,
-          message: "Transaction not found",
-        });
-      }
+      // if (!transaction) {
+      //   return res.status(400).send({
+      //     success: false,
+      //     message: "Transaction not found",
+      //   });
+      // }
 
       if (transaction.status === "successful") {
         return res.status(400).send({
