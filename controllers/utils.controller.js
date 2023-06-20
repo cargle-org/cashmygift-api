@@ -1151,4 +1151,55 @@ module.exports = {
       message: "webhook called successfully",
     });
   }),
+
+  // Get all transactions
+  getAllTransactionsController: asyncHandler(async (req, res) => {
+    const { userId } = req.query;
+
+    const transactions = await transactionModel.find({ userId: userId });
+
+    if (!transactions) {
+      return res.status(400).send({
+        success: false,
+        message: "No transaction found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: transactions,
+      message: "fetched all transactions successfully",
+    });
+  }),
+
+  // Get one transaction
+  getOneTransactionController: asyncHandler(async (req, res) => {
+    const { userId, transactionId } = req.query;
+    console.log(
+      "🚀 ~ file: utils.controller.js:1178 ~ getOneTransactionController:asyncHandler ~ transactionId:",
+      transactionId
+    );
+
+    const transaction = await transactionModel.findOne({
+      _id: transactionId,
+      userId: userId,
+    });
+    console.log(
+      "🚀 ~ file: utils.controller.js:1183 ~ getOneTransactionController:asyncHandler ~ transaction:",
+      transaction
+    );
+
+    if (!transaction) {
+      return res.status(400).send({
+        success: false,
+        message: "Transaction not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: transaction,
+      message: "fetched transaction successfully",
+    });
+  }),
 };
