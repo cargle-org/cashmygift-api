@@ -43,6 +43,17 @@ const TransactionSchema = new Schema(
       required: true,
       defaultValue: "initiated",
     },
+    fundingType: {
+      type: String,
+      default: "normal",
+      enum: ["normal", "crowdFunding"]
+    },
+    name: String,
+    link: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Link",
+    },
+
   },
   { timestamps: true }
 );

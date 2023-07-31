@@ -79,6 +79,7 @@ const userSchema = new Schema(
       type: Number,
       default: 0,
     },
+    linkId: String,
     role: {
       type: String,
       default: "user",

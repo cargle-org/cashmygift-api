@@ -1,7 +1,9 @@
 // Dependecies
 const moment = require("moment");
 const axios = require("axios");
+const { v4: uuidv4 } = require("uuid");
 require("dotenv").config();
+const Validator = require("../validators/validator.index");
 
 // Flutterwave stuff
 const Flutterwave = require("flutterwave-node-v3");
@@ -34,6 +36,8 @@ const monnify = require("../services/monnify.services");
 const voucherClaimMail = require("../templates/voucherClaimMail.templates");
 const winnerVoucherClaimMail = require("../templates/winnerVoucherClaimMail.templates");
 const contactUsMail = require("../templates/contactUsMail.templates");
+const linkModel = require("../models/link.model");
+const ErrorResponse = require("../utils/errorResponse");
 
 module.exports = {
   //   Test API connection
@@ -1202,4 +1206,133 @@ module.exports = {
       message: "fetched transaction successfully",
     });
   }),
+
+  // Crowd Funding
+
+  // @desc    Make Payment via Link
+  // @route   /link/pay
+  // @access  Public
+  postCrowdFundingController: asyncHandler(async (req, res, next) => {
+    const { amount, name, email, link } = req.body;
+    const { error } = await Validator.payToLink.validateAsync(req.body);
+    if (error) {
+      return next(new ErrorResponse(error.message, 400));
+    }
+    const findLink = await linkModel.findOne({ link });
+    if (!findLink) return next(new ErrorResponse("Invalid Link", 404));
+    const user = await userModel.findOne({ linkId: findLink.userLinkId });
+    if (!user) return next("Invalid Link", 404);
+    const currency = "NGN";
+    const transREf = await tx_ref.get_Tx_Ref();
+
+    const payload = {
+      amount,
+      name,
+      email,
+      description: "Crowd Funding Account",
+      tx_ref: transREf,
+    };
+
+    const token = await monnify.obtainAccessToken();
+    const makePayment = await monnify.initializePayment(payload, token);
+
+    const transaction = new transactionModel({
+      tx_ref: transREf,
+      paymentReference: makePayment.paymentReference,
+      transactionReference: makePayment.transactionReference,
+      userId: user.id,
+      amount,
+      currency,
+      type: "credit",
+      status: "initiated",
+      name,
+      link: findLink.id,
+      fundingType: "crowdFunding",
+    });
+
+    await transaction.save();
+    return res.status(200).send({
+      success: true,
+      data: makePayment.checkoutUrl,
+      message: "Payment Initiated",
+      transaction: transaction
+    });
+  }),
+
+  // @desc    Get Crowd Funded Transactions
+  // @route   /link/transactions/:linkId
+  // @access  Private
+  getCrowdFundedTransactionsPaidViaLink: asyncHandler(
+    async (req, res, next) => {
+      const { page = 1, pageSize = 50, ...rest } = req.query;
+      const link = await linkModel.findById(req.params.linkId);
+      console.log("🚀 ~ file: utils.controller.js:1269 ~ link:", link)
+      if (!link) return next(new ErrorResponse("Invalid Link", 404));
+      const transactions = await transactionModel
+        .find({
+          fundingType: "crowdFunding",
+          link: req.params.linkId,
+        })
+        // .skip(pageSize * page)
+        // .limit(pageSize)
+        // .select("-flw_ref -userId -link");
+      return res.status(200).json({
+        success: true,
+        message: "Transaction have been successfully retrieved",
+        transactions: transactions,
+      });
+    }
+  ),
+
+  // @desc    Create Payment Link
+  // @route   /link/create
+  // @access  Private
+  postCreateCrowdFundingLink: asyncHandler(async (req, res, next) => {
+    const { category, name, link } = req.body;
+    const { error } = await Validator.createLink.validateAsync(req.body);
+    if (error) {
+      return next(new ErrorResponse(error.message, 400));
+    }
+    let user = req.user;
+    if (!user.linkId) {
+      const linkId = uuidv4();
+      user = await userModel.findByIdAndUpdate(
+        req.user.id,
+        { linkId },
+        { new: true }
+      );
+    }
+    const checkName = await linkModel.findOne({
+      name,
+      userLinkId: user.linkId,
+    });
+    if (checkName)
+      return next(new ErrorResponse("Link with name already exists", 401));
+    const checkLink = await linkModel.findOne({ link });
+    if (checkLink)
+      return next(
+        new ErrorResponse(
+          "Link has already been taken. Please choose another",
+          401
+        )
+      );
+    const newLink = await new linkModel({
+      name,
+      category,
+      link,
+      userLinkId: user.linkId,
+    });
+    await newLink.save();
+    const findLink = await linkModel.findById(newLink.id).select("-userLinkId");
+    return res.status(201).json({
+      success: true,
+      message: "Link generated successfully",
+      link: findLink,
+    });
+  }),
+
+  // postGenerateCrowdFundingLink: asyncHandler(async(req, res, next) => {
+  //   const {link} = req.body
+  //   const user = await userModel.findByIdAndUpdate(req.user.id, {})
+  // })
 };

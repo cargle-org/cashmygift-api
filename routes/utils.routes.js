@@ -37,4 +37,9 @@ router.post("/contact-us", utils.postContactUsController);
 router.get("/transactions/all", utils.getAllTransactionsController);
 router.get("/transactions/one", utils.getOneTransactionController);
 
+// Crowd Funding
+router.post("/link/pay", utils.postCrowdFundingController)
+router.post("/link/create", authenticate, utils.postCreateCrowdFundingLink)
+router.get("/link/transactions/:linkId", authenticate, utils.getCrowdFundedTransactionsPaidViaLink)
+
 module.exports = router;
