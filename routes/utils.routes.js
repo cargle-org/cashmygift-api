@@ -38,8 +38,10 @@ router.get("/transactions/all", utils.getAllTransactionsController);
 router.get("/transactions/one", utils.getOneTransactionController);
 
 // Crowd Funding
-router.post("/link/pay", utils.postCrowdFundingController)
-router.post("/link/create", authenticate, utils.postCreateCrowdFundingLink)
-router.get("/link/transactions/:linkId", authenticate, utils.getCrowdFundedTransactionsPaidViaLink)
+router.post("/links/pay", utils.postCrowdFundingController)
+router.post("/links/create", authenticate, utils.postCreateCrowdFundingLink)
+router.get("/links/transactions/:linkId", authenticate, utils.getCrowdFundedTransactionsPaidViaLink)
+router.get("/user/links", authenticate, utils.getUserLinks)
+router.get("/links/categories", utils.getCategories)
 
 module.exports = router;

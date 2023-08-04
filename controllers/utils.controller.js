@@ -1209,6 +1209,31 @@ module.exports = {
 
   // Crowd Funding
 
+  getCategories: asyncHandler(async (req, res, next) => {
+    const categories = ["birthday", "wedding", "others"];
+    return res.status(200).json({
+      success: true,
+      message: "Categories fetched successfully",
+      categories: categories,
+    });
+  }),
+
+  getUserLinks: asyncHandler(async (req, res, next) => {
+    const { page = 1, pageSize = 50, ...rest } = req.query;
+    
+    console.log("🚀 ~ file: utils.controller.js:1226 ~ getUserLinks:asyncHandler ~ req.user:", req.user.linkId)
+    const links = await linkModel
+      .find({ userLinkId: req.user.linkId, isDeleted: false })
+      .select("-userLinkId")
+      .skip(pageSize * (page - 1))
+      .limit(pageSize);
+    return res.status(200).json({
+      success: true,
+      message: "Available Links fetched successfully",
+      links: links,
+    });
+  }),
+
   // @desc    Make Payment via Link
   // @route   /link/pay
   // @access  Public
@@ -1255,7 +1280,7 @@ module.exports = {
       success: true,
       data: makePayment.checkoutUrl,
       message: "Payment Initiated",
-      transaction: transaction
+      transaction: transaction,
     });
   }),
 
@@ -1266,16 +1291,16 @@ module.exports = {
     async (req, res, next) => {
       const { page = 1, pageSize = 50, ...rest } = req.query;
       const link = await linkModel.findById(req.params.linkId);
-      console.log("🚀 ~ file: utils.controller.js:1269 ~ link:", link)
+      console.log("🚀 ~ file: utils.controller.js:1269 ~ link:", link);
       if (!link) return next(new ErrorResponse("Invalid Link", 404));
       const transactions = await transactionModel
         .find({
           fundingType: "crowdFunding",
           link: req.params.linkId,
         })
-        // .skip(pageSize * page)
-        // .limit(pageSize)
-        // .select("-flw_ref -userId -link");
+        .skip(pageSize * (page - 1))
+        .limit(pageSize)
+        .select("-flw_ref -userId -link");
       return res.status(200).json({
         success: true,
         message: "Transaction have been successfully retrieved",
