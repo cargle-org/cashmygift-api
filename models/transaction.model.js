@@ -4,6 +4,9 @@ const Schema = mongoose.Schema;
 
 const TransactionSchema = new Schema(
   {
+    name: {
+      type: String,
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

@@ -4,6 +4,7 @@ const createLink = Joi.object({
   category: Joi.string().valid("wedding", "birthday", "others"),
   name: Joi.string().required(),
   link: Joi.string().uri().required(),
+  currency: Joi.string()
 });
 
 const payToLink = Joi.object({

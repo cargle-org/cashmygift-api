@@ -29,7 +29,7 @@ exports.obtainAccessToken = asyncHandler(async (payload) => {
 });
 
 exports.getBanks = asyncHandler(async (accessToken) => {
-  console.log("🚀 Fetching banks");
+  // console.log("🚀 Fetching banks");
   const response = await axios.get(
     `${process.env.MONNIFY_BASE_URL}/api/v1/banks`,
     {
@@ -43,10 +43,10 @@ exports.getBanks = asyncHandler(async (accessToken) => {
 });
 
 exports.initializePayment = asyncHandler(async (details, accessToken) => {
-  console.log(
-    "🚀 ~ file: monnify.services.js:45 ~ exports.initializePayment=asyncHandler ~ details:",
-    details
-  );
+  // console.log(
+  //   "🚀 ~ file: monnify.services.js:45 ~ exports.initializePayment=asyncHandler ~ details:",
+  //   details
+  // );
   let requestBody = {
     amount: details.amount,
     customerName: details.name,
@@ -75,10 +75,10 @@ exports.initializePayment = asyncHandler(async (details, accessToken) => {
         },
       }
     );
-    console.log(
-      "🚀 ~ file: monnify.services.js:84 ~ exports.initializePayment=asyncHandler ~ response:",
-      response
-    );
+    // console.log(
+    //   "🚀 ~ file: monnify.services.js:84 ~ exports.initializePayment=asyncHandler ~ response:",
+    //   response
+    // );
     return response.data.responseBody;
   } catch (error) {
     console.log(

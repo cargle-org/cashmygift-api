@@ -15,6 +15,10 @@ const linkSchema = new mongoose.Schema(
       enum: ["wedding", "birthday", "others"],
       required: true,
     },
+    currency: {
+      type: String,
+      required: true,
+    },
     link: {
       type: String,
       required: true,

@@ -38,6 +38,7 @@ const winnerVoucherClaimMail = require("../templates/winnerVoucherClaimMail.temp
 const contactUsMail = require("../templates/contactUsMail.templates");
 const linkModel = require("../models/link.model");
 const ErrorResponse = require("../utils/errorResponse");
+const { default: mongoose } = require("mongoose");
 
 module.exports = {
   //   Test API connection
@@ -1220,8 +1221,11 @@ module.exports = {
 
   getUserLinks: asyncHandler(async (req, res, next) => {
     const { page = 1, pageSize = 50, ...rest } = req.query;
-    
-    console.log("🚀 ~ file: utils.controller.js:1226 ~ getUserLinks:asyncHandler ~ req.user:", req.user.linkId)
+
+    console.log(
+      "🚀 ~ file: utils.controller.js:1226 ~ getUserLinks:asyncHandler ~ req.user:",
+      req.user.linkId
+    );
     const links = await linkModel
       .find({ userLinkId: req.user.linkId, isDeleted: false })
       .select("-userLinkId")
@@ -1239,15 +1243,55 @@ module.exports = {
   // @access  Public
   postCrowdFundingController: asyncHandler(async (req, res, next) => {
     const { amount, name, email, link } = req.body;
+    if (Number(amount) > Number(process.env.MAXIMUM_AMOUNT_PER_TRANSACTION))
+      return next(
+        new ErrorResponse(
+          `Transaction limit per transaction is ${process.env.MAXIMUM_AMOUNT_PER_TRANSACTION}k`,
+          401
+        )
+      );
+    console.log("here");
     const { error } = await Validator.payToLink.validateAsync(req.body);
     if (error) {
       return next(new ErrorResponse(error.message, 400));
     }
+
     const findLink = await linkModel.findOne({ link });
     if (!findLink) return next(new ErrorResponse("Invalid Link", 404));
     const user = await userModel.findOne({ linkId: findLink.userLinkId });
     if (!user) return next("Invalid Link", 404);
-    const currency = "NGN";
+    const useLinkId = new mongoose.Types.ObjectId(findLink.id)
+    const dailyTransactions = await transactionModel.aggregate([
+      {
+        $match: {
+          name: name, // Replace "Specific Name" with the desired name
+          link: useLinkId // Replace "Specific Link" with the desired link
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: "$amount" }, // Replace "fieldName" with the actual field name you want to sum
+        },
+      },
+    ]);
+    console.log(
+      "🚀 ~ file: utils.controller.js:1271 ~ postCrowdFundingController:asyncHandler ~ dailyTransactions:",
+      dailyTransactions
+    );
+    const totalSum =
+      dailyTransactions.length > 0 ? dailyTransactions[0].totalAmount : 0;
+      console.log("🚀 ~ file: utils.controller.js:1281 ~ postCrowdFundingController:asyncHandler ~ totalSum:", totalSum)
+    if (
+      Number(totalSum) + Number(amount) >
+      Number(process.env.MAXIMUM_AMOUNT_PER_DAY)
+    )
+      return next(
+        new ErrorResponse(
+          `Maximum transaction limit per day of ${process.env.MAXIMUM_AMOUNT_PER_DAY} cannot be exceeded`,
+          401
+        )
+      );
     const transREf = await tx_ref.get_Tx_Ref();
 
     const payload = {
@@ -1267,7 +1311,7 @@ module.exports = {
       transactionReference: makePayment.transactionReference,
       userId: user.id,
       amount,
-      currency,
+      currency: findLink.currency,
       type: "credit",
       status: "initiated",
       name,
@@ -1291,7 +1335,6 @@ module.exports = {
     async (req, res, next) => {
       const { page = 1, pageSize = 50, ...rest } = req.query;
       const link = await linkModel.findById(req.params.linkId);
-      console.log("🚀 ~ file: utils.controller.js:1269 ~ link:", link);
       if (!link) return next(new ErrorResponse("Invalid Link", 404));
       const transactions = await transactionModel
         .find({
@@ -1313,7 +1356,7 @@ module.exports = {
   // @route   /link/create
   // @access  Private
   postCreateCrowdFundingLink: asyncHandler(async (req, res, next) => {
-    const { category, name, link } = req.body;
+    const { category, name, link, currency } = req.body;
     const { error } = await Validator.createLink.validateAsync(req.body);
     if (error) {
       return next(new ErrorResponse(error.message, 400));
@@ -1345,6 +1388,7 @@ module.exports = {
       name,
       category,
       link,
+      currency,
       userLinkId: user.linkId,
     });
     await newLink.save();
