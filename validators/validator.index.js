@@ -2,9 +2,10 @@ const Joi = require("@hapi/joi");
 
 const createLink = Joi.object({
   category: Joi.string().valid("wedding", "birthday", "others"),
-  name: Joi.string().required(),
+  title: Joi.string().required(),
+  description: Joi.string().required(),
   link: Joi.string().uri().required(),
-  currency: Joi.string()
+  linkExpiry: Joi.date().iso()
 });
 
 const payToLink = Joi.object({

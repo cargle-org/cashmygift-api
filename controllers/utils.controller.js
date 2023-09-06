@@ -1352,7 +1352,7 @@ module.exports = {
   // @route   /link/create
   // @access  Private
   postCreateCrowdFundingLink: asyncHandler(async (req, res, next) => {
-    const { category, name, link, currency } = req.body;
+    const { category, title, description, link, linkExpiry } = req.body;
     const { error } = await Validator.createLink.validateAsync(req.body);
     if (error) {
       return next(new ErrorResponse(error.message, 400));
@@ -1367,11 +1367,11 @@ module.exports = {
       );
     }
     const checkName = await linkModel.findOne({
-      name,
+      title,
       userLinkId: user.linkId,
     });
     if (checkName)
-      return next(new ErrorResponse("Link with name already exists", 401));
+      return next(new ErrorResponse("Link with this title already exists", 401));
     const checkLink = await linkModel.findOne({ link });
     if (checkLink)
       return next(
@@ -1381,10 +1381,12 @@ module.exports = {
         )
       );
     const newLink = await new linkModel({
-      name,
+      title,
       category,
       link,
-      currency,
+      description,
+      linkExpiry,
+      currency: "NGN",
       userLinkId: user.linkId,
     });
     await newLink.save();
