@@ -1277,7 +1277,6 @@ module.exports = {
     ]);
     const totalSum =
       dailyTransactions.length > 0 ? dailyTransactions[0].totalAmount : 0;
-      console.log("🚀 ~ file: utils.controller.js:1281 ~ postCrowdFundingController:asyncHandler ~ totalSum:", totalSum)
     if (
       Number(totalSum) + Number(amount) >
       Number(process.env.MAXIMUM_AMOUNT_PER_DAY)

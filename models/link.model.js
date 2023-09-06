@@ -21,6 +21,7 @@ const linkSchema = new mongoose.Schema(
     },
     link: {
       type: String,
+      unique: true,
       required: true,
     },
     isDeleted: {
