@@ -2,7 +2,7 @@ const { default: mongoose } = require("mongoose");
 
 const linkSchema = new mongoose.Schema(
   {
-    name: {
+    title: {
       type: String,
       required: true,
     },
@@ -26,6 +26,10 @@ const linkSchema = new mongoose.Schema(
     isDeleted: {
       type: Boolean,
       default: false
+    },
+    linkExpiry: {
+      type: Date,
+      default: null
     }
   },
   {
