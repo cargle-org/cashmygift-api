@@ -12,7 +12,7 @@ module.exports = function (app) {
     next();
   });
 
-  app.get('/', (req, res) => {
+  app.get('/hello', (req, res) => {
     res.send('Hello, World 2!');
   });
   app.use("/api/auth", authRouter);
