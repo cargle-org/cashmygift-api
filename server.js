@@ -7,7 +7,7 @@ const cors = require("cors");
 const mongoSanitize = require("express-mongo-sanitize");
 const helmet = require("helmet");
 const xss = require("xss-clean");
-const rateLimit = require("express-rate-limit");
+// const rateLimit = require("express-rate-limit");
 const hpp = require("hpp");
 const errorHandler = require("./middlewares/error");
 
@@ -32,10 +32,10 @@ app.use(helmet());
 app.use(xss());
 
 //Rate limiting
-const limiter = rateLimit({
-  windows: 10 * 60 * 1000, //10 min
-  max: 100,
-});
+// const limiter = rateLimit({
+//   windows: 10 * 60 * 1000, //10 min
+//   max: 100,
+// });
 
 app.use(limiter);
 
