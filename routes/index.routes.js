@@ -12,6 +12,9 @@ module.exports = function (app) {
     next();
   });
 
+  app.get('/', (req, res) => {
+    res.send('Hello, World 2!');
+  });
   app.use("/api/auth", authRouter);
   app.use("/api/user", userRouter);
   app.use("/api/utils", utilsRouter);
