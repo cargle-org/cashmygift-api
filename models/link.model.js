@@ -24,6 +24,10 @@ const linkSchema = new mongoose.Schema(
       unique: true,
       required: true,
     },
+    amount:{
+      type: Number,
+      required: true
+    },
     isDeleted: {
       type: Boolean,
       default: false

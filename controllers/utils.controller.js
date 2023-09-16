@@ -1250,7 +1250,6 @@ module.exports = {
           401
         )
       );
-    console.log("here");
     const { error } = await Validator.payToLink.validateAsync(req.body);
     if (error) {
       return next(new ErrorResponse(error.message, 400));
@@ -1260,13 +1259,13 @@ module.exports = {
     if (!findLink) return next(new ErrorResponse("Invalid Link", 404));
     const user = await userModel.findOne({ linkId: findLink.userLinkId });
     if (!user) return next("Invalid Link", 404);
-    const useLinkId = new mongoose.Types.ObjectId(findLink.id)
+    const useLinkId = new mongoose.Types.ObjectId(findLink.id);
     const dailyTransactions = await transactionModel.aggregate([
       {
         $match: {
           name: name, // Replace "Specific Name" with the desired name
-          link: useLinkId // Replace "Specific Link" with the desired link
-        }
+          link: useLinkId, // Replace "Specific Link" with the desired link
+        },
       },
       {
         $group: {
@@ -1279,7 +1278,8 @@ module.exports = {
       dailyTransactions.length > 0 ? dailyTransactions[0].totalAmount : 0;
     if (
       Number(totalSum) + Number(amount) >
-      Number(process.env.MAXIMUM_AMOUNT_PER_DAY)
+        Number(process.env.MAXIMUM_AMOUNT_PER_DAY) ||
+      Number(totalSum) + Number(amount) > findLink.amount
     )
       return next(
         new ErrorResponse(
@@ -1351,7 +1351,16 @@ module.exports = {
   // @route   /link/create
   // @access  Private
   postCreateCrowdFundingLink: asyncHandler(async (req, res, next) => {
-    const { category, title, description, link, linkExpiry } = req.body;
+    const {
+      category,
+      title,
+      description,
+      link,
+      linkExpiry = null,
+      amount,
+    } = req.body;
+    if (Number(amount) > 200000)
+      return next(new ErrorResponse("Amount is larger than the maximum", 401));
     const { error } = await Validator.createLink.validateAsync(req.body);
     if (error) {
       return next(new ErrorResponse(error.message, 400));
@@ -1370,7 +1379,9 @@ module.exports = {
       userLinkId: user.linkId,
     });
     if (checkName)
-      return next(new ErrorResponse("Link with this title already exists", 401));
+      return next(
+        new ErrorResponse("Link with this title already exists", 401)
+      );
     const checkLink = await linkModel.findOne({ link });
     if (checkLink)
       return next(
@@ -1385,6 +1396,7 @@ module.exports = {
       link,
       description,
       linkExpiry,
+      amount,
       currency: "NGN",
       userLinkId: user.linkId,
     });
