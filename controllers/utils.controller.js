@@ -1347,6 +1347,21 @@ module.exports = {
     }
   ),
 
+  // @desc    Get Link details
+  // @route   /links/:linkId
+  // @access  Public
+  getLinkDetails: asyncHandler(
+    async (req, res, next) => {
+      const link = await linkModel.findById(req.params.linkId);
+      if (!link) return next(new ErrorResponse("Invalid Link", 404));
+      return res.status(200).json({
+        success: true,
+        message: "Transaction have been successfully retrieved",
+        link,
+      });
+    }
+  ),
+
   // @desc    Create Payment Link
   // @route   /link/create
   // @access  Private

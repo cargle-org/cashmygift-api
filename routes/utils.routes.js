@@ -43,5 +43,6 @@ router.post("/links/create", authenticate, utils.postCreateCrowdFundingLink)
 router.get("/links/transactions/:linkId", authenticate, utils.getCrowdFundedTransactionsPaidViaLink)
 router.get("/user/links", authenticate, utils.getUserLinks)
 router.get("/links/categories", utils.getCategories)
+router.get("/links/:linkId", utils.getLinkDetails)
 
 module.exports = router;
