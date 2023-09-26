@@ -1356,7 +1356,7 @@ module.exports = {
       if (!link) return next(new ErrorResponse("Invalid Link", 404));
       return res.status(200).json({
         success: true,
-        message: "Transaction have been successfully retrieved",
+        message: "Link has been successfully retrieved",
         link,
       });
     }
