@@ -40,9 +40,9 @@ const linkModel = require("../models/link.model");
 const ErrorResponse = require("../utils/errorResponse");
 const { default: mongoose } = require("mongoose");
 
-module.exports = {
+
   //   Test API connection
-  getPingController: (req, res) => {
+  const getPingController = (req, res) => {
     try {
       return res.status(200).send({
         success: true,
@@ -54,10 +54,10 @@ module.exports = {
         message: err.message,
       });
     }
-  },
+  }
 
   // Fund wallet
-  postFundWalletController: asyncHandler(async (req, res, next) => {
+  const postFundWalletController = asyncHandler(async (req, res, next) => {
     // const { amount } = req.body;
 
     // const currency = "NGN";
@@ -141,10 +141,10 @@ module.exports = {
       data: makePayment.checkoutUrl,
       message: "Payment Initiated",
     });
-  }),
+  })
 
   // Verify "Fund wallet transaction"
-  getVerifyController: asyncHandler(async (req, res, next) => {
+  const getVerifyController = asyncHandler(async (req, res, next) => {
     // const id = req.query.transaction_id;
     // const tx_ref = req.query.tx_ref;
 
@@ -298,10 +298,10 @@ module.exports = {
         errMessage: verify,
       });
     }
-  }),
+  })
 
   // Withdraw from wallet
-  postWithdrawFromWalletController: asyncHandler(async (req, res, next) => {
+  const postWithdrawFromWalletController = asyncHandler(async (req, res, next) => {
     const { amount, bankCode, accountNumber } = req.body;
 
     const transREf = await tx_ref.get_Tx_Ref();
@@ -395,10 +395,10 @@ module.exports = {
     //     message: "Transfer was not successful.",
     //   });
     // }
-  }),
+  })
 
   // create voucher
-  postCreateVoucherController: asyncHandler(async (req, res, next) => {
+  const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     const {
       title,
       description,
@@ -592,10 +592,10 @@ module.exports = {
       },
       message: "Created new voucher(s).",
     });
-  }),
+  })
 
   // find voucher
-  postFindVoucherController: asyncHandler(async (req, res, next) => {
+  const postFindVoucherController = asyncHandler(async (req, res, next) => {
     try {
       const { voucherCode } = req.body;
 
@@ -658,7 +658,7 @@ module.exports = {
         message: "Couldn't find voucher.",
       });
     }
-  }),
+  })
 
   // // Cashout voucher
   // postCashoutVoucherController: asyncHandler(async (req, res, next) => {
@@ -822,7 +822,7 @@ module.exports = {
   // }),
 
   // Cashout voucher
-  postCashoutVoucherController: asyncHandler(async (req, res, next) => {
+  const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
     const { fullName, email, voucherCode, bankCode, accountNumber } = req.body;
 
     const body = { ...req.body };
@@ -1027,10 +1027,10 @@ module.exports = {
       },
       message: "Claimed Coupon from Voucher successfully.",
     });
-  }),
+  })
 
   // Fetch all banks in Nigeria {{FOR FLUTTERWAVE}}
-  getAllBanksMonnifyController: asyncHandler(async (req, res, next) => {
+  const getAllBanksMonnifyController = asyncHandler(async (req, res, next) => {
     //   const options = {
     //     timeout: 1000 * 60,
     //     headers: {
@@ -1072,7 +1072,7 @@ module.exports = {
         errMessage: err,
       });
     }
-  }),
+  })
 
   // Fetch all banks in Nigeria {{FOR FLUTTERWAVE}}
   // getAllBanksController: asyncHandler(async (req, res, next) => {
@@ -1111,7 +1111,7 @@ module.exports = {
   // }),
 
   // Contact us
-  postContactUsController: asyncHandler(async (req, res, next) => {
+  const postContactUsController = asyncHandler(async (req, res, next) => {
     const { name, email, message } = req.body;
     try {
       const contact = new contactModel({
@@ -1145,20 +1145,20 @@ module.exports = {
         errMessage: err,
       });
     }
-  }),
+  })
 
   //handle Flw callback
-  handleFlwCallback: asyncHandler(async (req, res) => {
+  const handleFlwCallback = asyncHandler(async (req, res) => {
     console.log(req.body);
 
     res.status(200).json({
       success: true,
       message: "webhook called successfully",
     });
-  }),
+  })
 
   // Get all transactions
-  getAllTransactionsController: asyncHandler(async (req, res) => {
+  const getAllTransactionsController = asyncHandler(async (req, res) => {
     const { userId } = req.query;
 
     const transactions = await transactionModel.find({ userId: userId });
@@ -1175,15 +1175,11 @@ module.exports = {
       data: transactions,
       message: "fetched all transactions successfully",
     });
-  }),
+  })
 
   // Get one transaction
-  getOneTransactionController: asyncHandler(async (req, res) => {
+  const getOneTransactionController = asyncHandler(async (req, res) => {
     const { userId, transactionId } = req.query;
-    console.log(
-      "🚀 ~ file: utils.controller.js:1178 ~ getOneTransactionController:asyncHandler ~ transactionId:",
-      transactionId
-    );
 
     const transaction = await transactionModel.findOne({
       _id: transactionId,
@@ -1206,20 +1202,19 @@ module.exports = {
       data: transaction,
       message: "fetched transaction successfully",
     });
-  }),
+  })
 
   // Crowd Funding
-
-  getCategories: asyncHandler(async (req, res, next) => {
+  const getCategories = asyncHandler(async (req, res, next) => {
     const categories = ["birthday", "wedding", "others"];
     return res.status(200).json({
       success: true,
       message: "Categories fetched successfully",
       categories: categories,
     });
-  }),
+  })
 
-  getUserLinks: asyncHandler(async (req, res, next) => {
+  const getUserLinks = asyncHandler(async (req, res, next) => {
     const { page = 1, pageSize = 50, ...rest } = req.query;
 
     console.log(
@@ -1236,12 +1231,12 @@ module.exports = {
       message: "Available Links fetched successfully",
       links: links,
     });
-  }),
+  })
 
   // @desc    Make Payment via Link
   // @route   /link/pay
   // @access  Public
-  postCrowdFundingController: asyncHandler(async (req, res, next) => {
+  const postCrowdFundingController = asyncHandler(async (req, res, next) => {
     const { amount, name, email, link } = req.body;
     if (Number(amount) > Number(process.env.MAXIMUM_AMOUNT_PER_TRANSACTION))
       return next(
@@ -1321,12 +1316,12 @@ module.exports = {
       message: "Payment Initiated",
       transaction: transaction,
     });
-  }),
+  })
 
   // @desc    Get Crowd Funded Transactions
   // @route   /link/transactions/:linkId
   // @access  Private
-  getCrowdFundedTransactionsPaidViaLink: asyncHandler(
+  const getCrowdFundedTransactionsPaidViaLink = asyncHandler(
     async (req, res, next) => {
       const { page = 1, pageSize = 50, ...rest } = req.query;
       const link = await linkModel.findById(req.params.linkId);
@@ -1345,12 +1340,12 @@ module.exports = {
         transactions: transactions,
       });
     }
-  ),
+  )
 
   // @desc    Get Link details
   // @route   /links/:linkId
   // @access  Public
-  getLinkDetails: asyncHandler(
+  const getLinkDetails = asyncHandler(
     async (req, res, next) => {
       const link = await linkModel.findById(req.params.linkId);
       if (!link) return next(new ErrorResponse("Invalid Link", 404));
@@ -1360,12 +1355,12 @@ module.exports = {
         link,
       });
     }
-  ),
+  )
 
   // @desc    Create Payment Link
   // @route   /link/create
   // @access  Private
-  postCreateCrowdFundingLink: asyncHandler(async (req, res, next) => {
+  const postCreateCrowdFundingLink = asyncHandler(async (req, res, next) => {
     const {
       category,
       title,
@@ -1422,10 +1417,29 @@ module.exports = {
       message: "Link generated successfully",
       link: findLink,
     });
-  }),
+  })
 
   // postGenerateCrowdFundingLink: asyncHandler(async(req, res, next) => {
   //   const {link} = req.body
   //   const user = await userModel.findByIdAndUpdate(req.user.id, {})
   // })
-};
+  module.exports = {
+    getAllBanksMonnifyController,
+    getAllTransactionsController,
+    getCategories,
+    getLinkDetails,
+    getOneTransactionController,
+    getPingController,
+    getUserLinks,
+    getVerifyController,
+    handleFlwCallback,
+    postFundWalletController,
+    postCashoutVoucherController,
+    postCreateCrowdFundingLink,
+    postCreateVoucherController,
+    getCrowdFundedTransactionsPaidViaLink,
+    postCrowdFundingController,
+    postContactUsController ,
+    postFindVoucherController,
+    postWithdrawFromWalletController
+  };
