@@ -122,6 +122,7 @@ const { default: mongoose } = require("mongoose");
 
     const token = await monnify.obtainAccessToken();
     const makePayment = await monnify.initializePayment(payload, token);
+    console.log("🚀 ~ file: utils.controller.js:125 ~ postFundWalletController ~ makePayment:", makePayment)
 
     const transaction = await new transactionModel({
       tx_ref: transREf,
