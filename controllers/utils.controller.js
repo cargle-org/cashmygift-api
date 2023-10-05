@@ -123,9 +123,9 @@ const { default: mongoose } = require("mongoose");
     const token = await monnify.obtainAccessToken();
     const makePayment = await monnify.initializePayment(payload, token);
     console.log("🚀 ~ file: utils.controller.js:125 ~ postFundWalletController ~ makePayment:", makePayment)
-    if (makePayment.response.status != 200 || makePayment.response.status != 201){
-      return next(new ErrorResponse(makePayment.data.responseMessage, 500))
-    }
+    // if (makePayment.response.status != 200 || makePayment.response.status != 201){
+    //   return next(new ErrorResponse(makePayment.data.responseMessage, 500))
+    // }
 
     const transaction = await new transactionModel({
       tx_ref: transREf,
