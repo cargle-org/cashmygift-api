@@ -89,6 +89,53 @@ exports.initializePayment = asyncHandler(async (details, accessToken) => {
   }
 });
 
+exports.initializePaymentForLink = asyncHandler(async (details, accessToken) => {
+  // console.log(
+  //   "🚀 ~ file: monnify.services.js:45 ~ exports.initializePayment=asyncHandler ~ details:",
+  //   details
+  // );
+  let requestBody = {
+    amount: details.amount,
+    customerName: details.name,
+    customerEmail: details.email,
+    // paymentReference: new String(new Date().getTime()),
+    // paymentReference: "1239230423134023",
+    paymentReference: details.tx_ref,
+    paymentDescription: details.description,
+    currencyCode: "NGN",
+    contractCode: process.env.MONNIFY_CONTRACT_CODE,
+    paymentMethods: [
+      process.env.MONNIFY_CARD_PAYMENT_METHOD,
+      process.env.MONNIFY_ACCOUNT_TRANSFER_PAYMENT_METHOD,
+    ],
+    redirectUrl: process.env.MONNIFY_LINK_REDIRECT_URL,
+  };
+
+  try {
+    const response = await axios.post(
+      `${process.env.MONNIFY_BASE_URL}/api/v1/merchant/transactions/init-transaction`,
+      requestBody,
+      {
+        // timeout: 1000 * 60,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    // console.log(
+    //   "🚀 ~ file: monnify.services.js:84 ~ exports.initializePayment=asyncHandler ~ response:",
+    //   response
+    // );
+    return response.data.responseBody;
+  } catch (error) {
+    console.log(
+      "🚀 ~ file: monnify.services.js:77 ~ exports.initializePayment=asyncHandler ~ error:",
+      error
+    );
+    return error;
+  }
+});
+
 exports.verifyPayment = async (transactionReference, accessToken) => {
   try {
     const response = await axios.get(

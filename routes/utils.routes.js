@@ -32,6 +32,7 @@ router.post(
 router.post("/wallet/flw-webhook", utils.handleFlwCallback);
 router.get("/banks/all", utils.getAllBanksMonnifyController);
 router.post("/contact-us", utils.postContactUsController);
+router.post("/webhook", utils.webhook)
 
 // transactions
 router.get("/transactions/all", utils.getAllTransactionsController);
