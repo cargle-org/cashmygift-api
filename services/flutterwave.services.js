@@ -54,16 +54,15 @@ const transferMoney = async (payload) => {
     payload
   );
   try {
-    console.log("Processing Transfer...");
     const response = await axios.post(`${baseURL}/transfers`, payload, options);
     console.log(
       "🚀 ~ file: flutterwave.services.js:52 ~ transferMoney ~ response:",
-      response.data.data
+      response.data
     );
     return response.data.data;
   } catch (err) {
     console.log("Transfer error: ", err.response);
-    return err.message;
+    return {status: "error", message: err.response.data.message};
     // return res.status(400).send({
     //   success: false,
     //   message: "Error, couldn't process transfer",

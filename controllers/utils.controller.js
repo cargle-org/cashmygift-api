@@ -57,75 +57,37 @@ const getPingController = (req, res) => {
 
 // Fund wallet
 const postFundWalletController = asyncHandler(async (req, res, next) => {
-  // const { amount } = req.body;
-
-  // const currency = "NGN";
-  // const transREf = await tx_ref.get_Tx_Ref();
-
-  // const payload = {
-  //   tx_ref: transREf,
-  //   amount,
-  //   currency,
-  //   payment_options: "card",
-  //   redirect_url: "https://usepays.co/payment/depositecompleted",
-  //   customer: {
-  //     email: req.user.email,
-  //     phonenumber: req.user.phone,
-  //     name: req.user.name,
-  //   },
-  //   meta: {
-  //     customer_id: req.user._id,
-  //   },
-  //   customizations: {
-  //     title: "CMG",
-  //     description: "Pay with card",
-  //     logo: "#",
-  //   },
-  // };
-
-  // const transaction = await new transactionModel({
-  //   tx_ref: transREf,
-  //   userId: req.user._id,
-  //   amount,
-  //   currency,
-  //   type: "credit",
-  //   status: "initiated",
-  // });
-
-  // await transaction.save();
-
-  // const response = await FLW_services.initiateTransaction(payload);
-
-  // return res.status(200).send({
-  //   success: true,
-  //   data: {
-  //     response,
-  //   },
-  //   message: "Payment Initiated",
-  // });
-
-  //  Good ol' monnify
   const { amount } = req.body;
 
   const currency = "NGN";
   const transREf = await tx_ref.get_Tx_Ref();
-  // const tx_ref = "" + Math.floor(Math.random() * 1000000000 + 1);
 
   const payload = {
-    amount,
-    name: req.user.name,
-    email: req.user.email,
-    description: "Funding Usepays wallet",
     tx_ref: transREf,
+    amount,
+    currency,
+    payment_options: "card",
+    redirect_url: "https://usepays.co/payment/depositecompleted",
+    customer: {
+      email: req.user.email,
+      phonenumber: req.user.phone,
+      name: req.user.name,
+    },
+    meta: {
+      customer_id: req.user._id,
+    },
+    customizations: {
+      title: "CMG",
+      description: "Pay with card",
+      logo: "#",
+    },
   };
 
-  const token = await monnify.obtainAccessToken();
-  const makePayment = await monnify.initializePayment(payload, token);
-
+  const response = await FLW_services.initiateTransaction(payload);
+  // paymentReference
   const transaction = await new transactionModel({
     tx_ref: transREf,
-    paymentReference: makePayment.paymentReference,
-    transactionReference: makePayment.transactionReference,
+    transactionReference: transREf,
     userId: req.user._id,
     amount,
     currency,
@@ -137,104 +99,67 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
 
   return res.status(200).send({
     success: true,
-    data: makePayment.checkoutUrl,
+    data: {
+      response,
+    },
     message: "Payment Initiated",
   });
+
+  // //  Good ol' monnify
+  // const { amount } = req.body;
+
+  // const currency = "NGN";
+  // const transREf = await tx_ref.get_Tx_Ref();
+  // // const tx_ref = "" + Math.floor(Math.random() * 1000000000 + 1);
+
+  // const payload = {
+  //   amount,
+  //   name: req.user.name,
+  //   email: req.user.email,
+  //   description: "Funding Usepays wallet",
+  //   tx_ref: transREf,
+  // };
+
+  // const token = await monnify.obtainAccessToken();
+  // const makePayment = await monnify.initializePayment(payload, token);
+
+  // const transaction = await new transactionModel({
+  //   tx_ref: transREf,
+  //   paymentReference: makePayment.paymentReference,
+  //   transactionReference: makePayment.transactionReference,
+  //   userId: req.user._id,
+  //   amount,
+  //   currency,
+  //   type: "credit",
+  //   status: "initiated",
+  // });
+
+  // await transaction.save();
+
+  // return res.status(200).send({
+  //   success: true,
+  //   data: makePayment.checkoutUrl,
+  //   message: "Payment Initiated",
+  // });
 });
 
 // Verify "Fund wallet transaction"
 const getVerifyController = asyncHandler(async (req, res, next) => {
-  // const id = req.query.transaction_id;
-  // const tx_ref = req.query.tx_ref;
+  const id = req.query.transaction_id ?? null;
+  const tx_ref = req.query.tx_ref ?? null;
 
-  // const verify = await FLW_services.verifyTransaction(id);
+  if(!id || !tx_ref) return next(new ErrorResponse("Invalid query parameters", 400))
+  const verify = await FLW_services.verifyTransaction(id);
 
-  // if (verify.status === "successful") {
-  //   const transaction = await transactionModel.findOne({ tx_ref: tx_ref });
+  if (verify.status === "successful") {
+    const transaction = await transactionModel.findOne({ tx_ref: tx_ref });
 
-  //   if (!transaction) {
-  //     return res.status(400).send({
-  //       success: false,
-  //       message: "Transaction not found",
-  //     });
-  //   }
-
-  //   if (transaction.status === "successful") {
-  //     return res.status(400).send({
-  //       success: false,
-  //       message: "Failed: Possible duplicate Transaction",
-  //     });
-  //   }
-
-  //   // update transaction
-  //   transaction.status = "successful";
-  //   console.log(
-  //     "🚀 ~ file: utils.controller.js:125 ~ getVerifyController:asyncHandler ~ transaction:",
-  //     transaction
-  //   );
-  //   await transaction.save();
-
-  //   // find user and update walletBalance
-  //   const user = await userModel.findOne({ _id: transaction.userId });
-
-  //   if (!user) {
-  //     return res.status(400).send({
-  //       success: false,
-  //       message: "User not found",
-  //     });
-  //   }
-
-  //   user.walletBalance = user.walletBalance + transaction.amount;
-  //   console.log(
-  //     "🚀 ~ file: utils.controller.js:139 ~ getVerifyController:asyncHandler ~ user:",
-  //     user
-  //   );
-  //   await user.save();
-
-  //   return res.status(200).send({
-  //     success: true,
-  //     data: {
-  //       transaction,
-  //       user,
-  //     },
-  //     message: "Transaction Successful",
-  //   });
-  // } else {
-  //   return res.status(400).send({
-  //     success: false,
-  //     message: "Transaction was not successful",
-  //   });
-  // }
-
-  // Good ol' monnify
-  const paymentReference = req.query.paymentReference;
-
-  const transaction = await transactionModel.findOne({
-    paymentReference: paymentReference,
-  });
-
-  if (!transaction) {
-    return res.status(400).send({
-      success: false,
-      message: "transaction not found.",
-    });
-  }
-
-  const token = await monnify.obtainAccessToken();
-  const verify = await monnify.verifyPayment(
-    transaction.transactionReference,
-    token
-  );
-
-  if (verify.paymentStatus === "PAID") {
-    // const transaction = await transactionModel.findOne({ paymentReference: paymentReference });
-
-    // if (!transaction) {
-    //   return res.status(400).send({
-    //     success: false,
-    //     message: "Transaction not found",
-    //   });
-    // }
+    if (!transaction) {
+      return res.status(400).send({
+        success: false,
+        message: "Transaction not found",
+      });
+    }
 
     if (transaction.status === "successful") {
       return res.status(400).send({
@@ -245,6 +170,10 @@ const getVerifyController = asyncHandler(async (req, res, next) => {
 
     // update transaction
     transaction.status = "successful";
+    console.log(
+      "🚀 ~ file: utils.controller.js:125 ~ getVerifyController:asyncHandler ~ transaction:",
+      transaction
+    );
     await transaction.save();
 
     // find user and update walletBalance
@@ -258,6 +187,10 @@ const getVerifyController = asyncHandler(async (req, res, next) => {
     }
 
     user.walletBalance = user.walletBalance + transaction.amount;
+    console.log(
+      "🚀 ~ file: utils.controller.js:139 ~ getVerifyController:asyncHandler ~ user:",
+      user
+    );
     await user.save();
 
     return res.status(200).send({
@@ -268,35 +201,104 @@ const getVerifyController = asyncHandler(async (req, res, next) => {
       },
       message: "Transaction Successful",
     });
-  } else if (verify.paymentStatus === "PENDING") {
-    transaction.status = verify.paymentStatus;
-    await transaction.save();
-    return res.status(200).send({
-      success: true,
-      data: {
-        transaction,
-      },
-      message: "Transaction Pending",
-    });
-  } else if (verify.paymentStatus === "EXPIRED") {
-    transaction.status = verify.paymentStatus;
-    await transaction.save();
-    return res.status(200).send({
-      success: true,
-      data: {
-        transaction,
-      },
-      message: "Transaction Expired",
-    });
   } else {
-    transaction.status = verify.paymentStatus;
-    await transaction.save();
     return res.status(400).send({
       success: false,
       message: "Transaction was not successful",
-      errMessage: verify,
     });
   }
+
+  // // Good ol' monnify
+  // const paymentReference = req.query.paymentReference;
+
+  // const transaction = await transactionModel.findOne({
+  //   paymentReference: paymentReference,
+  // });
+
+  // if (!transaction) {
+  //   return res.status(400).send({
+  //     success: false,
+  //     message: "transaction not found.",
+  //   });
+  // }
+
+  // const token = await monnify.obtainAccessToken();
+  // const verify = await monnify.verifyPayment(
+  //   transaction.transactionReference,
+  //   token
+  // );
+
+  // if (verify.paymentStatus === "PAID") {
+  //   // const transaction = await transactionModel.findOne({ paymentReference: paymentReference });
+
+  //   // if (!transaction) {
+  //   //   return res.status(400).send({
+  //   //     success: false,
+  //   //     message: "Transaction not found",
+  //   //   });
+  //   // }
+
+  //   if (transaction.status === "successful") {
+  //     return res.status(400).send({
+  //       success: false,
+  //       message: "Failed: Possible duplicate Transaction",
+  //     });
+  //   }
+
+  //   // update transaction
+  //   transaction.status = "successful";
+  //   await transaction.save();
+
+  //   // find user and update walletBalance
+  //   const user = await userModel.findOne({ _id: transaction.userId });
+
+  //   if (!user) {
+  //     return res.status(400).send({
+  //       success: false,
+  //       message: "User not found",
+  //     });
+  //   }
+
+  //   user.walletBalance = user.walletBalance + transaction.amount;
+  //   await user.save();
+
+  //   return res.status(200).send({
+  //     success: true,
+  //     data: {
+  //       transaction,
+  //       user,
+  //     },
+  //     message: "Transaction Successful",
+  //   });
+  // } else if (verify.paymentStatus === "PENDING") {
+  //   transaction.status = verify.paymentStatus;
+  //   await transaction.save();
+  //   return res.status(200).send({
+  //     success: true,
+  //     data: {
+  //       transaction,
+  //     },
+  //     message: "Transaction Pending",
+  //   });
+  // } else if (verify.paymentStatus === "EXPIRED") {
+  //   transaction.status = verify.paymentStatus;
+  //   await transaction.save();
+  //   return res.status(200).send({
+  //     success: true,
+  //     data: {
+  //       transaction,
+  //     },
+  //     message: "Transaction Expired",
+  //   });
+  // } else {
+  //   transaction.status = verify.paymentStatus;
+  //   await transaction.save();
+  //   return res.status(400).send({
+  //     success: false,
+  //     message: "Transaction was not successful",
+  //     errMessage: verify,
+  //   });
+  // }
 });
 
 // Withdraw from wallet
@@ -336,40 +338,41 @@ const postWithdrawFromWalletController = asyncHandler(
     }
 
     // withdraw money to user
-    // const payload = {
-    //   account_bank: bankCode,
-    //   account_number: accountNumber,
-    //   amount: amount,
-    //   reference: tx_ref.get_Tx_Ref(),
-    //   narration: "Withdrawal from CMG.co wallet",
-    //   currency: "NGN",
-    //   callback_url: "http://localhost:3000/api/utils/wallet/flw-webhook",
-    //   debit_currency: "NGN",
-    // };
-
-    // const transfer = await FLW_services.transferMoney(payload);
-    // console.log(
-    //   "🚀 ~ file: utils.controller.js:339 ~ postWithdrawFromWalletController:asyncHandler ~ transfer:",
-    //   transfer
-    // );
-
-    // Good ol' monnify
-    payload = {
+    const payload = {
+      account_bank: bankCode,
+      account_number: accountNumber,
       amount: amount,
-      destinationBankCode: bankCode,
-      destinationAccountNumber: accountNumber,
-      destinationAccountName: user.name,
-      tx_ref: transREf,
+      ref: tx_ref.get_Tx_Ref(),
+      narration: "Withdrawal from CMG.co wallet",
+      currency: "NGN",
+      // callback_url: "https://6f83-197-210-77-13.ngrok.io/api/utils/transfer/webhook",
+      // debit_currency: "NGN",
     };
 
-    const token = await monnify.obtainAccessToken();
-    const withdrawToWallet = await monnify.withdraw(payload, token);
+    const transfer = await FLW_services.transferMoney(payload);
+    if(transfer.status == "error") return next(new ErrorResponse(transfer.message, 403))
     console.log(
-      "🚀 ~ file: utils.controller.js:359 ~ postWithdrawFromWalletController:asyncHandler ~ withdrawToWallet:",
-      withdrawToWallet
+      "🚀 ~ file: utils.controller.js:339 ~ postWithdrawFromWalletController:asyncHandler ~ transfer:",
+      transfer
     );
 
-    // remove money from dashboard wallet to it doesn't still appear
+    // Good ol' monnify
+    // payload = {
+    //   amount: amount,
+    //   destinationBankCode: bankCode,
+    //   destinationAccountNumber: accountNumber,
+    //   destinationAccountName: user.name,
+    //   tx_ref: transREf,
+    // };
+
+    // const token = await monnify.obtainAccessToken();
+    // const withdrawToWallet = await monnify.withdraw(payload, token);
+    // console.log(
+    //   "🚀 ~ file: utils.controller.js:359 ~ postWithdrawFromWalletController:asyncHandler ~ withdrawToWallet:",
+    //   withdrawToWallet
+    // );
+
+    // // remove money from dashboard wallet to it doesn't still appear
     user.walletBalance = user.walletBalance - amount;
     await user.save();
 
@@ -378,7 +381,7 @@ const postWithdrawFromWalletController = asyncHandler(
       message: `Successfully withdrawn ${amount} from your 'pays' wallet`,
     });
 
-    // Good ol' monnify
+    // Good ol' monnify (Former)
     // const {
     //   amount,
     //   destinationBankCode,
@@ -944,65 +947,66 @@ const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
 
   // The bulk that is FLUTTERWAVE...*sigh*
   // withdraw money to <<fullName>>
-  // const payload = {
-  //   account_bank: bankCode,
-  //   account_number: accountNumber,
-  //   amount: foundVoucher.amountPerVoucher,
-  //   narration: "Voucher Redemption at CMG.co",
-  //   currency: "NGN",
-  //   // reference: transREf,
-  //   // reference: "dfs23fhr7ntg0293039_PMCK",
-  //   callback_url: "https://usepays.co/",
-  //   debit_currency: "NGN",
-  // };
-
-  // const details = {
-  //   // account_bank: "044",
-  //   // account_number: "0768010549",
-  //   account_bank: bankCode,
-  //   account_number: accountNumber,
-  //   amount: 100,
-  //   currency: "NGN",
-  //   narration: "Payment for things",
-  //   // reference: generateTransactionReference(),
-  // };
-
-  // const transfer = await FLW_services.transferMoney(payload);
-  // const transfer = await FLW_services.runTF(details);
-  // console.log(
-  //   "🚀 ~ file: utils.controller.js:934 ~ postCashoutVoucherController:asyncHandler ~ transfer:",
-  //   transfer
-  // );
-
-  // if (!transfer) {
-  //   return res.status(400).send({
-  //     success: false,
-  //     message: "Transfer was not successful.",
-  //   });
-  // }
-
-  // Good ol' monnify
-  payload = {
+  const payload = {
+    account_bank: bankCode,
+    account_number: accountNumber,
     amount: foundVoucher.amountPerVoucher,
-    destinationBankCode: bankCode,
-    destinationAccountNumber: accountNumber,
-    destinationAccountName: fullName,
-    tx_ref: transREf,
+    narration: "Voucher Redemption at CMG.co",
+    currency: "NGN",
+    // reference: transREf,
+    // reference: "dfs23fhr7ntg0293039_PMCK",
+    callback_url: "https://usepays.co/",
+    debit_currency: "NGN",
   };
 
-  const token = await monnify.obtainAccessToken();
-  const withdrawMoney = await monnify.withdraw(payload, token);
+  const details = {
+    // account_bank: "044",
+    // account_number: "0768010549",
+    account_bank: bankCode,
+    account_number: accountNumber,
+    amount: 100,
+    currency: "NGN",
+    narration: "Payment for things",
+    ref: tx_ref.get_Tx_Ref(),
+  };
+
+  const transfer = await FLW_services.transferMoney(payload);
+  if(transfer.status == "error") return next(new ErrorResponse(transfer.message, 403))
+  // const transfer = await FLW_services.runTF(details);
   console.log(
-    "🚀 ~ file: utils.controller.js:720 ~ postCashoutVoucherController:asyncHandler ~ withdrawMoney:",
-    withdrawMoney
+    "🚀 ~ file: utils.controller.js:934 ~ postCashoutVoucherController:asyncHandler ~ transfer:",
+    transfer
   );
 
-  if (withdrawMoney?.status !== "SUCCESS") {
+  if (!transfer) {
     return res.status(400).send({
       success: false,
       message: "Transfer was not successful.",
     });
   }
+
+  // // Good ol' monnify
+  // payload = {
+  //   amount: foundVoucher.amountPerVoucher,
+  //   destinationBankCode: bankCode,
+  //   destinationAccountNumber: accountNumber,
+  //   destinationAccountName: fullName,
+  //   tx_ref: transREf,
+  // };
+
+  // const token = await monnify.obtainAccessToken();
+  // const withdrawMoney = await monnify.withdraw(payload, token);
+  // console.log(
+  //   "🚀 ~ file: utils.controller.js:720 ~ postCashoutVoucherController:asyncHandler ~ withdrawMoney:",
+  //   withdrawMoney
+  // );
+
+  // if (withdrawMoney?.status !== "SUCCESS") {
+  //   return res.status(400).send({
+  //     success: false,
+  //     message: "Transfer was not successful.",
+  //   });
+  // }
 
   sendMail(mailOptions);
   sendMail(winnerMailOptions);
@@ -1285,34 +1289,70 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
   const transREf = await tx_ref.get_Tx_Ref();
 
   const payload = {
-    amount,
-    name,
-    email,
-    description: "Crowd Funding Account",
     tx_ref: transREf,
+    amount,
+    currency: "NGN",
+    payment_options: "card",
+    redirect_url: "https://usepays.co/payment/depositecompleted",
+    customer: {
+      email: email,
+      phonenumber: " ",
+      name: name,
+    },
+    meta: {
+      customer_id: transREf,
+    },
+    customizations: {
+      title: "CMG",
+      description: "Pay with card",
+      logo: "#",
+    },
   };
 
-  const token = await monnify.obtainAccessToken();
-  const makePayment = await monnify.initializePaymentForLink(payload, token);
-
-  const transaction = new transactionModel({
+  const response = await FLW_services.initiateTransaction(payload);
+  // paymentReference
+  const transaction = await new transactionModel({
     tx_ref: transREf,
-    paymentReference: makePayment.paymentReference,
-    transactionReference: makePayment.transactionReference,
+    transactionReference: transREf,
     userId: user.id,
     amount,
-    currency: findLink.currency,
+    currency: "NGN",
     type: "credit",
     status: "initiated",
-    name,
-    link: findLink.id,
-    fundingType: "crowdFunding",
   });
 
   await transaction.save();
+
+  // // Good Ol monnify
+  // const payload = {
+  //   amount,
+  //   name,
+  //   email,
+  //   description: "Crowd Funding Account",
+  //   tx_ref: transREf,
+  // };
+
+  // const token = await monnify.obtainAccessToken();
+  // const makePayment = await monnify.initializePaymentForLink(payload, token);
+
+  // const transaction = new transactionModel({
+  //   tx_ref: transREf,
+  //   paymentReference: makePayment.paymentReference,
+  //   transactionReference: makePayment.transactionReference,
+  //   userId: user.id,
+  //   amount,
+  //   currency: findLink.currency,
+  //   type: "credit",
+  //   status: "initiated",
+  //   name,
+  //   link: findLink.id,
+  //   fundingType: "crowdFunding",
+  // });
+
+  // await transaction.save();
   return res.status(200).send({
     success: true,
-    data: makePayment.checkoutUrl,
+    data: response,
     message: "Payment Initiated",
     transaction: transaction,
   });
@@ -1473,6 +1513,63 @@ const webhook = asyncHandler(async (req, res, next) => {
   }
   return res.status(200).json({ success: true, data: req.body });
 });
+
+const transferWebhook = asyncHandler(async (req, res, next) => {
+  try {
+    const paymentReference = req.body.eventData.paymentReference;
+    const transactionReference = req.body.eventData.transactionReference;
+
+    const transaction = await transactionModel.findOne({
+      paymentReference,
+      transactionReference,
+    });
+
+    if (!transaction) {
+      return res.status(400).send({
+        success: false,
+        message: "transaction not found.",
+      });
+    }
+
+    if (req.body.eventData.paymentStatus !== "PAID")
+      return next(
+        new ErrorResponse("Something went wrong with the transaction", 400)
+      );
+    if (transaction.status === "successful") {
+      return res.status(400).send({
+        success: false,
+        message: "Failed: Possible duplicate Transaction",
+      });
+    }
+
+    // update transaction
+    transaction.status = "successful";
+    await transaction.save();
+
+    // find user and update walletBalance
+    const user = await userModel.findOne({ _id: transaction.userId });
+
+    if (!user) {
+      return res.status(400).send({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    user.walletBalance = user.walletBalance - transaction.amount;
+    await user.save();
+  } catch (error) {
+    console.log("Check: ", err);
+    // transaction.status = verify.paymentStatus;
+    // await transaction.save();
+    // return res.status(400).send({
+    //   success: false,
+    //   message: "Transaction was not successful",
+    //   errMessage: verify,
+    // });
+  }
+  return res.status(200).json({ success: true, data: req.body });
+});
 // postGenerateCrowdFundingLink: asyncHandler(async(req, res, next) => {
 //   const {link} = req.body
 //   const user = await userModel.findByIdAndUpdate(req.user.id, {})
@@ -1496,5 +1593,6 @@ module.exports = {
   postContactUsController,
   postFindVoucherController,
   postWithdrawFromWalletController,
+  transferWebhook,
   webhook,
 };
