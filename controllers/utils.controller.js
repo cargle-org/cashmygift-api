@@ -35,6 +35,7 @@ const monnify = require("../services/monnify.services");
 // Templates
 const voucherClaimMail = require("../templates/voucherClaimMail.templates");
 const winnerVoucherClaimMail = require("../templates/winnerVoucherClaimMail.templates");
+const newVoucherMail = require("../templates/newVoucherMail.templates");
 const contactUsMail = require("../templates/contactUsMail.templates");
 const linkModel = require("../models/link.model");
 const ErrorResponse = require("../utils/errorResponse");
@@ -148,7 +149,8 @@ const getVerifyController = asyncHandler(async (req, res, next) => {
   const id = req.query.transaction_id ?? null;
   const tx_ref = req.query.tx_ref ?? null;
 
-  if(!id || !tx_ref) return next(new ErrorResponse("Invalid query parameters", 400))
+  if (!id || !tx_ref)
+    return next(new ErrorResponse("Invalid query parameters", 400));
   const verify = await FLW_services.verifyTransaction(id);
 
   if (verify.status === "successful") {
@@ -350,7 +352,8 @@ const postWithdrawFromWalletController = asyncHandler(
     };
 
     const transfer = await FLW_services.transferMoney(payload);
-    if(transfer.status == "error") return next(new ErrorResponse(transfer.message, 403))
+    if (transfer.status == "error")
+      return next(new ErrorResponse(transfer.message, 403));
     console.log(
       "🚀 ~ file: utils.controller.js:339 ~ postWithdrawFromWalletController:asyncHandler ~ transfer:",
       transfer
@@ -409,11 +412,13 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     voucherKey,
     totalNumberOfVouchers,
     amountPerVoucher,
+    expiry_date,
+    recipients,
   } = req.body;
-  console.log(
-    "🚀 ~ file: utils.controller.js:243 ~ postCreateVoucherController:asyncHandler ~ req.body:",
-    req.body
-  );
+  // console.log(
+  //   "🚀 ~ file: utils.controller.js:243 ~ postCreateVoucherController:asyncHandler ~ req.body:",
+  //   req.body.recipients
+  // );
 
   const cmgFee = parseInt(totalNumberOfVouchers * 10);
   const totalAmount = parseInt(totalNumberOfVouchers * amountPerVoucher);
@@ -556,7 +561,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
 
   if (req.file) {
     // send image to Cloudinary
-    const thumbnail = await uploadImageSingle(req, res, next);
+    thumbnail = await uploadImageSingle(req, res, next);
   }
 
   // create voucher
@@ -569,15 +574,49 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     totalNumberOfVouchers,
     amountPerVoucher,
     totalAmount,
+    expiry_date,
     voucherCoupons,
+    recipients,
   });
   await voucher.save();
 
+  // get user
   const user = await userModel.findOne({ _id: req.user._id });
   if (!user) {
     return res.status(400).send({
       success: false,
       message: "Couldn't find user",
+    });
+  }
+
+  // format expiry date
+  // Parse the expiry date string
+  const expiryDate = moment(expiry_date, "YYYY-MM-DD:HH:mm:ss");
+
+  // Format the expiry date in your desired format
+  const formattedExpiryDate = expiryDate.format("YYYY-MMM-DD HH:mm:ss");
+
+  // send mail to recipients
+  if (recipients) {
+    recipients.map((recipient, i) => {
+      console.log("🚀 ~ recipients.map ~ recipient:", recipient);
+      console.log("🚀 ~ voucherCoupons:", voucherCoupons[i]);
+      console.log("🚀 ~ username:", user.name);
+
+      // Send email
+      const mailOptions = {
+        to: recipient.recipient_email,
+        subject: `New coupon from ${user.name}`,
+        html: newVoucherMail(
+          user.name,
+          recipient.recipient_name,
+          voucherCoupons[i]?.couponCode,
+          amountPerVoucher,
+          formattedExpiryDate
+        ),
+      };
+
+      sendMail(mailOptions);
     });
   }
 
@@ -971,7 +1010,8 @@ const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
   };
 
   const transfer = await FLW_services.transferMoney(payload);
-  if(transfer.status == "error") return next(new ErrorResponse(transfer.message, 403))
+  if (transfer.status == "error")
+    return next(new ErrorResponse(transfer.message, 403));
   // const transfer = await FLW_services.runTF(details);
   console.log(
     "🚀 ~ file: utils.controller.js:934 ~ postCashoutVoucherController:asyncHandler ~ transfer:",
@@ -1388,7 +1428,9 @@ const getCrowdFundedTransactionsPaidViaLink = asyncHandler(
 const getLinkDetails = asyncHandler(async (req, res, next) => {
   const link = await linkModel.findById(req.params.linkId);
   if (!link) return next(new ErrorResponse("Invalid Link", 404));
-  const user = await userModel.findOne({ linkId: link.userLinkId }).select("name email phone companyLogo role");
+  const user = await userModel
+    .findOne({ linkId: link.userLinkId })
+    .select("name email phone companyLogo role");
   return res.status(200).json({
     success: true,
     message: "Link has been successfully retrieved",
