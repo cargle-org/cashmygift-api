@@ -15,4 +15,9 @@ const dataUri = (req) => {
   );
 };
 
-module.exports = { multerUploads, dataUri };
+const thumbnailDataUri = (req) => {
+  console.log(req);
+  return parser.format(path.extname(req.originalname).toString(), req.buffer);
+};
+
+module.exports = { multerUploads, dataUri, thumbnailDataUri };

@@ -1,6 +1,7 @@
 // Dependecies
 const moment = require("moment");
 const axios = require("axios");
+const xlsx = require("xlsx");
 const { v4: uuidv4 } = require("uuid");
 require("dotenv").config();
 const Validator = require("../validators/validator.index");
@@ -24,7 +25,10 @@ const {
   cashoutVoucherValidation,
 } = require("../middlewares/validate");
 const asyncHandler = require("../middlewares/asyncHandler");
-const { uploadImageSingle } = require("../middlewares/cloudinary");
+const {
+  uploadImageSingle,
+  uploadThumbnail,
+} = require("../middlewares/cloudinary");
 const tx_ref = require("../middlewares/tx_ref");
 
 // Services
@@ -413,12 +417,22 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     totalNumberOfVouchers,
     amountPerVoucher,
     expiry_date,
-    recipients,
   } = req.body;
-  // console.log(
-  //   "🚀 ~ file: utils.controller.js:243 ~ postCreateVoucherController:asyncHandler ~ req.body:",
-  //   req.body.recipients
-  // );
+
+  // ******** FETCH RECIPIENTS ******* //
+  let recipients = [];
+  // get from body
+  if (req.body?.recipients) recipients = req.body.recipients;
+  // get from files
+  if (req.files?.recipients) {
+    // Accessing recipients file
+    const recipientsFile = req.files.recipients[0];
+    // Parse recipients Excel file
+    const workbook = xlsx.read(recipientsFile.buffer, { type: "buffer" });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const recipientsData = xlsx.utils.sheet_to_json(sheet);
+    recipients = recipientsData;
+  }
 
   const cmgFee = parseInt(totalNumberOfVouchers * 10);
   const totalAmount = parseInt(totalNumberOfVouchers * amountPerVoucher);
@@ -559,9 +573,9 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     });
   }
 
-  if (req.file) {
+  if (req.files?.thumbnail) {
     // send image to Cloudinary
-    thumbnail = await uploadImageSingle(req, res, next);
+    thumbnail = await uploadThumbnail(req.files.thumbnail);
   }
 
   // create voucher
@@ -578,7 +592,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     voucherCoupons,
     recipients,
   });
-  await voucher.save();
+  // await voucher.save();
 
   // get user
   const user = await userModel.findOne({ _id: req.user._id });
@@ -599,10 +613,6 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
   // send mail to recipients
   if (recipients) {
     recipients.map((recipient, i) => {
-      console.log("🚀 ~ recipients.map ~ recipient:", recipient);
-      console.log("🚀 ~ voucherCoupons:", voucherCoupons[i]);
-      console.log("🚀 ~ username:", user.name);
-
       // Send email
       const mailOptions = {
         to: recipient.recipient_email,
@@ -621,7 +631,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
   }
 
   user.walletBalance = user.walletBalance - (totalAmount + cmgFee);
-  await user.save();
+  // await user.save();
 
   console.log(
     "🚀 ~ file: utils.controller.js:50 ~ postCreateVoucherController:asyncHandler ~ voucher:",
