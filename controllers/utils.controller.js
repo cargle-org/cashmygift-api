@@ -592,7 +592,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     voucherCoupons,
     recipients,
   });
-  // await voucher.save();
+  await voucher.save();
 
   // get user
   const user = await userModel.findOne({ _id: req.user._id });
@@ -631,7 +631,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
   }
 
   user.walletBalance = user.walletBalance - (totalAmount + cmgFee);
-  // await user.save();
+  await user.save();
 
   console.log(
     "🚀 ~ file: utils.controller.js:50 ~ postCreateVoucherController:asyncHandler ~ voucher:",
