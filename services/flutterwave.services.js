@@ -62,7 +62,7 @@ const transferMoney = async (payload) => {
     return response.data.data;
   } catch (err) {
     console.log("Transfer error: ", err.response);
-    return {status: "error", message: err.response.data.message};
+    return { status: "error", message: err.response.data.message };
     // return res.status(400).send({
     //   success: false,
     //   message: "Error, couldn't process transfer",
@@ -98,9 +98,84 @@ const runTF = async (details) => {
   }
 };
 
+// AIRTIME SERVICES
+// get airtime billers
+const getAirtimeBillers = async () => {
+  try {
+    const response = await axios.get(
+      "https://api.flutterwave.com/v3/bills/AIRTIME/billers?country=NG",
+      options
+    );
+    // console.log("🚀 ~ getAirtimeBillers ~ response:", response);
+    if (response.data.status === "error") {
+      return { status: "error", message: response.data.message };
+    }
+    return response.data.data;
+  } catch (err) {
+    console.log("🚀 ~ getAirtimeBillers ~ err:", err);
+    return { status: "error", message: err.response.data.message };
+  }
+};
+
+// get bill information
+const getBillInformation = async (billerCode) => {
+  try {
+    const response = await axios.get(
+      `https://api.flutterwave.com/v3/billers/${billerCode}/items`,
+      options
+    );
+    if (response.data.status === "error") {
+      return { status: "error", message: response.data.message };
+    }
+    return response.data.data;
+  } catch (err) {
+    console.log("🚀 ~ getBillInformation ~ err:", err);
+    return { status: "error", message: err.response.data.message };
+  }
+};
+
+// validate customer info
+const validateCustomerInfo = async (payload) => {
+  try {
+    const response = await axios.get(
+      `https://api.flutterwave.com/v3/bill-items/${payload.item_code}/validate?code=${payload.biller_code}&customer=${payload.phone_number}`,
+      options
+    );
+    if (response.data.status === "error") {
+      return { status: "error", message: response.data.message };
+    }
+    return response.data.data;
+  } catch (err) {
+    console.log("🚀 ~ validateCustomerInfo ~ err:", err);
+    return { status: "error", message: err.response.data.message };
+  }
+};
+
+// Buy airtime
+const buyAirtime = async (query, payload) => {
+  try {
+    const response = await axios.post(
+      `https://api.flutterwave.com/v3/billers/${query.biller_code}/items/${query.item_code}/payment`,
+      payload,
+      options
+    );
+    if (response.data.status === "error") {
+      return { status: "error", message: response.data.message };
+    }
+    return response.data.data;
+  } catch (err) {
+    console.log("🚀 ~ buyAirtime ~ err:", err);
+    return { status: "error", message: err.response.data.message };
+  }
+};
+
 module.exports = {
   initiateTransaction,
   verifyTransaction,
   transferMoney,
   runTF,
+  getAirtimeBillers,
+  getBillInformation,
+  validateCustomerInfo,
+  buyAirtime,
 };

@@ -48,10 +48,20 @@ const cashoutVoucherValidation = Joi.object({
   accountNumber: Joi.string().required(),
 });
 
+const cashoutVoucherAsAirtimeValidation = Joi.object({
+  fullName: Joi.string().min(2).required(),
+  email: Joi.string().min(6).required().email(),
+  phone_number: Joi.string().min(11).required(),
+  voucherCode: Joi.string().required(),
+  biller_code: Joi.string().required(),
+  item_code: Joi.string().required(),
+});
+
 module.exports = {
   registerValidation,
   loginValidation,
   editProfileValidation,
   createVoucherValidation,
   cashoutVoucherValidation,
+  cashoutVoucherAsAirtimeValidation,
 };

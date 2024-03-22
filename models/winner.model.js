@@ -21,11 +21,12 @@ const winnerSchema = new Schema(
     },
     bankCode: {
       type: String,
-      required: true,
     },
     accountNumber: {
       type: String,
-      required: true,
+    },
+    phone_number: {
+      type: String,
     },
   },
   {

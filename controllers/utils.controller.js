@@ -23,6 +23,7 @@ const contactModel = require("../models/contact.model");
 const {
   createVoucherValidation,
   cashoutVoucherValidation,
+  cashoutVoucherAsAirtimeValidation,
 } = require("../middlewares/validate");
 const asyncHandler = require("../middlewares/asyncHandler");
 const {
@@ -1083,6 +1084,227 @@ const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
   });
 });
 
+// ************* //
+const getAllAirtimeBillersController = asyncHandler(async (req, res, next) => {
+  try {
+    const billers = await FLW_services.getAirtimeBillers();
+    return res.status(200).send({
+      success: true,
+      data: {
+        billers: billers,
+      },
+      message: "Billers fetched successflly",
+    });
+  } catch (err) {
+    console.log("🚀 ~ getAllAirtimeBillersController ~ err:", err);
+    return res.status(500).send({
+      success: false,
+      message: "Couldn't fetch billers",
+      errMessage: err,
+    });
+  }
+});
+
+const getBillInformationController = asyncHandler(async (req, res, next) => {
+  try {
+    const { biller_code } = req.query;
+    const bill = await FLW_services.getBillInformation(biller_code);
+    return res.status(200).send({
+      success: true,
+      data: {
+        bill: bill,
+      },
+      message: "Bill information fetched successflly",
+    });
+  } catch (err) {
+    console.log("🚀 ~ getAllAirtimeBillController ~ err:", err);
+    return res.status(500).send({
+      success: false,
+      message: "Couldn't fetch bill information",
+      errMessage: err,
+    });
+  }
+});
+
+// cash voucher as airtime
+const postCashVoucherAsAirtimeController = asyncHandler(
+  async (req, res, next) => {
+    const {
+      fullName,
+      email,
+      phone_number,
+      voucherCode,
+      biller_code,
+      item_code,
+    } = req.body;
+
+    const body = { ...req.body };
+
+    // // Run Hapi/Joi validation
+    const { error } = await cashoutVoucherAsAirtimeValidation.validateAsync(
+      body
+    );
+    if (error) {
+      return res.status(400).send({
+        success: false,
+        message: "Validation failed",
+        errMessage: error.details[0].message,
+      });
+    }
+
+    // find voucher using voucherCode
+    const foundVoucher = await voucherModel.findOne({
+      voucherKey: voucherCode.slice(0, 5),
+    });
+
+    if (!foundVoucher) {
+      return res.status(400).send({
+        success: false,
+        message: "This coupon does not exist, please try another.",
+      });
+    }
+
+    let matchingCoupon;
+
+    // search voucher coupons for matching code
+    foundVoucher.voucherCoupons.map((item) => {
+      if (item.couponCode === voucherCode) {
+        if (item.status === "cashed") {
+          return res.status(400).send({
+            success: false,
+            message: "This coupon has already been claimed, please try another",
+          });
+        }
+        matchingCoupon = item;
+        // remove coupon from array if found so we can add it later after editing
+        // foundVoucher.voucherCoupons.pop(item);
+      }
+    });
+
+    if (!matchingCoupon) {
+      return res.status(400).send({
+        success: false,
+        message: "This coupon does not exist, please try another.",
+      });
+    }
+
+    const time = moment().format("yy-MM-DD hh:mm:ss");
+
+    // Edit coupon details then add to array
+    matchingCoupon.status = "cashed";
+    matchingCoupon.cashedBy = fullName;
+    matchingCoupon.cashedDate = time.split(" ")[0];
+    matchingCoupon.cashedTime = time.split(" ")[1];
+
+    const index = foundVoucher.voucherCoupons.indexOf(matchingCoupon);
+
+    foundVoucher.voucherCoupons.splice(index, 1, matchingCoupon);
+
+    // Add every other needed calculation stuff then save
+    foundVoucher.totalCashedAmount =
+      parseInt(foundVoucher.totalCashedAmount) +
+      parseInt(foundVoucher.amountPerVoucher);
+
+    foundVoucher.vouchersCashed = parseInt(foundVoucher.vouchersCashed) + 1;
+    foundVoucher.cashedPercentage = (
+      (parseInt(foundVoucher.vouchersCashed) /
+        parseInt(foundVoucher.totalNumberOfVouchers)) *
+      (100 / 1)
+    ).toFixed(2);
+
+    // Send mail to Voucher creator that <<fullName>> just cashed their voucher
+    // find user Email
+    const creator = await userModel.findOne({ _id: foundVoucher.userId });
+
+    // Send email to Voucher creator
+    const mailOptions = {
+      to: creator.email,
+      subject: "Voucher Claim Mail",
+      html: voucherClaimMail(
+        fullName,
+        voucherCode,
+        creator.name,
+        foundVoucher.title,
+        foundVoucher.amountPerVoucher
+      ),
+    };
+
+    // Send email to Voucher winner
+    const winnerMailOptions = {
+      to: email,
+      subject: "Voucher Claim Mail",
+      html: winnerVoucherClaimMail(
+        fullName,
+        voucherCode,
+        foundVoucher.title,
+        foundVoucher.amountPerVoucher
+      ),
+    };
+
+    const purchaseDetails = {
+      country: "NG",
+      customer_id: phone_number,
+      amount: foundVoucher.amountPerVoucher,
+      reference: `${tx_ref.get_Tx_Ref()}`,
+    };
+
+    const customerInfo = {
+      item_code,
+      biller_code,
+      phone_number,
+    };
+
+    const validateCustomerInfo = await FLW_services.validateCustomerInfo(
+      customerInfo
+    );
+
+    if (validateCustomerInfo.response_message !== "Successful") {
+      return res.status(400).send({
+        success: false,
+        message: "Couldn't validate details",
+      });
+    }
+
+    const buyAirtime = await FLW_services.buyAirtime(
+      customerInfo,
+      purchaseDetails
+    );
+
+    console.log("🚀 ~ buyAirtime:", buyAirtime);
+
+    if (buyAirtime.status === "error") {
+      return res.status(400).send({
+        success: false,
+        message: "Airtime purchase was not successful.",
+        error: buyAirtime.message,
+      });
+    }
+
+    sendMail(mailOptions);
+    sendMail(winnerMailOptions);
+    await foundVoucher.save();
+
+    // Save winner details
+    const winner = new winnerModel({
+      fullName,
+      email,
+      claimedVoucherCode: voucherCode,
+      phone_number,
+    });
+    await winner.save();
+
+    return res.status(200).send({
+      success: true,
+      data: {
+        voucher: foundVoucher,
+        winner,
+        details: buyAirtime,
+      },
+      message: "Cashed voucher as airtime successfully.",
+    });
+  }
+);
+
 // Fetch all banks in Nigeria {{FOR FLUTTERWAVE}}
 const getAllBanksMonnifyController = asyncHandler(async (req, res, next) => {
   //   const options = {
@@ -1638,6 +1860,9 @@ module.exports = {
   handleFlwCallback,
   postFundWalletController,
   postCashoutVoucherController,
+  getAllAirtimeBillersController,
+  getBillInformationController,
+  postCashVoucherAsAirtimeController,
   postCreateCrowdFundingLink,
   postCreateVoucherController,
   getCrowdFundedTransactionsPaidViaLink,

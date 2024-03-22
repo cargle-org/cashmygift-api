@@ -39,6 +39,14 @@ router.post("/contact-us", utils.postContactUsController);
 router.post("/webhook", utils.webhook);
 router.post("/transfer/webhook", utils.transferWebhook);
 
+// airtime routes
+router.get("/airtime-billers", utils.getAllAirtimeBillersController);
+router.get("/bill-information", utils.getBillInformationController);
+router.post(
+  "/voucher/claim-as-airtime",
+  utils.postCashVoucherAsAirtimeController
+);
+
 // transactions
 router.get("/transactions/all", utils.getAllTransactionsController);
 router.get("/transactions/one", utils.getOneTransactionController);
