@@ -363,7 +363,7 @@ ul.social li{
             	</tr>
             </table>
           </td>
-	      </tr><!-- end tr -->
+	      </tr><!-- end tr. -->
       <!-- 1 Column Text + Button : END -->
       </table>
     </div>
