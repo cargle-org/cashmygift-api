@@ -24,7 +24,6 @@ const TransactionSchema = new Schema(
     },
     paymentReference: {
       type: String,
-      default: "",
     },
     flw_ref: {
       type: String,

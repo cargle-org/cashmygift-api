@@ -94,6 +94,7 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
   // paymentReference
   const transaction = await new transactionModel({
     tx_ref: transREf,
+    paymentReference: transREf,
     transactionReference: transREf,
     userId: req.user._id,
     amount,
@@ -111,8 +112,12 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
     },
     message: "Payment Initiated",
   });
-  } catch (ex) {
-    console.log("🚀 ~ postFundWalletController ~ ex:", ex)
+  } catch (err) {
+    console.log("🚀 ~ postFundWalletController ~ err:", err)
+    return res.status(500).send({
+      success: false,
+      message: err.message,
+    });
   }
 
   // //  Good ol' monnify
