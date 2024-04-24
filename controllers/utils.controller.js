@@ -633,10 +633,10 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
       // Send email
       const mailOptions = {
         to: recipient.recipient_email,
-        subject: `New coupon from ${user.name}`,
+        subject: `New coupon from ${user?.name}`,
         html: newVoucherMail(
-          user.name,
-          recipient.recipient_name,
+          user?.name,
+          recipient?.recipient_name ? recipient?.recipient_name : "",
           voucherCoupons[i]?.couponCode,
           amountPerVoucher,
           formattedExpiryDate
