@@ -63,7 +63,8 @@ const getPingController = (req, res) => {
 
 // Fund wallet
 const postFundWalletController = asyncHandler(async (req, res, next) => {
-  const { amount } = req.body;
+  try {
+    const { amount } = req.body;
 
   const currency = "NGN";
   const transREf = await tx_ref.get_Tx_Ref();
@@ -110,6 +111,9 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
     },
     message: "Payment Initiated",
   });
+  } catch (ex) {
+    console.log("🚀 ~ postFundWalletController ~ ex:", ex)
+  }
 
   // //  Good ol' monnify
   // const { amount } = req.body;
