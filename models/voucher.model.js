@@ -58,7 +58,7 @@ const voucherSchema = new Schema(
     },
     expiry_date: {
       type: Date,
-      required: true,
+      // required: true,
     },
     voucherCoupons: [],
     recipients: [],

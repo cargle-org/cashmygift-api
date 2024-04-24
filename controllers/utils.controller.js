@@ -429,6 +429,13 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     expiry_date,
   } = req.body;
 
+  if (amountPerVoucher < 100) {
+    return res.status(400).send({
+      success: false,
+      message: "Amount cannot be less than 100, please increase the amount",
+    });
+  }
+
   // ******** FETCH RECIPIENTS ******* //
   let recipients = [];
   // get from body
@@ -618,7 +625,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
   const expiryDate = moment(expiry_date, "YYYY-MM-DD:HH:mm:ss");
 
   // Format the expiry date in your desired format
-  const formattedExpiryDate = expiryDate.format("YYYY-MMM-DD HH:mm:ss");
+  const formattedExpiryDate = expiryDate?.format("YYYY-MMM-DD HH:mm:ss");
 
   // send mail to recipients
   if (recipients) {
