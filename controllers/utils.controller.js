@@ -85,7 +85,7 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
       customer_id: req.user._id,
     },
     customizations: {
-      title: "CMG",
+      title: "Pays",
       description: "Pay with card",
       logo: "#",
     },
@@ -360,7 +360,7 @@ const postWithdrawFromWalletController = asyncHandler(
       account_number: accountNumber,
       amount: amount,
       ref: tx_ref.get_Tx_Ref(),
-      narration: "Withdrawal from CMG.co wallet",
+      narration: "Withdrawal from usepays.co wallet",
       currency: "NGN",
       // callback_url: "https://6f83-197-210-77-13.ngrok.io/api/utils/transfer/webhook",
       // debit_currency: "NGN",
