@@ -67,7 +67,8 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
     const { amount } = req.body;
 
   const currency = "NGN";
-  const transREf = await tx_ref.get_Tx_Ref();
+  // const transREf = await tx_ref.get_Tx_Ref();
+  const transREf = tx_ref.get_Tx_Ref();
 
   const payload = {
     tx_ref: transREf,

@@ -1,7 +1,8 @@
 const moment = require("moment");
 
 //generate random IDs for flutterwave tx_ref
-let tx_ref = 0;
+// let tx_ref = 0;
+let tx_ref = '';
 const get_Tx_Ref = () => {
   const time = moment().format("YYYY-MM-DD hh:mm:ss");
   //   const rand = Math.floor(Math.random() * Date.now());
@@ -10,7 +11,7 @@ const get_Tx_Ref = () => {
   tx_ref = parseInt(ref) * rand1;
   console.log(" ~ file: tx_ref.js ~ line 10 ~ tx_ref", tx_ref);
 
-  return tx_ref;
+  return `${tx_ref}`;
 
   // const alphabets = [
   //     "a",

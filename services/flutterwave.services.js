@@ -31,7 +31,7 @@ const initiateTransaction = async (payload) => {
     );
     return response.data.data.link;
   } catch (err) {
-    console.log(err);
+    console.log(err.response.data);
   }
 };
 
