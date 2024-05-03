@@ -229,6 +229,7 @@ const getVerifyController = asyncHandler(async (req, res, next) => {
     return res.status(400).send({
       success: false,
       message: "Transaction was not successful",
+      data: transaction
     });
   }
 
