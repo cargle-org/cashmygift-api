@@ -168,7 +168,7 @@ const getVerifyController = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse("Invalid query parameters", 400));
   const verify = await FLW_services.verifyTransaction(id);
 
-  if (verify.status === "successful") {
+  if (verify?.status === "successful") {
     const transaction = await transactionModel.findOne({ tx_ref: tx_ref });
 
     if (!transaction) {

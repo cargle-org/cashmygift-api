@@ -32,6 +32,7 @@ const initiateTransaction = async (payload) => {
     return response.data.data.link;
   } catch (err) {
     console.log(err.response.data);
+    return err.response.data;
   }
 };
 
@@ -45,6 +46,7 @@ const verifyTransaction = async (id) => {
     return response.data.data;
   } catch (err) {
     console.log(err);
+    return err.response.data;
   }
 };
 
