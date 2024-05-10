@@ -1103,7 +1103,7 @@ const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
     data: {
       voucher: foundVoucher,
       winner,
-      details: withdrawMoney,
+      details: transfer,
     },
     message: "Claimed Coupon from Voucher successfully.",
   });
