@@ -354,7 +354,7 @@ ul.social li{
 							<h3>Hi <b>${winner}</b>,
 							</h3>
 							
-							<h4>Congratulations, you just claimed a voucher from <b>'${title}'</b> on <a href="https://usepays.co/">usepays.co</a>, here are the details ;
+							<h4>Congratulations, you just claimed a voucher from <b>'${title}'</b> on <a href="https://www.usepays.co/">usepays.co</a>, here are the details ;
 							<br/>
 							 <h5>Coupon Code : <b>${code}</b> </h5>
 							 <h5>Amount : <b>${amount}</b> </h5>

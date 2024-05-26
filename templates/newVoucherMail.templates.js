@@ -354,7 +354,7 @@ ul.social li{
 							<h3>Hi <b>${recipient}</b>,
 							</h3>
 							
-							<h4>You have been gifted a voucher from <b>'${owner_name}'</b> on <a href="https://usepays.co/">usepays.co</a>, here are the details;
+							<h4>You have been gifted a voucher from <b>'${owner_name}'</b> on <a href="https://www.usepays.co/">usepays.co</a>, here are the details;
 							<br/>
 							 <h5>Coupon Code : <b>${code}</b> </h5>
 							 <h5>Amount : <b>₦${amount}</b> </h5>

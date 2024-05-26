@@ -356,7 +356,7 @@ ul.social li{
 							
 							<h4>It seems you had issues remembering your last password, use this link to reset your password, and do well to remember it this time. 😉
 							<br/>
-							 <h5><a href='https://usepays.co/signin/resetpassword?id=${id}&resetToken=${token}'>Click here to reset password</a></h5>
+							 <h5><a href='https://www.usepays.co/signin/resetpassword?id=${id}&resetToken=${token}'>Click here to reset password</a></h5>
 							<br><br>						
             			</div>
             		</td>
