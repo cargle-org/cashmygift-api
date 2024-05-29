@@ -75,7 +75,7 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
     amount,
     currency,
     payment_options: "card",
-    redirect_url: "https://usepays.co/payment/depositecompleted",
+    redirect_url: "https://www.usepays.co/payment/depositecompleted",
     customer: {
       email: req.user.email,
       phonenumber: req.user.phone,
@@ -1030,7 +1030,7 @@ const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
     currency: "NGN",
     // reference: transREf,
     // reference: "dfs23fhr7ntg0293039_PMCK",
-    callback_url: "https://usepays.co/",
+    callback_url: "https://www.usepays.co/",
     debit_currency: "NGN",
   };
 
@@ -1590,7 +1590,7 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
     amount,
     currency: "NGN",
     payment_options: "card",
-    redirect_url: "https://usepays.co/payment/depositecompleted",
+    redirect_url: "https://www.usepays.co/payment/depositecompleted",
     customer: {
       email: email,
       phonenumber: " ",

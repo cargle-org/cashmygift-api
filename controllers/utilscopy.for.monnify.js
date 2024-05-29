@@ -66,7 +66,7 @@ module.exports = {
       amount,
       currency,
       payment_options: "card",
-      redirect_url: "https://usepays.co/payment/depositecompleted",
+      redirect_url: "https://www.usepays.co/payment/depositecompleted",
       customer: {
         email: req.user.email,
         phonenumber: req.user.phone,

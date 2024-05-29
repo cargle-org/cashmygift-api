@@ -3,7 +3,7 @@
 
 # #APP_URL
 # APP_URL=http://localhost:3030/api
-# BASE_URL=https://usepays.co/
+# BASE_URL=https://www.usepays.co/
 
 # #MONGODB CONNECTION STRING
 # MDB_ATLAS=mongodb+srv://cmg:cashMyGift@cmg.ccng7dg.mongodb.net/
@@ -50,5 +50,5 @@
 # MONNIFY_CONTRACT_CODE=3714456690
 # MONNIFY_CARD_PAYMENT_METHOD=CARD
 # MONNIFY_ACCOUNT_TRANSFER_PAYMENT_METHOD=ACCOUNT_TRANSFER
-# MONNIFY_REDIRECT_URL=https://usepays.co/
+# MONNIFY_REDIRECT_URL=https://www.usepays.co/
 # MONNIFY_WALLET_ACCOUNT_NUMBER=7127576672
