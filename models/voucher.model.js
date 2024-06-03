@@ -29,6 +29,10 @@ const voucherSchema = new Schema(
       type: String,
       required: true,
     },
+    specialKey: {
+      type: String,
+      required: true,
+    },
     totalNumberOfVouchers: {
       type: Number,
       default: 0,

@@ -472,33 +472,6 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     });
   }
 
-  // // Do simple maths to know if numbers match again just to be safe
-  // if (totalNumberOfVouchers * amountPerVoucher != totalAmount) {
-  //     return res.status(400).send({
-  //         success: false,
-  //         message: "Error! please check numbers and try again",
-  //     });
-  // }
-
-  // // Check walletBalance before transaction
-  // if (req.user.walletBalance < totalAmount) {
-  //     return res.status(400).send({
-  //         success: false,
-  //         message: "Insufficient wallet balance, please fund wallet",
-  //     });
-  // }
-
-  // Check if voucherKEy already exists
-  const foundVoucherKey = await voucherModel.findOne({
-    voucherKey: voucherKey,
-  });
-  if (foundVoucherKey) {
-    return res
-      .status(400)
-      .send("Voucher Key already exists, please try another.");
-  }
-
-  let voucherCoupons = [];
   // Generate voucher code
   const alphabets = [
     "a",
@@ -555,23 +528,50 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     "Z",
   ];
 
+  const rand = Math.floor(Math.random() * 48);
+  const rand2 = Math.floor(Math.random() * 48);
+  const rand3 = Math.floor(Math.random() * 48);
+  const rand4 = Math.floor(Math.random() * 48);
+
+  const specialKey = `${alphabets[rand]}${rand}${alphabets[rand3]}${alphabets[rand2]}`;
+
+  console.log("🚀 ~ postCreateVoucherController ~ specialKey:", specialKey)
+  // // Do simple maths to know if numbers match again just to be safe
+  // if (totalNumberOfVouchers * amountPerVoucher != totalAmount) {
+  //     return res.status(400).send({
+  //         success: false,
+  //         message: "Error! please check numbers and try again",
+  //     });
+  // }
+
+  // // Check walletBalance before transaction
+  // if (req.user.walletBalance < totalAmount) {
+  //     return res.status(400).send({
+  //         success: false,
+  //         message: "Insufficient wallet balance, please fund wallet",
+  //     });
+  // }
+
+  // Check if voucherKEy already exists
+  const foundVoucherKey = await voucherModel.findOne({
+    specialKey: `${voucherKey}-${specialKey}`,
+  });
+  if (foundVoucherKey) {
+    return res
+      .status(400)
+      .send("Voucher Key already exists, please try another.");
+  }
+
+  let voucherCoupons = [];
+  
+
   // create loop based on number of vouchers
   for (let i = 1; i <= totalNumberOfVouchers; i++) {
-    const rand = Math.floor(Math.random() * 48);
-    const rand2 = Math.floor(Math.random() * 48);
-    const rand3 = Math.floor(Math.random() * 48);
-    const rand4 = Math.floor(Math.random() * 48);
+  
+    // const time = moment().format("yy-MM-DD hh:mm:ss");
+    // const ref = time.replace(/[\-]|[\s]|[\:]/g, "");
 
-    const time = moment().format("yy-MM-DD hh:mm:ss");
-    const ref = time.replace(/[\-]|[\s]|[\:]/g, "");
-
-    // const voucherCode = `${voucherKey}-${alphabets[rand]}${alphabets[rand3]}${
-    //   alphabets[rand2]
-    // }-${ref.slice(10, 20)}${alphabets[rand4]}${rand}${rand3}${
-    //   alphabets[rand3]
-    // }`;
-
-    const voucherCode = `${voucherKey}-${alphabets[rand]}${alphabets[rand3]}${alphabets[rand2]}-${alphabets[rand4]}${rand}${rand3}${alphabets[rand3]}`;
+    const voucherCode = `${voucherKey}-${specialKey}-${alphabets[rand4]}${rand}${rand3}${alphabets[rand3]}`;
 
     voucherCoupons.push({
       couponId: i,
@@ -581,10 +581,6 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
       cashedDate: "Not yet",
       cashedTime: "Not yet",
     });
-
-    // const voucherCode1 = `${alphabets[rand]}${alphabets[rand3]}${
-    //   alphabets[rand2]
-    // }-${ref.slice(10, 20)}-${ref.slice(2, 6)}${alphabets[rand4]}`;
   }
 
   const body = { ...req.body, thumbnail: req.file, voucherCoupons };
@@ -611,6 +607,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     thumbnail,
     description,
     voucherKey,
+    specialKey: `${voucherKey}-${specialKey}`,
     totalNumberOfVouchers,
     amountPerVoucher,
     totalAmount,
@@ -680,7 +677,7 @@ const postFindVoucherController = asyncHandler(async (req, res, next) => {
 
     // find voucher using voucherCode
     const foundVoucher = await voucherModel.findOne({
-      voucherKey: voucherCode.slice(0, 5),
+      specialKey: voucherCode.slice(0, 11),
     });
 
     if (!foundVoucher) {
@@ -917,7 +914,7 @@ const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
 
   // find voucher using voucherCode
   const foundVoucher = await voucherModel.findOne({
-    voucherKey: voucherCode.slice(0, 5),
+    specialKey: voucherCode.slice(0, 11),
   });
   console.log(
     "🚀 ~ file: utils.controller.js:348 ~ postCashoutVoucherController:asyncHandler ~ foundVoucher:",
