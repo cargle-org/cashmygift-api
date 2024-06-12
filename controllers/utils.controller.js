@@ -352,7 +352,7 @@ const verifyWalletFundWebhook = asyncHandler(async (req, res, next) => {
   console.log("🚀 ~ verifyWalletFundWebhook ~ payload:", payload);
 
   const transaction = await transactionModel.findOne({
-    tx_ref: payload.data.tx_ref,
+    tx_ref: payload.tx_ref,
   });
 
   if (!transaction) {
