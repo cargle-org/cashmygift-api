@@ -9,9 +9,14 @@ const Validator = require("../validators/validator.index");
 // Flutterwave stuff
 const Flutterwave = require("flutterwave-node-v3");
 const baseURL = process.env.FLUTTERWAVE_BASE_URL;
-const FLW_pubKey = process.env.FLUTTERWAVE_PUBLIC_KEY;
-const FLW_secKey = process.env.FLUTTERWAVE_SECRET_KEY;
-const FLW_SECRET_HASH = process.env.FLUTTERWAVE_SECRET_KEY; // For webhook
+// const FLW_pubKey = process.env.FLUTTERWAVE_PUBLIC_KEY;
+// const FLW_secKey = process.env.FLUTTERWAVE_SECRET_KEY;
+
+// TEST Mode
+const FLW_pubKey = process.env.FLUTTERWAVE_TEST_PUBLIC_KEY;
+const FLW_secKey = process.env.FLUTTERWAVE_TEST_SECRET_KEY;
+// Webhook
+const FLW_SECRET_HASH = FLW_secKey; // For webhook
 
 // Models
 const voucherModel = require("../models/voucher.model");
