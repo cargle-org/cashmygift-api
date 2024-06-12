@@ -11,7 +11,7 @@ const Flutterwave = require("flutterwave-node-v3");
 const baseURL = process.env.FLUTTERWAVE_BASE_URL;
 const FLW_pubKey = process.env.FLUTTERWAVE_PUBLIC_KEY;
 const FLW_secKey = process.env.FLUTTERWAVE_SECRET_KEY;
-const FLW_SECRET_HASH = process.env.FLUTTERWAVE_SECRET_KEY; // For webhook
+// const FLW_SECRET_HASH = process.env.FLUTTERWAVE_SECRET_KEY; // For webhook
 
 // Models
 const voucherModel = require("../models/voucher.model");
@@ -329,13 +329,22 @@ const getVerifyController = asyncHandler(async (req, res, next) => {
 
 // Verify "Fund wallet transaction"
 const verifyWalletFundWebhook = asyncHandler(async (req, res, next) => {
-  const secretHash = process.env.FLW_SECRET_HASH;
+  // const FLW_SECRET_HASH = "FLWSECK_TEST-1012ed4289da7ede614b9ee473c698b0-X";
+  console.log(
+    "🚀 ~ verifyWalletFundWebhook ~ secretHash: HERE in Webhook!!!!!"
+  );
   const signature = req.headers["verif-hash"];
-  if (!signature || signature !== secretHash) {
+  console.log("🚀 ~ verifyWalletFundWebhook ~ signature:", signature);
+  console.log(
+    "🚀 ~ verifyWalletFundWebhook ~ FLW_SECRET_HASH:",
+    FLW_SECRET_HASH
+  );
+  if (!signature || signature !== FLW_SECRET_HASH) {
     res.status(401).end();
   }
 
   const payload = req.body;
+  console.log("🚀 ~ verifyWalletFundWebhook ~ payload:", payload);
 
   const transaction = await transactionModel.findOne({
     tx_ref: payload.data.tx_ref,
