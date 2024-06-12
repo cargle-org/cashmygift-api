@@ -11,6 +11,7 @@ const Flutterwave = require("flutterwave-node-v3");
 const baseURL = process.env.FLUTTERWAVE_BASE_URL;
 const FLW_pubKey = process.env.FLUTTERWAVE_PUBLIC_KEY;
 const FLW_secKey = process.env.FLUTTERWAVE_SECRET_KEY;
+const FLW_SECRET_HASH = process.env.FLUTTERWAVE_SECRET_KEY; // For webhook
 
 // Models
 const voucherModel = require("../models/voucher.model");
@@ -66,55 +67,55 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
   try {
     const { amount } = req.body;
 
-  const currency = "NGN";
-  // const transREf = await tx_ref.get_Tx_Ref();
-  const transREf = tx_ref.get_Tx_Ref();
+    const currency = "NGN";
+    // const transREf = await tx_ref.get_Tx_Ref();
+    const transREf = tx_ref.get_Tx_Ref();
 
-  const payload = {
-    tx_ref: transREf,
-    amount,
-    currency,
-    payment_options: "card",
-    redirect_url: "https://www.usepays.co/payment/depositecompleted",
-    customer: {
-      email: req.user.email,
-      phonenumber: req.user.phone,
-      name: req.user.name,
-    },
-    meta: {
-      customer_id: req.user._id,
-    },
-    customizations: {
-      title: "Pays",
-      description: "Pay with card",
-      logo: "#",
-    },
-  };
+    const payload = {
+      tx_ref: transREf,
+      amount,
+      currency,
+      payment_options: "card",
+      redirect_url: "https://www.usepays.co/payment/depositecompleted",
+      customer: {
+        email: req.user.email,
+        phonenumber: req.user.phone,
+        name: req.user.name,
+      },
+      meta: {
+        customer_id: req.user._id,
+      },
+      customizations: {
+        title: "Pays",
+        description: "Pay with card",
+        logo: "#",
+      },
+    };
 
-  const response = await FLW_services.initiateTransaction(payload);
-  // paymentReference
-  const transaction = await new transactionModel({
-    tx_ref: transREf,
-    paymentReference: transREf,
-    transactionReference: transREf,
-    userId: req.user._id,
-    amount,
-    currency,
-    type: "credit",
-    status: "initiated",
-  });
+    const response = await FLW_services.initiateTransaction(payload);
+    // paymentReference
+    const transaction = await new transactionModel({
+      tx_ref: transREf,
+      paymentReference: transREf,
+      transactionReference: transREf,
+      userId: req.user._id,
+      amount,
+      currency,
+      type: "credit",
+      status: "initiated",
+    });
 
-  await transaction.save();
+    await transaction.save();
 
-  return res.status(200).send({
-    success: true,
-    data: {
-      response,
-    },
-    message: "Payment Initiated",
-  });
+    return res.status(200).send({
+      success: true,
+      data: {
+        response,
+      },
+      message: "Payment Initiated",
+    });
   } catch (err) {
-    console.log("🚀 ~ postFundWalletController ~ err:", err)
+    console.log("🚀 ~ postFundWalletController ~ err:", err);
     return res.status(500).send({
       success: false,
       message: err.message,
@@ -229,7 +230,7 @@ const getVerifyController = asyncHandler(async (req, res, next) => {
     return res.status(400).send({
       success: false,
       message: "Transaction was not successful",
-      data: transaction
+      data: transaction,
     });
   }
 
@@ -324,6 +325,69 @@ const getVerifyController = asyncHandler(async (req, res, next) => {
   //     errMessage: verify,
   //   });
   // }
+});
+
+// Verify "Fund wallet transaction"
+const verifyWalletFundWebhook = asyncHandler(async (req, res, next) => {
+  const secretHash = process.env.FLW_SECRET_HASH;
+  const signature = req.headers["verif-hash"];
+  if (!signature || signature !== secretHash) {
+    res.status(401).end();
+  }
+
+  const payload = req.body;
+
+  const transaction = await transactionModel.findOne({
+    tx_ref: payload.data.tx_ref,
+  });
+
+  if (!transaction) {
+    return res.status(200).send({
+      success: false,
+      message: "Transaction not found",
+    });
+  }
+
+  if (transaction.status === "successful") {
+    return res.status(200).send({
+      success: false,
+      message: "Failed: Possible duplicate Transaction",
+    });
+  }
+
+  // update transaction
+  transaction.status = "successful";
+  console.log(
+    "🚀 ~ file: utils.controller.js:125 ~ getVerifyController:asyncHandler ~ transaction:",
+    transaction
+  );
+  await transaction.save();
+
+  // find user and update walletBalance
+  const user = await userModel.findOne({ _id: transaction.userId });
+
+  if (!user) {
+    return res.status(200).send({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  user.walletBalance = user.walletBalance + transaction.amount;
+  console.log(
+    "🚀 ~ file: utils.controller.js:139 ~ getVerifyController:asyncHandler ~ user:",
+    user
+  );
+  await user.save();
+
+  return res.status(200).send({
+    success: true,
+    data: {
+      transaction,
+      user,
+    },
+    message: "Transaction Successful",
+  });
 });
 
 // Withdraw from wallet
@@ -535,7 +599,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
 
   const specialKey = `${alphabets[rand]}${rand}${alphabets[rand3]}${alphabets[rand2]}`;
 
-  console.log("🚀 ~ postCreateVoucherController ~ specialKey:", specialKey)
+  console.log("🚀 ~ postCreateVoucherController ~ specialKey:", specialKey);
   // // Do simple maths to know if numbers match again just to be safe
   // if (totalNumberOfVouchers * amountPerVoucher != totalAmount) {
   //     return res.status(400).send({
@@ -563,11 +627,9 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
   }
 
   let voucherCoupons = [];
-  
 
   // create loop based on number of vouchers
   for (let i = 1; i <= totalNumberOfVouchers; i++) {
-  
     // const time = moment().format("yy-MM-DD hh:mm:ss");
     // const ref = time.replace(/[\-]|[\s]|[\:]/g, "");
 
@@ -1458,6 +1520,7 @@ const handleFlwCallback = asyncHandler(async (req, res) => {
 // Get all transactions
 const getAllTransactionsController = asyncHandler(async (req, res) => {
   const { userId } = req.query;
+  console.log("🚀 ~ getAllTransactionsController ~ userId:", userId);
 
   const transactions = await transactionModel.find({ userId: userId });
 
@@ -1894,4 +1957,5 @@ module.exports = {
   postWithdrawFromWalletController,
   transferWebhook,
   webhook,
+  verifyWalletFundWebhook,
 };

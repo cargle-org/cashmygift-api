@@ -27,6 +27,11 @@ router.post(
 router.post("/voucher/one", utils.postFindVoucherController);
 router.post("/voucher/claim", utils.postCashoutVoucherController);
 router.post("/wallet/fund", authenticate, utils.postFundWalletController);
+router.post(
+  "/wallet/verify-wallet-fund",
+  authenticate,
+  utils.verifyWalletFundWebhook
+);
 router.get("/wallet/verifyTrx", authenticate, utils.getVerifyController);
 router.post(
   "/wallet/withdraw",
