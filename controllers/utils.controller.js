@@ -11,7 +11,7 @@ const Flutterwave = require("flutterwave-node-v3");
 const baseURL = process.env.FLUTTERWAVE_BASE_URL;
 const FLW_pubKey = process.env.FLUTTERWAVE_PUBLIC_KEY;
 const FLW_secKey = process.env.FLUTTERWAVE_SECRET_KEY;
-// const FLW_SECRET_HASH = process.env.FLUTTERWAVE_SECRET_KEY; // For webhook
+const FLW_SECRET_HASH = process.env.FLUTTERWAVE_SECRET_KEY; // For webhook
 
 // Models
 const voucherModel = require("../models/voucher.model");
@@ -76,7 +76,7 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
       amount,
       currency,
       payment_options: "card",
-      redirect_url: "https://www.usepays.co/payment/depositecompleted",
+      // redirect_url: "https://www.usepays.co/payment/depositecompleted",
       customer: {
         email: req.user.email,
         phonenumber: req.user.phone,
