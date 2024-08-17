@@ -190,9 +190,11 @@ module.exports = {
   // verify email
   getVerifyEmailController: asyncHandler(async (req, res, next) => {
     const { id, emailToken } = req.query;
+    console.log("🚀 ~ getVerifyEmailController:asyncHandler ~ id:", id);
 
     //   check if user exist
     const user = await User.findOne({ _id: id });
+    console.log("🚀 ~ getVerifyEmailController:asyncHandler ~ user:", user);
     if (!user) {
       return res.status(400).send({
         success: false,
@@ -333,8 +335,21 @@ module.exports = {
   postResetPasswordController: async (req, res, next) => {
     try {
       const { newPassword, confirmPassword } = req.body;
+      console.log(
+        "🚀 ~ postResetPasswordController: ~ confirmPassword:",
+        confirmPassword
+      );
+      console.log(
+        "🚀 ~ postResetPasswordController: ~ newPassword:",
+        newPassword
+      );
 
       const { id, resetToken } = req.query;
+      console.log(
+        "🚀 ~ postResetPasswordController: ~ resetToken:",
+        resetToken
+      );
+      console.log("🚀 ~ postResetPasswordController: ~ id:", id);
 
       //   check if user exist
       const user = await User.findOne({ _id: id });

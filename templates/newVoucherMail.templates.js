@@ -358,7 +358,7 @@ ul.social li{
 							<br/>
 							 <h5>Coupon Code : <b>${code}</b> </h5>
 							 <h5>Amount : <b>₦${amount}</b> </h5>
-							 <h5>Expiry Date : <b>${expiry_date}</b> </h5>
+							 <h5>Expiry Date : <b>${expiry_date ? expiry_date : "No expiry date"}</b> </h5>
 							<br/>
 							<br><br>						
             			</div>
