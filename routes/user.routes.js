@@ -13,7 +13,7 @@ const user = require("../controllers/user.controller");
 // Stuff
 const router = express.Router();
 
-// Routes
+// Routes.
 router.get("/ping", user.getPingController);
 router.get("/one", authenticate, user.getUserController);
 router.post(
