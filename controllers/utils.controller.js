@@ -506,6 +506,248 @@ const postWithdrawFromWalletController = asyncHandler(
 );
 
 // create voucher
+// const postCreateVoucherController = asyncHandler(async (req, res, next) => {
+//   const {
+//     title,
+//     description,
+//     voucherKey,
+//     totalNumberOfVouchers,
+//     amountPerVoucher,
+//     expiry_date,
+//     amount,
+//   } = req.body;
+
+//   if (amountPerVoucher < 100) {
+//     return res.status(400).send({
+//       success: false,
+//       message: "Amount cannot be less than 100, please increase the amount",
+//     });
+//   }
+
+//   // ******** FETCH RECIPIENTS ******* //
+//   let recipients = [];
+//   // get from body
+//   if (req.body?.recipients) recipients = req.body.recipients;
+//   // get from files
+//   if (req.files?.recipients) {
+//     // Accessing recipients file
+//     const recipientsFile = req.files.recipients[0];
+//     // Parse recipients Excel file
+//     const workbook = xlsx.read(recipientsFile.buffer, { type: "buffer" });
+//     const sheet = workbook.Sheets[workbook.SheetNames[0]];
+//     const recipientsData = xlsx.utils.sheet_to_json(sheet);
+//     recipients = recipientsData;
+//   }
+
+//   const cmgFee = parseInt(totalNumberOfVouchers * 10);
+//   const totalAmount = parseInt(totalNumberOfVouchers * amountPerVoucher);
+//   let thumbnail = "";
+
+//   // Do simple maths to know if numbers match
+//   if (req.user.walletBalance < totalAmount + cmgFee) {
+//     return res.status(400).send({
+//       success: false,
+//       message: "Insufficient wallet balance, please fund wallet",
+//     });
+//   }
+
+//   // Generate voucher code
+//   const alphabets = [
+//     "a",
+//     "b",
+//     "c",
+//     "d",
+//     "e",
+//     "f",
+//     "g",
+//     "h",
+//     "i",
+//     "j",
+//     "k",
+//     "l",
+//     "m",
+//     "n",
+//     "o",
+//     "p",
+//     "q",
+//     "r",
+//     "s",
+//     "t",
+//     "u",
+//     "v",
+//     "w",
+//     "x",
+//     "y",
+//     "z",
+//     "A",
+//     "B",
+//     "C",
+//     "D",
+//     "E",
+//     "F",
+//     "G",
+//     "H",
+//     "I",
+//     "J",
+//     "K",
+//     "L",
+//     "M",
+//     "N",
+//     "O",
+//     "P",
+//     "Q",
+//     "R",
+//     "S",
+//     "T",
+//     "U",
+//     "V",
+//     "W",
+//     "X",
+//     "Y",
+//     "Z",
+//   ];
+
+//   const rand = Math.floor(Math.random() * 48);
+//   const rand2 = Math.floor(Math.random() * 48);
+//   const rand3 = Math.floor(Math.random() * 48);
+//   const rand4 = Math.floor(Math.random() * 48);
+
+//   const specialKey = `${alphabets[rand]}${rand}${alphabets[rand3]}${alphabets[rand2]}`;
+
+//   console.log("🚀 ~ postCreateVoucherController ~ specialKey:", specialKey);
+//   // // Do simple maths to know if numbers match again just to be safe
+//   // if (totalNumberOfVouchers * amountPerVoucher != totalAmount) {
+//   //     return res.status(400).send({
+//   //         success: false,
+//   //         message: "Error! please check numbers and try again",
+//   //     });
+//   // }
+
+//   // // Check walletBalance before transaction
+//   // if (req.user.walletBalance < totalAmount) {
+//   //     return res.status(400).send({
+//   //         success: false,
+//   //         message: "Insufficient wallet balance, please fund wallet",
+//   //     });
+//   // }
+
+//   // Check if voucherKEy already exists
+//   const foundVoucherKey = await voucherModel.findOne({
+//     specialKey: `${voucherKey}-${specialKey}`,
+//   });
+//   if (foundVoucherKey) {
+//     return res
+//       .status(400)
+//       .send("Voucher Key already exists, please try another.");
+//   }
+
+//   let voucherCoupons = [];
+
+//   // create loop based on number of vouchers
+//   for (let i = 1; i <= totalNumberOfVouchers; i++) {
+//     // const time = moment().format("yy-MM-DD hh:mm:ss");
+//     // const ref = time.replace(/[\-]|[\s]|[\:]/g, "");
+
+//     const voucherCode = `${voucherKey}-${specialKey}-${alphabets[rand4]}${rand}${rand3}${alphabets[rand3]}`;
+
+//     voucherCoupons.push({
+//       couponId: i,
+//       couponCode: voucherCode,
+//       status: "pending",
+//       cashedBy: "No one yet",
+//       cashedDate: "Not yet",
+//       cashedTime: "Not yet",
+//     });
+//   }
+
+//   const body = { ...req.body, thumbnail: req.file, voucherCoupons };
+
+//   // Run Hapi/Joi validation
+//   const { error } = await createVoucherValidation.validateAsync(body);
+//   if (error) {
+//     return res.status(400).send({
+//       success: false,
+//       message: "Validation failed",
+//       errMessage: error.details[0].message,
+//     });
+//   }
+
+//   if (req.files?.thumbnail) {
+//     // send image to Cloudinary
+//     thumbnail = await uploadThumbnail(req.files.thumbnail);
+//   }
+
+//   // create voucher
+//   const voucher = new voucherModel({
+//     userId: req.user.id,
+//     title,
+//     thumbnail,
+//     description,
+//     voucherKey,
+//     specialKey: `${voucherKey}-${specialKey}`,
+//     totalNumberOfVouchers,
+//     amountPerVoucher,
+//     totalAmount,
+//     expiry_date,
+//     voucherCoupons,
+//     recipients,
+//   });
+//   await voucher.save();
+
+//   // get user
+//   const user = await userModel.findOne({ _id: req.user._id });
+//   if (!user) {
+//     return res.status(400).send({
+//       success: false,
+//       message: "Couldn't find user",
+//     });
+//   }
+
+//   // format expiry date
+//   // Parse the expiry date string
+//   const expiryDate = moment(expiry_date, "YYYY-MM-DD:HH:mm:ss");
+
+//   // Format the expiry date in your desired format
+//   const formattedExpiryDate = expiryDate?.format("YYYY-MMM-DD HH:mm:ss");
+
+//   // send mail to recipients
+//   if (recipients) {
+//     recipients.map((recipient, i) => {
+//       // Send email
+//       const mailOptions = {
+//         to: recipient.recipient_email,
+//         subject: `New coupon from ${user?.name}`,
+//         html: newVoucherMail(
+//           user?.name,
+//           recipient?.recipient_name ? recipient?.recipient_name : "",
+//           voucherCoupons[i]?.couponCode,
+//           amountPerVoucher,
+//           formattedExpiryDate
+//         ),
+//       };
+
+//       sendMail(mailOptions);
+//     });
+//   }
+
+//   user.walletBalance = user.walletBalance - (totalAmount + cmgFee);
+//   await user.save();
+
+//   console.log(
+//     "🚀 ~ file: utils.controller.js:50 ~ postCreateVoucherController:asyncHandler ~ voucher:",
+//     voucher
+//   );
+
+//   return res.status(200).send({
+//     success: true,
+//     data: {
+//       voucher: voucher,
+//     },
+//     message: "Created new voucher(s).",
+//   });
+// });
+
+// create voucher
 const postCreateVoucherController = asyncHandler(async (req, res, next) => {
   const {
     title,
@@ -521,21 +763,6 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
       success: false,
       message: "Amount cannot be less than 100, please increase the amount",
     });
-  }
-
-  // ******** FETCH RECIPIENTS ******* //
-  let recipients = [];
-  // get from body
-  if (req.body?.recipients) recipients = req.body.recipients;
-  // get from files
-  if (req.files?.recipients) {
-    // Accessing recipients file
-    const recipientsFile = req.files.recipients[0];
-    // Parse recipients Excel file
-    const workbook = xlsx.read(recipientsFile.buffer, { type: "buffer" });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const recipientsData = xlsx.utils.sheet_to_json(sheet);
-    recipients = recipientsData;
   }
 
   const cmgFee = parseInt(totalNumberOfVouchers * 10);
@@ -614,21 +841,6 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
   const specialKey = `${alphabets[rand]}${rand}${alphabets[rand3]}${alphabets[rand2]}`;
 
   console.log("🚀 ~ postCreateVoucherController ~ specialKey:", specialKey);
-  // // Do simple maths to know if numbers match again just to be safe
-  // if (totalNumberOfVouchers * amountPerVoucher != totalAmount) {
-  //     return res.status(400).send({
-  //         success: false,
-  //         message: "Error! please check numbers and try again",
-  //     });
-  // }
-
-  // // Check walletBalance before transaction
-  // if (req.user.walletBalance < totalAmount) {
-  //     return res.status(400).send({
-  //         success: false,
-  //         message: "Insufficient wallet balance, please fund wallet",
-  //     });
-  // }
 
   // Check if voucherKEy already exists
   const foundVoucherKey = await voucherModel.findOne({
@@ -644,9 +856,6 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
 
   // create loop based on number of vouchers
   for (let i = 1; i <= totalNumberOfVouchers; i++) {
-    // const time = moment().format("yy-MM-DD hh:mm:ss");
-    // const ref = time.replace(/[\-]|[\s]|[\:]/g, "");
-
     const voucherCode = `${voucherKey}-${specialKey}-${alphabets[rand4]}${rand}${rand3}${alphabets[rand3]}`;
 
     voucherCoupons.push({
@@ -689,7 +898,6 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     totalAmount,
     expiry_date,
     voucherCoupons,
-    recipients,
   });
   await voucher.save();
 
@@ -709,25 +917,25 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
   // Format the expiry date in your desired format
   const formattedExpiryDate = expiryDate?.format("YYYY-MMM-DD HH:mm:ss");
 
-  // send mail to recipients
-  if (recipients) {
-    recipients.map((recipient, i) => {
-      // Send email
-      const mailOptions = {
-        to: recipient.recipient_email,
-        subject: `New coupon from ${user?.name}`,
-        html: newVoucherMail(
-          user?.name,
-          recipient?.recipient_name ? recipient?.recipient_name : "",
-          voucherCoupons[i]?.couponCode,
-          amountPerVoucher,
-          formattedExpiryDate
-        ),
-      };
+  // // send mail to recipients
+  // if (recipients) {
+  //   recipients.map((recipient, i) => {
+  //     // Send email
+  //     const mailOptions = {
+  //       to: recipient.recipient_email,
+  //       subject: `New coupon from ${user?.name}`,
+  //       html: newVoucherMail(
+  //         user?.name,
+  //         recipient?.recipient_name ? recipient?.recipient_name : "",
+  //         voucherCoupons[i]?.couponCode,
+  //         amountPerVoucher,
+  //         formattedExpiryDate
+  //       ),
+  //     };
 
-      sendMail(mailOptions);
-    });
-  }
+  //     sendMail(mailOptions);
+  //   });
+  // }
 
   user.walletBalance = user.walletBalance - (totalAmount + cmgFee);
   await user.save();
@@ -743,6 +951,83 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
       voucher: voucher,
     },
     message: "Created new voucher(s).",
+  });
+});
+
+// update voucher
+const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
+  const { voucherCode } = req.query;
+
+  // find voucher using voucherCode
+  const foundVoucher = await voucherModel.findOne({
+    specialKey: voucherCode.slice(0, 11),
+  });
+
+  if (!foundVoucher) {
+    return res.status(400).send({
+      success: false,
+      message: "This coupon does not exist, please try another.",
+    });
+  }
+
+  // ******** FETCH RECIPIENTS ******* //
+  let recipients = [];
+  // get from body
+  if (req.body?.recipients) recipients = req.body.recipients;
+  // get from files
+  if (req.files?.recipients) {
+    // Accessing recipients file
+    const recipientsFile = req.files.recipients[0];
+    // Parse recipients Excel file
+    const workbook = xlsx.read(recipientsFile.buffer, { type: "buffer" });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const recipientsData = xlsx.utils.sheet_to_json(sheet);
+    recipients = recipientsData;
+  }
+
+  foundVoucher.recipients = recipients;
+  await foundVoucher.save();
+
+  // get user
+  const user = await userModel.findOne({ _id: req.user._id });
+  if (!user) {
+    return res.status(400).send({
+      success: false,
+      message: "Couldn't find user",
+    });
+  }
+
+  // send mail to recipients
+  if (recipients) {
+    recipients.map((recipient, i) => {
+      // Send email
+      const mailOptions = {
+        to: recipient.recipient_email,
+        subject: `New coupon from ${user?.name}`,
+        html: newVoucherMail(
+          user?.name,
+          recipient?.recipient_name ? recipient?.recipient_name : "",
+          foundVoucher?.voucherCoupons[i]?.couponCode,
+          foundVoucher?.amountPerVoucher
+          // foundVoucher?.expiryDate
+        ),
+      };
+
+      sendMail(mailOptions);
+    });
+  }
+
+  console.log(
+    "🚀 ~ file: utils.controller.js:50 ~ putUpdateVoucherController:asyncHandler ~ foundVoucher: ",
+    foundVoucher
+  );
+
+  return res.status(200).send({
+    success: true,
+    data: {
+      voucher: voucher,
+    },
+    message: "Updated voucher.",
   });
 });
 
@@ -1964,6 +2249,7 @@ module.exports = {
   postCashVoucherAsAirtimeController,
   postCreateCrowdFundingLink,
   postCreateVoucherController,
+  putUpdateVoucherController,
   getCrowdFundedTransactionsPaidViaLink,
   postCrowdFundingController,
   postContactUsController,
