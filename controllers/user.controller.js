@@ -300,11 +300,14 @@ module.exports = {
 
   // get all user vouchers
   getAllUserVouchersController: asyncHandler(async (req, res, next) => {
-    const { userId, from, to, amount, status } = req.query;
+    const { userId, from, to, amount, status, page = 1 } = req.query;
     console.log("🚀req.query:", req.query);
     let sortVouchers = [];
     let fromDate = new Date(from);
     let toDate = new Date(to);
+
+    const limit = 10; // Number of vouchers per page
+    const skip = (page - 1) * limit; // Calculate the number of documents to skip
 
     // Check if voucher exists
     const vouchers = await voucherModel.find({ userId: userId });
@@ -323,12 +326,19 @@ module.exports = {
       });
     }
 
-    // DEFAULT: No needed params? Return all vouchers sorted by creation date
+    // DEFAULT: No needed params? Return all vouchers sorted by creation date with pagination
     if (!from && !to && !amount && !status) {
+      const paginatedVouchers = await voucherModel
+        .find({ userId: userId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+
       return res.status(200).send({
         success: true,
         data: {
-          vouchers: vouchers.sort((a, b) => b.createdAt - a.createdAt),
+          vouchers: paginatedVouchers,
+          page,
         },
         message: "Fetched vouchers successfully.",
       });
@@ -341,13 +351,16 @@ module.exports = {
           userId: userId,
           createdAt: { $gte: fromDate, $lt: toDate },
         })
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
       console.log("🚀dateVouchers:", dateVouchers);
 
       return res.status(200).send({
         success: true,
         data: {
           vouchers: dateVouchers,
+          page,
         },
         message: "Fetched vouchers successfully.",
       });
@@ -361,13 +374,16 @@ module.exports = {
           amountPerVoucher: amount,
           createdAt: { $gte: fromDate, $lt: toDate },
         })
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
       console.log("🚀amountVouchers:", amountVouchers);
 
       return res.status(200).send({
         success: true,
         data: {
           vouchers: amountVouchers,
+          page,
         },
         message: "Fetched vouchers successfully.",
       });
@@ -380,7 +396,9 @@ module.exports = {
           userId: userId,
           createdAt: { $gte: fromDate, $lt: toDate },
         })
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
 
       statusVouchers.forEach((item) => {
         item.voucherCoupons.forEach((voucher) => {
@@ -401,6 +419,7 @@ module.exports = {
         success: true,
         data: {
           vouchers: sortVouchers,
+          page,
         },
         message: "Fetched vouchers successfully.",
       });
@@ -413,13 +432,16 @@ module.exports = {
           userId: userId,
           amountPerVoucher: amount,
         })
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
       console.log("🚀amountVouchers:", amountVouchers);
 
       return res.status(200).send({
         success: true,
         data: {
           vouchers: amountVouchers,
+          page,
         },
         message: "Fetched vouchers successfully.",
       });
@@ -431,7 +453,9 @@ module.exports = {
         .find({
           userId: userId,
         })
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
 
       statusVouchers.forEach((item) => {
         item.voucherCoupons.forEach((voucher) => {
@@ -452,6 +476,7 @@ module.exports = {
         success: true,
         data: {
           vouchers: sortVouchers,
+          page,
         },
         message: "Fetched vouchers successfully.",
       });
@@ -465,7 +490,9 @@ module.exports = {
           amountPerVoucher: amount,
           createdAt: { $gte: fromDate, $lt: toDate },
         })
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
 
       statusVouchers.forEach((item) => {
         item.voucherCoupons.forEach((voucher) => {
@@ -486,6 +513,7 @@ module.exports = {
         success: true,
         data: {
           vouchers: sortVouchers,
+          page,
         },
         message: "Fetched vouchers successfully.",
       });
@@ -498,7 +526,9 @@ module.exports = {
           userId: userId,
           amountPerVoucher: amount,
         })
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
 
       statusVouchers.forEach((item) => {
         item.voucherCoupons.forEach((voucher) => {
@@ -519,6 +549,7 @@ module.exports = {
         success: true,
         data: {
           vouchers: sortVouchers,
+          page,
         },
         message: "Fetched vouchers successfully.",
       });

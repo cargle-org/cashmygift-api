@@ -956,12 +956,16 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
 
 // update voucher
 const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
-  const { voucherCode } = req.query;
+  const { specialKey } = req.query;
 
   // find voucher using voucherCode
   const foundVoucher = await voucherModel.findOne({
-    specialKey: voucherCode.slice(0, 11),
+    specialKey: specialKey,
   });
+  console.log(
+    "🚀 ~ putUpdateVoucherController ~ foundVoucher (before): ",
+    foundVoucher
+  );
 
   if (!foundVoucher) {
     return res.status(400).send({
@@ -987,6 +991,10 @@ const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
 
   foundVoucher.recipients = recipients;
   await foundVoucher.save();
+  console.log(
+    "🚀 ~ putUpdateVoucherController ~ foundVoucher (after): ",
+    foundVoucher
+  );
 
   // get user
   const user = await userModel.findOne({ _id: req.user._id });
@@ -1025,7 +1033,7 @@ const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
   return res.status(200).send({
     success: true,
     data: {
-      voucher: voucher,
+      voucher: foundVoucher,
     },
     message: "Updated voucher.",
   });

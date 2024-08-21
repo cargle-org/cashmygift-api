@@ -24,6 +24,14 @@ router.post(
   ]),
   utils.postCreateVoucherController
 );
+router.put(
+  "/voucher/update",
+  authenticate,
+  multerUploads.fields([
+    { name: "recipients", maxCount: 1 }, // Assuming recipients field is a single file
+  ]),
+  utils.putUpdateVoucherController
+);
 router.post("/voucher/one", utils.postFindVoucherController);
 router.post("/voucher/claim", utils.postCashoutVoucherController);
 router.post("/wallet/fund", authenticate, utils.postFundWalletController);

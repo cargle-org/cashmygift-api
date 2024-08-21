@@ -4,6 +4,7 @@ const userModel = require("../models/user.model");
 
 const authenticate = async (req, res, next) => {
   const token = req.header("x-access-token");
+  console.log("🚀 ~ authenticate ~ token:", token);
   if (!token)
     return res.status(401).send({
       success: false,
