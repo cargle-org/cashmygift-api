@@ -301,7 +301,7 @@ module.exports = {
   // get all user vouchers
   getAllUserVouchersController: asyncHandler(async (req, res, next) => {
     const { userId, from, to, amount, status, page = 1 } = req.query;
-    console.log("🚀req.query:", req.query);
+    // console.log("🚀req.query:", req.query);
     let sortVouchers = [];
     let fromDate = new Date(from);
     let toDate = new Date(to);
@@ -354,7 +354,7 @@ module.exports = {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit);
-      console.log("🚀dateVouchers:", dateVouchers);
+      // console.log("🚀dateVouchers:", dateVouchers);
 
       return res.status(200).send({
         success: true,
@@ -377,7 +377,7 @@ module.exports = {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit);
-      console.log("🚀amountVouchers:", amountVouchers);
+      // console.log("🚀amountVouchers:", amountVouchers);
 
       return res.status(200).send({
         success: true,
@@ -435,7 +435,7 @@ module.exports = {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit);
-      console.log("🚀amountVouchers:", amountVouchers);
+      // console.log("🚀amountVouchers:", amountVouchers);
 
       return res.status(200).send({
         success: true,

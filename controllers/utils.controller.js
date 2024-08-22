@@ -955,6 +955,83 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
 });
 
 // update voucher
+// const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
+//   const { specialKey } = req.query;
+
+//   // find voucher using voucherCode
+//   const foundVoucher = await voucherModel.findOne({
+//     specialKey: specialKey,
+//   });
+
+//   if (!foundVoucher) {
+//     return res.status(400).send({
+//       success: false,
+//       message: "This coupon does not exist, please try another.",
+//     });
+//   }
+
+//   // ******** FETCH RECIPIENTS ******* //
+//   let recipients = [];
+//   // get from body
+//   if (req.body?.recipients) recipients = req.body.recipients;
+//   // get from files
+//   if (req.files?.recipients) {
+//     // Accessing recipients file
+//     const recipientsFile = req.files.recipients[0];
+//     // Parse recipients Excel file
+//     const workbook = xlsx.read(recipientsFile.buffer, { type: "buffer" });
+//     const sheet = workbook.Sheets[workbook.SheetNames[0]];
+//     const recipientsData = xlsx.utils.sheet_to_json(sheet);
+//     recipients = recipientsData;
+//   }
+
+//   console.log("🚀 ~ putUpdateVoucherController ~ recipients:", recipients);
+//   foundVoucher.recipients = recipients;
+//   await foundVoucher.save();
+
+//   // get user
+//   const user = await userModel.findOne({ _id: req.user._id });
+//   console.log("🚀 ~ putUpdateVoucherController ~ user:", user);
+//   if (!user) {
+//     return res.status(400).send({
+//       success: false,
+//       message: "Couldn't find user",
+//     });
+//   }
+
+//   // send mail to recipients
+//   if (recipients) {
+//     recipients.map((recipient, i) => {
+//       // Send email
+//       const mailOptions = {
+//         to: recipient.recipient_email,
+//         subject: `New coupon from ${user?.name}`,
+//         html: newVoucherMail(
+//           user?.name,
+//           recipient?.recipient_name ? recipient?.recipient_name : "",
+//           foundVoucher?.voucherCoupons[i]?.couponCode,
+//           foundVoucher?.amountPerVoucher
+//           // foundVoucher?.expiryDate
+//         ),
+//       };
+
+//       sendMail(mailOptions);
+//     });
+//   }
+
+//   console.log(
+//     "🚀 ~ file: utils.controller.js:50 ~ putUpdateVoucherController:asyncHandler ~ foundVoucher: ",
+//     foundVoucher
+//   );
+
+//   return res.status(200).send({
+//     success: true,
+//     data: {
+//       voucher: foundVoucher,
+//     },
+//     message: "Updated voucher.",
+//   });
+// });
 const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
   const { specialKey } = req.query;
 
@@ -962,10 +1039,6 @@ const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
   const foundVoucher = await voucherModel.findOne({
     specialKey: specialKey,
   });
-  console.log(
-    "🚀 ~ putUpdateVoucherController ~ foundVoucher (before): ",
-    foundVoucher
-  );
 
   if (!foundVoucher) {
     return res.status(400).send({
@@ -989,15 +1062,29 @@ const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
     recipients = recipientsData;
   }
 
+  // Ensure recipients is an array and properly formatted
+  if (!Array.isArray(recipients)) {
+    return res.status(400).send({
+      success: false,
+      message: "Recipients data is not in the correct format.",
+    });
+  }
+
   foundVoucher.recipients = recipients;
-  await foundVoucher.save();
-  console.log(
-    "🚀 ~ putUpdateVoucherController ~ foundVoucher (after): ",
-    foundVoucher
-  );
+
+  try {
+    await foundVoucher.save();
+  } catch (error) {
+    console.error("Error saving voucher:", error);
+    return res.status(500).send({
+      success: false,
+      message: "Failed to save voucher.",
+    });
+  }
 
   // get user
   const user = await userModel.findOne({ _id: req.user._id });
+  console.log("🚀 ~ putUpdateVoucherController ~ user:", user);
   if (!user) {
     return res.status(400).send({
       success: false,
