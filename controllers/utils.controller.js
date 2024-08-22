@@ -1095,6 +1095,10 @@ const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
   // send mail to recipients
   if (recipients) {
     recipients.map((recipient, i) => {
+      if (!foundVoucher?.voucherCoupons[i]) {
+        console.log("THE VOUCHERS FINISH, LOL!");
+        return;
+      }
       // Send email
       const mailOptions = {
         to: recipient.recipient_email,
