@@ -1917,24 +1917,89 @@ const handleFlwCallback = asyncHandler(async (req, res) => {
 
 // Get all transactions
 const getAllTransactionsController = asyncHandler(async (req, res) => {
-  const { userId } = req.query;
+  const {
+    userId,
+    page = 1,
+    limit = 10,
+    status,
+    type,
+    minAmount,
+    maxAmount,
+    fromDate,
+    toDate,
+  } = req.query;
   console.log("🚀 ~ getAllTransactionsController ~ userId:", userId);
 
-  const transactions = await transactionModel.find({ userId: userId });
+  // Initialize query object
+  let query = { userId: userId };
 
-  if (!transactions) {
-    return res.status(400).send({
+  // Add filters to the query
+  if (status) query.status = status;
+  if (type) query.type = type;
+  if (minAmount)
+    query.amount = { ...query.amount, $gte: parseFloat(minAmount) };
+  if (maxAmount)
+    query.amount = { ...query.amount, $lte: parseFloat(maxAmount) };
+  if (fromDate)
+    query.createdAt = { ...query.createdAt, $gte: new Date(fromDate) };
+  if (toDate) query.createdAt = { ...query.createdAt, $lte: new Date(toDate) };
+
+  // Pagination options
+  const pageNumber = parseInt(page, 10);
+  const pageSize = parseInt(limit, 10);
+  const skip = (pageNumber - 1) * pageSize;
+
+  // Fetch transactions with filters, pagination, and sorting by most recent
+  const transactions = await transactionModel
+    .find(query)
+    .sort({ createdAt: -1 }) // Sort by most recent first
+    .skip(skip)
+    .limit(pageSize);
+
+  // Total transactions count for pagination
+  const totalTransactions = await transactionModel.countDocuments(query);
+
+  // If no transactions are found
+  if (!transactions || transactions.length === 0) {
+    return res.status(404).send({
       success: false,
-      message: "No transaction found",
+      message: "No transactions found",
     });
   }
 
+  // Return the paginated and filtered transactions
   res.status(200).json({
     success: true,
     data: transactions,
-    message: "fetched all transactions successfully",
+    pagination: {
+      total: totalTransactions,
+      page: pageNumber,
+      limit: pageSize,
+      totalPages: Math.ceil(totalTransactions / pageSize),
+    },
+    message: "Fetched transactions successfully",
   });
 });
+
+// const getAllTransactionsController = asyncHandler(async (req, res) => {
+//   const { userId } = req.query;
+//   console.log("🚀 ~ getAllTransactionsController ~ userId:", userId);
+
+//   const transactions = await transactionModel.find({ userId: userId });
+
+//   if (!transactions) {
+//     return res.status(400).send({
+//       success: false,
+//       message: "No transaction found",
+//     });
+//   }
+
+//   res.status(200).json({
+//     success: true,
+//     data: transactions,
+//     message: "fetched all transactions successfully",
+//   });
+// });
 
 // Get one transaction
 const getOneTransactionController = asyncHandler(async (req, res) => {
