@@ -81,7 +81,8 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
       amount,
       currency,
       payment_options: "card",
-      redirect_url: "https://www.usepays.co/payment/depositecompleted",
+      // redirect_url: "https://www.usepays.co/payment/depositecompleted",
+      redirect_url: "https://usepays.up.railway.app/dashboard/transactions",
       customer: {
         email: req.user.email,
         phonenumber: req.user.phone,
