@@ -168,8 +168,11 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
 
 // Verify "Fund wallet transaction"
 const getVerifyController = asyncHandler(async (req, res, next) => {
+  console.log("🚀 ~ getVerifyController ~ req.query:", req.query);
   const id = req.query.transaction_id ?? null;
+  console.log("🚀 ~ getVerifyController ~ id:", id);
   const tx_ref = req.query.tx_ref ?? null;
+  console.log("🚀 ~ getVerifyController ~ tx_ref:", tx_ref);
 
   if (!id || !tx_ref)
     return next(new ErrorResponse("Invalid query parameters", 400));
