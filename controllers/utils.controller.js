@@ -1803,10 +1803,10 @@ const getAllBanksMonnifyController = asyncHandler(async (req, res, next) => {
     console.log("Get all banks first ping");
     const token = await monnify.obtainAccessToken();
     const banks = await monnify.getBanks(token);
-    console.log(
-      "🚀 ~ file: utils.controller.js:685 ~ getAllBanksController:asyncHandler ~ banks:",
-      banks
-    );
+    // console.log(
+    //   "🚀 ~ file: utils.controller.js:685 ~ getAllBanksController:asyncHandler ~ banks:",
+    //   banks
+    // );
 
     // const response = await axios.get(`${baseURL}/banks/NG`, options);
     // console.log(
