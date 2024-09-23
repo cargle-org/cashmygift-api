@@ -857,7 +857,28 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
   let voucherCoupons = [];
 
   // create loop based on number of vouchers
+  // for (let i = 1; i <= totalNumberOfVouchers; i++) {
+  //   const voucherCode = `${voucherKey}-${specialKey}-${alphabets[rand4]}${rand}${rand3}${alphabets[rand3]}`;
+
+  //   voucherCoupons.push({
+  //     couponId: i,
+  //     couponCode: voucherCode,
+  //     status: "pending",
+  //     cashedBy: "No one yet",
+  //     cashedDate: "Not yet",
+  //     cashedTime: "Not yet",
+  //   });
+  // }
+
+  // create loop based on the number of vouchers
   for (let i = 1; i <= totalNumberOfVouchers; i++) {
+    // Generate new random indices for each voucher
+    const rand = Math.floor(Math.random() * alphabets.length);
+    const rand2 = Math.floor(Math.random() * alphabets.length);
+    const rand3 = Math.floor(Math.random() * alphabets.length);
+    const rand4 = Math.floor(Math.random() * alphabets.length);
+
+    // Generate a unique voucher code using the new random values
     const voucherCode = `${voucherKey}-${specialKey}-${alphabets[rand4]}${rand}${rand3}${alphabets[rand3]}`;
 
     voucherCoupons.push({
@@ -1196,167 +1217,6 @@ const postFindVoucherController = asyncHandler(async (req, res, next) => {
     });
   }
 });
-
-// // Cashout voucher
-// postCashoutVoucherController: asyncHandler(async (req, res, next) => {
-//   const { fullName, voucherCode, bankCode, accountNumber } = req.body;
-
-//   const body = { ...req.body };
-
-//   // Run Hapi/Joi validation
-//   const { error } = await cashoutVoucherValidation.validateAsync(body);
-//   if (error) {
-//     return res.status(400).send({
-//       success: false,
-//       message: "Validation failed",
-//       errMessage: error.details[0].message,
-//     });
-//   }
-
-//   // find voucher using voucherCode
-//   const foundVoucher = await voucherModel.findOne({
-//     voucherKey: voucherCode.slice(0, 5),
-//   });
-//   console.log(
-//     "🚀 ~ file: utils.controller.js:348 ~ postCashoutVoucherController:asyncHandler ~ foundVoucher:",
-//     foundVoucher
-//   );
-
-//   if (!foundVoucher) {
-//     return res.status(400).send({
-//       success: false,
-//       message: "This coupon does not exist, please try another.",
-//     });
-//   }
-
-//   let matchingCoupon;
-
-//   // search voucher coupons for matching code
-//   foundVoucher.voucherCoupons.map((item) => {
-//     if (item.couponCode === voucherCode) {
-//       if (item.status === "cashed") {
-//         return res.status(400).send({
-//           success: false,
-//           message: "This coupon has already been claimed, please try another",
-//         });
-//       }
-//       matchingCoupon = item;
-//       // remove coupon from array if found so we can add it later after editing
-//       // foundVoucher.voucherCoupons.pop(item);
-//     }
-//   });
-
-//   if (!matchingCoupon) {
-//     return res.status(400).send({
-//       success: false,
-//       message: "This coupon does not exist, please try another.",
-//     });
-//   }
-
-//   const time = moment().format("yy-MM-DD hh:mm:ss");
-
-//   // Edit coupon details then add to array
-//   matchingCoupon.status = "cashed";
-//   matchingCoupon.cashedBy = fullName;
-//   matchingCoupon.cashedDate = time.split(" ")[0];
-//   matchingCoupon.cashedTime = time.split(" ")[1];
-
-//   // foundVoucher.voucherCoupons.push(matchingCoupon);
-
-//   const index = foundVoucher.voucherCoupons.indexOf(matchingCoupon);
-//   console.log(
-//     "🚀 ~ file: utils.controller.js:475 ~ postCashoutVoucherController:asyncHandler ~ index:",
-//     index
-//   );
-
-//   foundVoucher.voucherCoupons.splice(index, 1, matchingCoupon);
-
-//   // Add every other needed calculation stuff then save
-//   foundVoucher.totalCashedAmount =
-//     parseInt(foundVoucher.totalCashedAmount) +
-//     parseInt(foundVoucher.amountPerVoucher);
-
-//   foundVoucher.vouchersCashed = parseInt(foundVoucher.vouchersCashed) + 1;
-//   foundVoucher.cashedPercentage = (
-//     (parseInt(foundVoucher.vouchersCashed) /
-//       parseInt(foundVoucher.totalNumberOfVouchers)) *
-//     (100 / 1)
-//   ).toFixed(2);
-
-//   // Send mail to Voucher creator that <<fullName>> just cashed their voucher
-//   // find user Email
-//   const creator = await userModel.findOne({ _id: foundVoucher.userId });
-
-//   // Send email to Voucher creator
-//   const mailOptions = {
-//     to: creator.email,
-//     subject: "Voucher Claim Mail",
-//     html: voucherClaimMail(
-//       fullName,
-//       voucherCode,
-//       creator.firstName,
-//       foundVoucher.title,
-//       foundVoucher.amountPerVoucher
-//     ),
-//   };
-
-//   // Send email to Voucher winner
-//   const winnerMailOptions = {
-//     to: creator.email,
-//     subject: "Voucher Claim Mail",
-//     html: winnerVoucherClaimMail(
-//       fullName,
-//       voucherCode,
-//       foundVoucher.title,
-//       foundVoucher.amountPerVoucher
-//     ),
-//   };
-
-//   const transREf = await tx_ref.get_Tx_Ref();
-//   console.log(
-//     "🚀 ~ file: utils.controller.js:417 ~ postCashoutVoucherController:asyncHandler ~ transREf:",
-//     transREf
-//   );
-
-//   // withdraw money to <<fullName>>
-//   const payload = {
-//     account_bank: bankCode,
-//     account_number: accountNumber,
-//     amount: foundVoucher.amountPerVoucher,
-//     narration: "Voucher Redemption at CMG.co",
-//     currency: "NGN",
-//     // reference: transREf,
-//     // reference: "dfs23fhr7ntg0293039_PMCK",
-//     callback_url: "https://cmg-three.vercel.app/",
-//     debit_currency: "NGN",
-//   };
-
-//   const transfer = await FLW_services.transferMoney(payload);
-//   console.log(
-//     "🚀 ~ file: utils.controller.js:499 ~ postCashoutVoucherController:asyncHandler ~ transfer:",
-//     transfer
-//   );
-
-//   if (!transfer) {
-//     return res.status(400).send({
-//       success: false,
-//       message: "Transfer was not successful.",
-//     });
-//   }
-
-//   // sendMail(mailOptions);
-//   // sendMail(winnerMailOptions);
-//   // await foundVoucher.save();
-
-//   return res.status(200).send({
-//     success: true,
-//     data: {
-//       voucher: foundVoucher,
-//       transfer,
-//     },
-//     message: "Claimed Coupon from Voucher successfully.",
-//   });
-// }),
 
 // Cashout voucher
 const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
@@ -2063,7 +1923,19 @@ const getUserLinks = asyncHandler(async (req, res, next) => {
 // @route   /link/pay
 // @access  Public
 const postCrowdFundingController = asyncHandler(async (req, res, next) => {
-  const { amount, name, email, link } = req.body;
+  // const { amount, name, email, link } = req.body;
+  const { name, email, link } = req.body;
+
+  // const findLink = await linkModel.findById(link);
+  const findLink = await linkModel.findOne({ link });
+  console.log("LINK: ", findLink);
+  if (!findLink) return next(new ErrorResponse("Invalid Link", 404));
+  const user = await userModel.findOne({ linkId: findLink.userLinkId });
+  if (!user) return next("Invalid Link", 404);
+  const useLinkId = new mongoose.Types.ObjectId(findLink.id);
+
+  const amount = findLink.amount;
+
   if (Number(amount) > Number(process.env.MAXIMUM_AMOUNT_PER_TRANSACTION))
     return next(
       new ErrorResponse(
@@ -2071,16 +1943,18 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
         401
       )
     );
-  const { error } = await Validator.payToLink.validateAsync(req.body);
+  const { error } = await Validator.payToLink.validateAsync({...req.body, amount});
   if (error) {
     return next(new ErrorResponse(error.message, 400));
   }
 
-  const findLink = await linkModel.findOne({ link });
-  if (!findLink) return next(new ErrorResponse("Invalid Link", 404));
-  const user = await userModel.findOne({ linkId: findLink.userLinkId });
-  if (!user) return next("Invalid Link", 404);
-  const useLinkId = new mongoose.Types.ObjectId(findLink.id);
+  // // const findLink = await linkModel.findById(link);
+  // const findLink = await linkModel.findOne({ link });
+  // console.log("LINK: ", findLink);
+  // if (!findLink) return next(new ErrorResponse("Invalid Link", 404));
+  // const user = await userModel.findOne({ linkId: findLink.userLinkId });
+  // if (!user) return next("Invalid Link", 404);
+  // const useLinkId = new mongoose.Types.ObjectId(findLink.id);
   const dailyTransactions = await transactionModel.aggregate([
     {
       $match: {
@@ -2112,7 +1986,7 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
 
   const payload = {
     tx_ref: transREf,
-    amount,
+    amount: findLink.amount,
     currency: "NGN",
     payment_options: "card",
     redirect_url: "https://www.usepays.co/payment/depositecompleted",
@@ -2125,7 +1999,7 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
       customer_id: transREf,
     },
     customizations: {
-      title: "CMG",
+      title: "Pays",
       description: "Pay with card",
       logo: "#",
     },
@@ -2135,6 +2009,7 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
   // paymentReference
   const transaction = await new transactionModel({
     tx_ref: transREf,
+    paymentReference: transREf,
     transactionReference: transREf,
     userId: user.id,
     amount,
@@ -2179,6 +2054,146 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
     transaction: transaction,
   });
 });
+
+// const postCrowdFundingController = asyncHandler(async (req, res, next) => {
+//   // const { amount, name, email, link } = req.body;
+//   // const { name, email, link } = req.body;
+//   const { link } = req.query;
+//   console.log("Query: ", link);
+
+//   // const findLink = await linkModel.findById(link);
+//   const findLink = await linkModel.findOne({ link });
+//   console.log("LINK: ", findLink);
+//   if (!findLink) return next(new ErrorResponse("Invalid Link", 404));
+//   const user = await userModel.findOne({ linkId: findLink.userLinkId });
+//   // console.log("User: ", user);
+//   if (!user) return next("Invalid Link", 404);
+//   const useLinkId = new mongoose.Types.ObjectId(findLink.id);
+
+//   const { amount } = findLink;
+//   const { email, name } = user;
+
+//   if (Number(amount) > Number(process.env.MAXIMUM_AMOUNT_PER_TRANSACTION))
+//     return next(
+//       new ErrorResponse(
+//         `Transaction limit per transaction is ${process.env.MAXIMUM_AMOUNT_PER_TRANSACTION}k`,
+//         401
+//       )
+//     );
+//     const verify = { email, amount, name, link }
+//   const { error } = await Validator.payToLink.validateAsync(verify);
+//   if (error) {
+//     return next(new ErrorResponse(error.message, 400));
+//   }
+
+//   // // const findLink = await linkModel.findById(link);
+//   // const findLink = await linkModel.findOne({ link });
+//   // console.log("LINK: ", findLink);
+//   // if (!findLink) return next(new ErrorResponse("Invalid Link", 404));
+//   // const user = await userModel.findOne({ linkId: findLink.userLinkId });
+//   // if (!user) return next("Invalid Link", 404);
+//   // const useLinkId = new mongoose.Types.ObjectId(findLink.id);
+//   const dailyTransactions = await transactionModel.aggregate([
+//     {
+//       $match: {
+//         name: name, // Replace "Specific Name" with the desired name
+//         link: useLinkId, // Replace "Specific Link" with the desired link
+//       },
+//     },
+//     {
+//       $group: {
+//         _id: null,
+//         totalAmount: { $sum: "$amount" }, // Replace "fieldName" with the actual field name you want to sum
+//       },
+//     },
+//   ]);
+//   const totalSum =
+//     dailyTransactions.length > 0 ? dailyTransactions[0].totalAmount : 0;
+//   if (
+//     Number(totalSum) + Number(amount) >
+//       Number(process.env.MAXIMUM_AMOUNT_PER_DAY) ||
+//     Number(totalSum) + Number(amount) > findLink.amount
+//   )
+//     return next(
+//       new ErrorResponse(
+//         `Maximum transaction limit per day of ${process.env.MAXIMUM_AMOUNT_PER_DAY} cannot be exceeded`,
+//         401
+//       )
+//     );
+//   const transREf = await tx_ref.get_Tx_Ref();
+
+//   const payload = {
+//     tx_ref: transREf,
+//     amount: findLink.amount,
+//     currency: "NGN",
+//     payment_options: "card",
+//     // redirect_url: "https://www.usepays.co/payment/depositecompleted",
+//     redirect_url: "https://www.usepays.co/",
+//     customer: {
+//       email: email,
+//       phonenumber: " ",
+//       name: name,
+//     },
+//     meta: {
+//       customer_id: transREf,
+//     },
+//     customizations: {
+//       title: "Pays",
+//       description: "Pay with card",
+//       logo: "#",
+//     },
+//   };
+
+//   const response = await FLW_services.initiateTransaction(payload);
+//   // paymentReference
+//   const transaction = await new transactionModel({
+//     tx_ref: transREf,
+//     paymentReference: transREf,
+//     transactionReference: transREf,
+//     userId: user.id,
+//     amount,
+//     currency: "NGN",
+//     type: "credit",
+//     status: "initiated",
+//   });
+
+//   await transaction.save();
+
+//   // // Good Ol monnify
+//   // const payload = {
+//   //   amount,
+//   //   name,
+//   //   email,
+//   //   description: "Crowd Funding Account",
+//   //   tx_ref: transREf,
+//   // };
+
+//   // const token = await monnify.obtainAccessToken();
+//   // const makePayment = await monnify.initializePaymentForLink(payload, token);
+
+//   // const transaction = new transactionModel({
+//   //   tx_ref: transREf,
+//   //   paymentReference: makePayment.paymentReference,
+//   //   transactionReference: makePayment.transactionReference,
+//   //   userId: user.id,
+//   //   amount,
+//   //   currency: findLink.currency,
+//   //   type: "credit",
+//   //   status: "initiated",
+//   //   name,
+//   //   link: findLink.id,
+//   //   fundingType: "crowdFunding",
+//   // });
+
+//   // await transaction.save();
+//   return res.status(200).send({
+//     success: true,
+//     data: response,
+//     message: "Payment Initiated",
+//     transaction: transaction,
+//     userId: user?.id,
+//   });
+// });
 
 // @desc    Get Crowd Funded Transactions
 // @route   /link/transactions/:linkId
@@ -2274,6 +2289,9 @@ const postCreateCrowdFundingLink = asyncHandler(async (req, res, next) => {
   });
   await newLink.save();
   const findLink = await linkModel.findById(newLink.id).select("-userLinkId");
+  const appendLink = `${link}/${newLink.id}`;
+  newLink.link = appendLink;
+  await newLink.save();
   return res.status(201).json({
     success: true,
     message: "Link generated successfully",

@@ -37,7 +37,7 @@ const createVoucherValidation = Joi.object({
   amountPerVoucher: Joi.number().required(),
   // totalAmount: Joi.number().required(),
   voucherCoupons: Joi.array().required(),
-  expiry_date: Joi.string(),
+  // expiry_date: Joi.string(),
   recipients: Joi.array(),
 });
 

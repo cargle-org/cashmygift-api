@@ -33,10 +33,10 @@ module.exports = {
 
     //   check if user exist
     const user = await User.findOne({ _id: userId });
-    console.log(
-      "🚀 ~ file: user.controller.js:34 ~ getUserController:asyncHandler ~ user:",
-      user
-    );
+    // console.log(
+    //   "🚀 ~ file: user.controller.js:34 ~ getUserController:asyncHandler ~ user:",
+    //   user
+    // );
 
     if (!user) {
       return res.status(400).send({
