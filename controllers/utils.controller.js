@@ -82,7 +82,8 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
       currency,
       payment_options: "card",
       // redirect_url: "https://www.usepays.co/payment/depositecompleted",
-      redirect_url: "https://usepays.up.railway.app/dashboard/transactions",
+      // redirect_url: "https://usepays.up.railway.app/dashboard/transactions",
+      redirect_url: "https://www.usepays.co/dashboard/transactions",
       customer: {
         email: req.user.email,
         phonenumber: req.user.phone,
@@ -170,10 +171,12 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
 const getVerifyController = asyncHandler(async (req, res, next) => {
   const id = req.query.transaction_id ?? null;
   const tx_ref = req.query.tx_ref ?? null;
+  console.log("🚀 ~ getVerifyController ~ req.query:", req.query);
 
   if (!id || !tx_ref)
     return next(new ErrorResponse("Invalid query parameters", 400));
   const verify = await FLW_services.verifyTransaction(id);
+  console.log("🚀 ~ getVerifyController ~ verify:", verify);
 
   if (verify?.status === "error") {
     return res.status(400).send({
@@ -1943,7 +1946,10 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
         401
       )
     );
-  const { error } = await Validator.payToLink.validateAsync({...req.body, amount});
+  const { error } = await Validator.payToLink.validateAsync({
+    ...req.body,
+    amount,
+  });
   if (error) {
     return next(new ErrorResponse(error.message, 400));
   }
