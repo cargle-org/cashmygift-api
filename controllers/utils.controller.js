@@ -760,7 +760,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     voucherKey,
     totalNumberOfVouchers,
     amountPerVoucher,
-    expiry_date,
+    // expiry_date,
   } = req.body;
 
   if (amountPerVoucher < 100) {
@@ -922,7 +922,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     totalNumberOfVouchers,
     amountPerVoucher,
     totalAmount,
-    expiry_date,
+    // expiry_date,
     voucherCoupons,
   });
   await voucher.save();
@@ -938,10 +938,10 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
 
   // format expiry date
   // Parse the expiry date string
-  const expiryDate = moment(expiry_date, "YYYY-MM-DD:HH:mm:ss");
+  // const expiryDate = moment(expiry_date, "YYYY-MM-DD:HH:mm:ss");
 
   // Format the expiry date in your desired format
-  const formattedExpiryDate = expiryDate?.format("YYYY-MMM-DD HH:mm:ss");
+  // const formattedExpiryDate = expiryDate?.format("YYYY-MMM-DD HH:mm:ss");
 
   // // send mail to recipients
   // if (recipients) {
@@ -1995,7 +1995,8 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
     amount: findLink.amount,
     currency: "NGN",
     payment_options: "card",
-    redirect_url: "https://www.usepays.co/payment/depositecompleted",
+    // redirect_url: "https://www.usepays.co/payment/depositecompleted",
+    redirect_url: "https://www.usepays.co/dashboard/transactions",
     customer: {
       email: email,
       phonenumber: " ",
