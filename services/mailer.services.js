@@ -14,7 +14,7 @@ const sendMail = (mailOptions) => {
     {
       from: `"UsePays.co" <${process.env.MAIL_USER}>`, // Sender's email
       to: mailOptions.to, // Recipient's email
-      subject: mailOptions.subject || "No Subject", // Email subject
+      subject: mailOptions.subject || "No Subject.", // Email subject
       html: mailOptions.html, // HTML content of the email
     },
     function (error, info) {
