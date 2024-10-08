@@ -1903,6 +1903,25 @@ const getCategories = asyncHandler(async (req, res, next) => {
   });
 });
 
+// const getUserLinks = asyncHandler(async (req, res, next) => {
+//   const { page = 1, pageSize = 50, ...rest } = req.query;
+
+//   console.log(
+//     "🚀 ~ file: utils.controller.js:1226 ~ getUserLinks:asyncHandler ~ req.user:",
+//     req.user.linkId
+//   );
+//   const links = await linkModel
+//     .find({ userLinkId: req.user.linkId, isDeleted: false })
+//     .select("-userLinkId")
+//     .skip(pageSize * (page - 1))
+//     .limit(pageSize);
+//   return res.status(200).json({
+//     success: true,
+//     message: "Available Links fetched successfully",
+//     links: links,
+//   });
+// });
+
 const getUserLinks = asyncHandler(async (req, res, next) => {
   const { page = 1, pageSize = 50, ...rest } = req.query;
 
@@ -1910,11 +1929,14 @@ const getUserLinks = asyncHandler(async (req, res, next) => {
     "🚀 ~ file: utils.controller.js:1226 ~ getUserLinks:asyncHandler ~ req.user:",
     req.user.linkId
   );
+
   const links = await linkModel
     .find({ userLinkId: req.user.linkId, isDeleted: false })
     .select("-userLinkId")
+    .sort({ createdAt: -1 }) // Sorting by date in descending order
     .skip(pageSize * (page - 1))
     .limit(pageSize);
+
   return res.status(200).json({
     success: true,
     message: "Available Links fetched successfully",
