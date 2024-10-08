@@ -1131,7 +1131,7 @@ const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
         subject: `New coupon from ${user?.name}`,
         html: newVoucherMail(
           user?.name,
-          recipient?.recipient_name ? recipient?.recipient_name : "",
+          // recipient?.recipient_name ? recipient?.recipient_name : "",
           foundVoucher?.voucherCoupons[i]?.couponCode,
           foundVoucher?.amountPerVoucher
           // foundVoucher?.expiryDate

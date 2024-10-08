@@ -1,4 +1,4 @@
-const newVoucherMail = (owner_name, recipient, code, amount, expiry_date) => {
+const newVoucherMail = (owner_name, code, amount) => {
   return `
        
 	<!DOCTYPE html>
@@ -351,14 +351,13 @@ ul.social li{
                   
             		<td>
             			<div class="text" style="padding: 0 2.5em; text-align: left;">
-							<h3>Hi <b>${recipient}</b>,
+							<h3>Hello there,
 							</h3>
 							
 							<h4>You have been gifted a voucher from <b>'${owner_name}'</b> on <a href="https://www.usepays.co/">usepays.co</a>, here are the details;
 							<br/>
 							 <h5>Coupon Code : <b>${code}</b> </h5>
 							 <h5>Amount : <b>₦${amount}</b> </h5>
-							 <h5>Expiry Date : <b>${expiry_date ? expiry_date : "No expiry date"}</b> </h5>
 							<br/>
 							<br><br>						
             			</div>
