@@ -1926,7 +1926,7 @@ const getUserLinks = asyncHandler(async (req, res, next) => {
   const { page = 1, pageSize = 50, ...rest } = req.query;
 
   console.log(
-    "🚀 ~ file: utils.controller.js:1226 ~ getUserLinks:asyncHandler ~ req.user:",
+    "🚀 ~ file:  utils.controller.js:1226 ~ getUserLinks:asyncHandler ~ req.user:",
     req.user.linkId
   );
 
