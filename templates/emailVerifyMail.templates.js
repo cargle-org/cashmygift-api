@@ -1,5 +1,5 @@
 const emailVerifyMail = (id, user, token) => {
-    return `
+  return `
        
 	<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
@@ -356,7 +356,8 @@ ul.social li{
 							
 							<h4>You recently began registration on CMG.co, please use the link below to complete your registration.
 							<br/>
-							 <h5><a href='https://www.usepays.co/accountverified?id=${id}&emailToken=${token}'>Click here to complete registration</a></h5>
+							 <!-- <h5><a href='https://www.usepays.co/auth/verify?id=${id}&emailToken=${token}'>Click here to complete registration</a></h5> -->
+							 <h5><a href='https://www.usepays.co/auth/verify?id=${id}&emailToken=${token}'>Click here to complete registration</a></h5>
 							<br><br>						
             			</div>
             		</td>
