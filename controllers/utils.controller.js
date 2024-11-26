@@ -770,8 +770,21 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     });
   }
 
-  const cmgFee = parseInt(totalNumberOfVouchers * 10);
-  const totalAmount = parseInt(totalNumberOfVouchers * amountPerVoucher);
+  let cmgFee;
+  // cmgFee = parseInt(totalNumberOfVouchers * 150);
+  if (totalNumberOfVouchers > 0 && totalNumberOfVouchers <= 10) {
+    cmgFee = parseInt(totalNumberOfVouchers * 150);
+  }
+  if (totalNumberOfVouchers > 10 && totalNumberOfVouchers <= 50) {
+    cmgFee = parseInt(totalNumberOfVouchers * 120);
+  }
+  if (totalNumberOfVouchers > 50) {
+    cmgFee = parseInt(totalNumberOfVouchers * 100);
+  }
+  console.log("🚀 ~ postCreateVoucherController ~ cmgFee:", cmgFee);
+  const totalAmount = parseInt(
+    totalNumberOfVouchers * amountPerVoucher + cmgFee
+  );
   let thumbnail = "";
 
   // Do simple maths to know if numbers match
