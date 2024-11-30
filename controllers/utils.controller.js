@@ -2458,6 +2458,27 @@ const transferWebhook = asyncHandler(async (req, res, next) => {
 //   const {link} = req.body
 //   const user = await userModel.findByIdAndUpdate(req.user.id, {})
 // })
+
+// Homepage Stats
+const getHomepageStats = asyncHandler(async (req, res, next) => {
+  const allUsers = await userModel.find();
+  const allVouchers = await voucherModel.find();
+  let amountCashed = 0;
+  allVouchers.map((voucher) => {
+    amountCashed = amountCashed + voucher.totalCashedAmount;
+  });
+  // console.log("🚀 ~ getHomepageStats ~ allVouchers:", allVouchers);
+  return res.status(200).json({
+    success: true,
+    message: "Link has been successfully retrieved",
+    data: {
+      users: allUsers.length,
+      vouchersCreated: allVouchers.length,
+      amountCashed: amountCashed,
+    },
+  });
+});
+
 module.exports = {
   getAllBanksMonnifyController,
   getAllTransactionsController,
@@ -2484,4 +2505,5 @@ module.exports = {
   transferWebhook,
   webhook,
   verifyWalletFundWebhook,
+  getHomepageStats,
 };

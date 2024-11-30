@@ -72,4 +72,7 @@ router.get("/user/links", authenticate, utils.getUserLinks);
 router.get("/links/categories", utils.getCategories);
 router.get("/links/:linkId", utils.getLinkDetails);
 
+// Homepage Stats
+router.get("/homepage-stats", utils.getHomepageStats);
+
 module.exports = router;
