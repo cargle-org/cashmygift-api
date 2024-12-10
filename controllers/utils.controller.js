@@ -1173,11 +1173,14 @@ const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
 const postFindVoucherController = asyncHandler(async (req, res, next) => {
   try {
     const { voucherCode } = req.body;
+    console.log("🚀 ~ postFindVoucherController ~ voucherCode:", voucherCode);
 
     // find voucher using voucherCode
     const foundVoucher = await voucherModel.findOne({
       specialKey: voucherCode.slice(0, 11),
     });
+
+    console.log("🚀 ~ postFindVoucherController ~ foundVoucher:", foundVoucher);
 
     if (!foundVoucher) {
       return res.status(400).send({
@@ -1223,10 +1226,7 @@ const postFindVoucherController = asyncHandler(async (req, res, next) => {
       message: "Claimed Coupon from Voucher successfully.",
     });
   } catch (error) {
-    console.log(
-      "🚀 ~ file: utils.controller.js:430 ~ postFindVoucherController:asyncHandler ~ error:",
-      error
-    );
+    console.log("🚀 ~ postFindVoucherController ~ error:", error);
     return res.status(400).send({
       success: false,
       message: "Couldn't find voucher.",
