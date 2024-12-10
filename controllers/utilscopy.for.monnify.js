@@ -264,7 +264,7 @@ module.exports = {
     //   account_bank: bankCode,
     //   account_number: accountNumber,
     //   amount: amount,
-    //   narration: "Withdrawal from CMG.co wallet",
+    //   narration: "Withdrawal from usepays.co wallet",
     //   currency: "NGN",
     //   callback_url: "https://cmg-three.vercel.app/",
     //   debit_currency: "NGN",
@@ -292,7 +292,7 @@ module.exports = {
 
     return res.status(200).send({
       success: true,
-      message: `Successfully withdrawn ${amount} from your CMG wallet`,
+      message: `Successfully withdrawn ${amount} from your pays wallet`,
     });
   }),
 
@@ -693,7 +693,7 @@ module.exports = {
     //   account_bank: bankCode,
     //   account_number: accountNumber,
     //   amount: foundVoucher.amountPerVoucher,
-    //   narration: "Voucher Redemption at CMG.co",
+    //   narration: "Voucher Redemption at usepays.co",
     //   currency: "NGN",
     //   // reference: transREf,
     //   // reference: "dfs23fhr7ntg0293039_PMCK",

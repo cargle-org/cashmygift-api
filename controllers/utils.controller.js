@@ -1386,7 +1386,7 @@ const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
     account_bank: bankCode,
     account_number: accountNumber,
     amount: foundVoucher.amountPerVoucher,
-    narration: "Voucher Redemption at CMG.co",
+    narration: "Voucher Redemption at usepays.co",
     currency: "NGN",
     // reference: transREf,
     // reference: "dfs23fhr7ntg0293039_PMCK",
