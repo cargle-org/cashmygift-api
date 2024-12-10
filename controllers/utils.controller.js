@@ -1823,7 +1823,7 @@ const getAllTransactionsController = asyncHandler(async (req, res) => {
   const {
     userId,
     page = 1,
-    limit = 10,
+    limit = 100000,
     status,
     type,
     minAmount,
@@ -1831,6 +1831,8 @@ const getAllTransactionsController = asyncHandler(async (req, res) => {
     fromDate,
     toDate,
   } = req.query;
+  // console.log("🚀 ~ getAllTransactionsController ~ req.query:", req.query);
+
   // console.log("🚀 ~ getAllTransactionsController ~ userId:", userId);
 
   // Initialize query object
