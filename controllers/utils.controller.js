@@ -225,9 +225,10 @@ const getVerifyController = asyncHandler(async (req, res, next) => {
     }
 
     // update transaction
-    transaction.status = "successful";
-    transaction.paymentReference = verify?.data?.id;
-    transaction.transactionReference = verify?.data?.id;
+    // transaction.status = "successful";
+    transaction.status = verify?.status;
+    transaction.paymentReference = verify?.id;
+    transaction.transactionReference = verify?.id;
     console.log(
       "🚀 ~ file: utils.controller.js:125 ~ getVerifyController:asyncHandler ~ transaction:",
       transaction
