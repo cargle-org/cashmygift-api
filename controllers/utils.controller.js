@@ -1845,9 +1845,19 @@ const getAllTransactionsController = asyncHandler(async (req, res) => {
     query.amount = { ...query.amount, $gte: parseFloat(minAmount) };
   if (maxAmount)
     query.amount = { ...query.amount, $lte: parseFloat(maxAmount) };
+  // if (fromDate)
+  //   query.createdAt = { ...query.createdAt, $gte: new Date(fromDate) };
+  // if (toDate) query.createdAt = { ...query.createdAt, $lte: new Date(toDate) };
   if (fromDate)
-    query.createdAt = { ...query.createdAt, $gte: new Date(fromDate) };
-  if (toDate) query.createdAt = { ...query.createdAt, $lte: new Date(toDate) };
+    query.createdAt = {
+      ...query.createdAt,
+      $gte: new Date(fromDate),
+    };
+  if (toDate)
+    query.createdAt = {
+      ...query.createdAt,
+      $lte: new Date(new Date(toDate).setHours(23, 59, 59, 999)),
+    };
 
   // Pagination options
   const pageNumber = parseInt(page, 10);
@@ -1869,6 +1879,7 @@ const getAllTransactionsController = asyncHandler(async (req, res) => {
     return res.status(404).send({
       success: false,
       message: "No transactions found",
+      data: [],
     });
   }
 
