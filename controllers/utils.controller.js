@@ -105,6 +105,8 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
       tx_ref: transREf,
       paymentReference: transREf,
       transactionReference: transREf,
+      // paymentReference: "",
+      // transactionReference: "",
       userId: req.user._id,
       amount,
       currency,
@@ -171,7 +173,26 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
 const getVerifyController = asyncHandler(async (req, res, next) => {
   const id = req.query.transaction_id ?? null;
   const tx_ref = req.query.tx_ref ?? null;
+  const status = req.query.status ?? null;
   console.log("🚀 ~ getVerifyController ~ req.query:", req.query);
+
+  const transaction = await transactionModel.findOne({ tx_ref: tx_ref });
+
+  if (!transaction) {
+    return res.status(400).send({
+      success: false,
+      message: "Transaction not found",
+    });
+  }
+
+  if (status === "cancelled") {
+    transaction.status = "cancelled";
+    await transaction.save();
+    return res.status(400).send({
+      success: false,
+      message: "Transaction cancelled.",
+    });
+  }
 
   if (!id || !tx_ref)
     return next(new ErrorResponse("Invalid query parameters", 400));
@@ -186,14 +207,14 @@ const getVerifyController = asyncHandler(async (req, res, next) => {
   }
 
   if (verify?.status === "successful") {
-    const transaction = await transactionModel.findOne({ tx_ref: tx_ref });
+    // const transaction = await transactionModel.findOne({ tx_ref: tx_ref });
 
-    if (!transaction) {
-      return res.status(400).send({
-        success: false,
-        message: "Transaction not found",
-      });
-    }
+    // if (!transaction) {
+    //   return res.status(400).send({
+    //     success: false,
+    //     message: "Transaction not found",
+    //   });
+    // }
 
     if (transaction.status === "successful") {
       return res.status(400).send({
@@ -204,6 +225,8 @@ const getVerifyController = asyncHandler(async (req, res, next) => {
 
     // update transaction
     transaction.status = "successful";
+    transaction.paymentReference = verify?.data?.id;
+    transaction.transactionReference = verify?.data?.id;
     console.log(
       "🚀 ~ file: utils.controller.js:125 ~ getVerifyController:asyncHandler ~ transaction:",
       transaction
@@ -1806,7 +1829,7 @@ const getAllTransactionsController = asyncHandler(async (req, res) => {
     fromDate,
     toDate,
   } = req.query;
-  console.log("🚀 ~ getAllTransactionsController ~ userId:", userId);
+  // console.log("🚀 ~ getAllTransactionsController ~ userId:", userId);
 
   // Initialize query object
   let query = { userId: userId };

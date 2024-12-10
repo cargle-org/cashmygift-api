@@ -47,10 +47,10 @@ module.exports = {
 
     // get all vouchers
     const vouchers = await voucherModel.find({ userId: userId });
-    console.log(
-      "🚀 ~ file: user.controller.js:49 ~ getUserController:asyncHandler ~ vouchers:",
-      vouchers
-    );
+    // console.log(
+    //   "🚀 ~ file: user.controller.js:49 ~ getUserController:asyncHandler ~ vouchers:",
+    //   vouchers
+    // );
 
     let totalVouchers = 0;
     let totalAmountCashed = 0;
