@@ -306,7 +306,7 @@ module.exports = {
     let fromDate = new Date(from);
     let toDate = new Date(to);
 
-    const limit = 10; // Number of vouchers per page
+    const limit = 1000000; // Number of vouchers per page
     const skip = (page - 1) * limit; // Calculate the number of documents to skip
 
     // Check if voucher exists
