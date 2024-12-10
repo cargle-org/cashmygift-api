@@ -177,6 +177,7 @@ const getVerifyController = asyncHandler(async (req, res, next) => {
   console.log("🚀 ~ getVerifyController ~ req.query:", req.query);
 
   const transaction = await transactionModel.findOne({ tx_ref: tx_ref });
+  console.log("🚀 ~ getVerifyController ~ transaction:", transaction);
 
   if (!transaction) {
     return res.status(400).send({
