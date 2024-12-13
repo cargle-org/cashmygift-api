@@ -40,7 +40,7 @@ module.exports = {
 
   //   SignUp
   postRegisterController: asyncHandler(async (req, res, next) => {
-    const {
+    let {
       name,
       email,
       phone,
@@ -50,6 +50,8 @@ module.exports = {
     } = req.body;
 
     let companyLogo = "";
+
+    email = email.toLowerCase();
 
     // const body = await {...req.body, companyLogo: req.file };
     const body = await { ...req.body };
@@ -225,7 +227,9 @@ module.exports = {
 
   // Login
   postLoginController: asyncHandler(async (req, res, next) => {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
+
+    email = email.toLowerCase();
 
     // Run Hapi/Joi validation
     const { error } = await loginValidation.validateAsync(req.body);
