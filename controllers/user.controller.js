@@ -85,21 +85,24 @@ module.exports = {
     });
   }),
 
-  // //   get all user vouchers
+  // get all user vouchers
   // getAllUserVouchersController: asyncHandler(async (req, res, next) => {
-  //   const { userId, from, to, amount, status } = req.query;
-  //   console.log("🚀req.query:", req.query);
+  //   const { userId, from, to, amount, status, page = 1 } = req.query;
+  //   // console.log("🚀req.query:", req.query);
   //   let sortVouchers = [];
   //   let fromDate = new Date(from);
   //   let toDate = new Date(to);
 
-  //   //   check if voucher exist
+  //   const limit = 1000000; // Number of vouchers per page
+  //   const skip = (page - 1) * limit; // Calculate the number of documents to skip
+
+  //   // Check if voucher exists
   //   const vouchers = await voucherModel.find({ userId: userId });
 
-  //   if (!vouchers) {
+  //   if (!vouchers || vouchers.length === 0) {
   //     return res.status(400).send({
   //       success: false,
-  //       message: "no vouchers found.",
+  //       message: "No vouchers found.",
   //     });
   //   }
 
@@ -110,61 +113,82 @@ module.exports = {
   //     });
   //   }
 
-  //   // DEFAULT...no needed params? return all vouchers
+  //   // DEFAULT: No needed params? Return all vouchers sorted by creation date with pagination
   //   if (!from && !to && !amount && !status) {
+  //     const paginatedVouchers = await voucherModel
+  //       .find({ userId: userId })
+  //       .sort({ createdAt: -1 })
+  //       .skip(skip)
+  //       .limit(limit);
+
   //     return res.status(200).send({
   //       success: true,
   //       data: {
-  //         vouchers: vouchers,
+  //         vouchers: paginatedVouchers,
+  //         page,
   //       },
-  //       message: "fetched vouchers successfully.",
+  //       message: "Fetched vouchers successfully.",
   //     });
   //   }
 
-  //   // sort by date
+  //   // Sort by date
   //   if (from && to && !amount && !status) {
-  //     const dateVouchers = await voucherModel.find({
-  //       userId: userId,
-  //       createdAt: { $gte: fromDate, $lt: toDate },
-  //     });
-  //     console.log("🚀dateVouchers:", dateVouchers);
+  //     const dateVouchers = await voucherModel
+  //       .find({
+  //         userId: userId,
+  //         createdAt: { $gte: fromDate, $lt: toDate },
+  //       })
+  //       .sort({ createdAt: -1 })
+  //       .skip(skip)
+  //       .limit(limit);
+  //     // console.log("🚀dateVouchers:", dateVouchers);
 
   //     return res.status(200).send({
   //       success: true,
   //       data: {
   //         vouchers: dateVouchers,
+  //         page,
   //       },
-  //       message: "fetched vouchers successfully.",
+  //       message: "Fetched vouchers successfully.",
   //     });
   //   }
 
-  //   // sort then by date & amount
+  //   // Sort by date & amount
   //   if (from && to && amount && !status) {
-  //     const amountVouchers = await voucherModel.find({
-  //       userId: userId,
-  //       amountPerVoucher: amount,
-  //       createdAt: { $gte: fromDate, $lt: toDate },
-  //     });
-  //     console.log("🚀amountVouchers:", amountVouchers);
+  //     const amountVouchers = await voucherModel
+  //       .find({
+  //         userId: userId,
+  //         amountPerVoucher: amount,
+  //         createdAt: { $gte: fromDate, $lt: toDate },
+  //       })
+  //       .sort({ createdAt: -1 })
+  //       .skip(skip)
+  //       .limit(limit);
+  //     // console.log("🚀amountVouchers:", amountVouchers);
 
   //     return res.status(200).send({
   //       success: true,
   //       data: {
   //         vouchers: amountVouchers,
+  //         page,
   //       },
-  //       message: "fetched vouchers successfully.",
+  //       message: "Fetched vouchers successfully.",
   //     });
   //   }
 
-  //   // sort by date & status
+  //   // Sort by date & status
   //   if (from && to && status) {
-  //     const statusVouchers = await voucherModel.find({
-  //       userId: userId,
-  //       createdAt: { $gte: fromDate, $lt: toDate },
-  //     });
+  //     const statusVouchers = await voucherModel
+  //       .find({
+  //         userId: userId,
+  //         createdAt: { $gte: fromDate, $lt: toDate },
+  //       })
+  //       .sort({ createdAt: -1 })
+  //       .skip(skip)
+  //       .limit(limit);
 
-  //     statusVouchers.map((item) => {
-  //       item.voucherCoupons.map((voucher) => {
+  //     statusVouchers.forEach((item) => {
+  //       item.voucherCoupons.forEach((voucher) => {
   //         if (voucher.status === status) {
   //           const data = {
   //             title: item.title,
@@ -182,36 +206,46 @@ module.exports = {
   //       success: true,
   //       data: {
   //         vouchers: sortVouchers,
+  //         page,
   //       },
-  //       message: "fetched vouchers successfully.",
+  //       message: "Fetched vouchers successfully.",
   //     });
   //   }
 
-  //   // sort by amount
+  //   // Sort by amount
   //   if (!from && !to && amount) {
-  //     const amountVouchers = await voucherModel.find({
-  //       userId: userId,
-  //       amountPerVoucher: amount,
-  //     });
-  //     console.log("🚀amountVouchers:", amountVouchers);
+  //     const amountVouchers = await voucherModel
+  //       .find({
+  //         userId: userId,
+  //         amountPerVoucher: amount,
+  //       })
+  //       .sort({ createdAt: -1 })
+  //       .skip(skip)
+  //       .limit(limit);
+  //     // console.log("🚀amountVouchers:", amountVouchers);
 
   //     return res.status(200).send({
   //       success: true,
   //       data: {
   //         vouchers: amountVouchers,
+  //         page,
   //       },
-  //       message: "fetched vouchers successfully.",
+  //       message: "Fetched vouchers successfully.",
   //     });
   //   }
 
-  //   // sort by status
+  //   // Sort by status
   //   if (!from && !to && status) {
-  //     const statusVouchers = await voucherModel.find({
-  //       userId: userId,
-  //     });
+  //     const statusVouchers = await voucherModel
+  //       .find({
+  //         userId: userId,
+  //       })
+  //       .sort({ createdAt: -1 })
+  //       .skip(skip)
+  //       .limit(limit);
 
-  //     statusVouchers.map((item) => {
-  //       item.voucherCoupons.map((voucher) => {
+  //     statusVouchers.forEach((item) => {
+  //       item.voucherCoupons.forEach((voucher) => {
   //         if (voucher.status === status) {
   //           const data = {
   //             title: item.title,
@@ -229,21 +263,26 @@ module.exports = {
   //       success: true,
   //       data: {
   //         vouchers: sortVouchers,
+  //         page,
   //       },
-  //       message: "fetched vouchers successfully.",
+  //       message: "Fetched vouchers successfully.",
   //     });
   //   }
 
-  //   // sort by date, amount & status
+  //   // Sort by date, amount & status
   //   if (from && to && amount && status) {
-  //     const statusVouchers = await voucherModel.find({
-  //       userId: userId,
-  //       amountPerVoucher: amount,
-  //       createdAt: { $gte: fromDate, $lt: toDate },
-  //     });
+  //     const statusVouchers = await voucherModel
+  //       .find({
+  //         userId: userId,
+  //         amountPerVoucher: amount,
+  //         createdAt: { $gte: fromDate, $lt: toDate },
+  //       })
+  //       .sort({ createdAt: -1 })
+  //       .skip(skip)
+  //       .limit(limit);
 
-  //     statusVouchers.map((item) => {
-  //       item.voucherCoupons.map((voucher) => {
+  //     statusVouchers.forEach((item) => {
+  //       item.voucherCoupons.forEach((voucher) => {
   //         if (voucher.status === status) {
   //           const data = {
   //             title: item.title,
@@ -261,20 +300,25 @@ module.exports = {
   //       success: true,
   //       data: {
   //         vouchers: sortVouchers,
+  //         page,
   //       },
-  //       message: "fetched vouchers successfully.",
+  //       message: "Fetched vouchers successfully.",
   //     });
   //   }
 
-  //   // sort by amount & status
-  //   if (from && to && amount && status) {
-  //     const statusVouchers = await voucherModel.find({
-  //       userId: userId,
-  //       amountPerVoucher: amount,
-  //     });
+  //   // Sort by amount & status
+  //   if (amount && status) {
+  //     const statusVouchers = await voucherModel
+  //       .find({
+  //         userId: userId,
+  //         amountPerVoucher: amount,
+  //       })
+  //       .sort({ createdAt: -1 })
+  //       .skip(skip)
+  //       .limit(limit);
 
-  //     statusVouchers.map((item) => {
-  //       item.voucherCoupons.map((voucher) => {
+  //     statusVouchers.forEach((item) => {
+  //       item.voucherCoupons.forEach((voucher) => {
   //         if (voucher.status === status) {
   //           const data = {
   //             title: item.title,
@@ -292,266 +336,89 @@ module.exports = {
   //       success: true,
   //       data: {
   //         vouchers: sortVouchers,
+  //         page,
   //       },
-  //       message: "fetched vouchers successfully.",
+  //       message: "Fetched vouchers successfully.",
   //     });
   //   }
   // }),
 
-  // get all user vouchers
   getAllUserVouchersController: asyncHandler(async (req, res, next) => {
-    const { userId, from, to, amount, status, page = 1 } = req.query;
-    // console.log("🚀req.query:", req.query);
-    let sortVouchers = [];
-    let fromDate = new Date(from);
-    let toDate = new Date(to);
+    const {
+      userId,
+      from,
+      to,
+      minAmount,
+      maxAmount,
+      status,
+      page = 1,
+    } = req.query;
 
-    const limit = 1000000; // Number of vouchers per page
+    const limit = 100; // Number of vouchers per page
     const skip = (page - 1) * limit; // Calculate the number of documents to skip
+    const query = { userId };
 
-    // Check if voucher exists
-    const vouchers = await voucherModel.find({ userId: userId });
-
-    if (!vouchers || vouchers.length === 0) {
-      return res.status(400).send({
-        success: false,
-        message: "No vouchers found.",
-      });
-    }
-
-    if ((to && !from) || (!to && from)) {
+    // Date range filtering
+    if (from && to) {
+      const fromDate = new Date(from);
+      const toDate = new Date(to);
+      query.createdAt = { $gte: fromDate, $lt: toDate };
+    } else if ((from && !to) || (!from && to)) {
       return res.status(400).send({
         success: false,
         message: "Date should be a range.",
       });
     }
 
-    // DEFAULT: No needed params? Return all vouchers sorted by creation date with pagination
-    if (!from && !to && !amount && !status) {
-      const paginatedVouchers = await voucherModel
-        .find({ userId: userId })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit);
-
-      return res.status(200).send({
-        success: true,
-        data: {
-          vouchers: paginatedVouchers,
-          page,
-        },
-        message: "Fetched vouchers successfully.",
-      });
+    // Amount range filtering
+    if (minAmount || maxAmount) {
+      query.amountPerVoucher = {
+        ...(minAmount && { $gte: parseFloat(minAmount) }),
+        ...(maxAmount && { $lte: parseFloat(maxAmount) }),
+      };
     }
 
-    // Sort by date
-    if (from && to && !amount && !status) {
-      const dateVouchers = await voucherModel
-        .find({
-          userId: userId,
-          createdAt: { $gte: fromDate, $lt: toDate },
-        })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit);
-      // console.log("🚀dateVouchers:", dateVouchers);
-
-      return res.status(200).send({
-        success: true,
-        data: {
-          vouchers: dateVouchers,
-          page,
-        },
-        message: "Fetched vouchers successfully.",
-      });
-    }
-
-    // Sort by date & amount
-    if (from && to && amount && !status) {
-      const amountVouchers = await voucherModel
-        .find({
-          userId: userId,
-          amountPerVoucher: amount,
-          createdAt: { $gte: fromDate, $lt: toDate },
-        })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit);
-      // console.log("🚀amountVouchers:", amountVouchers);
-
-      return res.status(200).send({
-        success: true,
-        data: {
-          vouchers: amountVouchers,
-          page,
-        },
-        message: "Fetched vouchers successfully.",
-      });
-    }
-
-    // Sort by date & status
-    if (from && to && status) {
-      const statusVouchers = await voucherModel
-        .find({
-          userId: userId,
-          createdAt: { $gte: fromDate, $lt: toDate },
-        })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit);
-
-      statusVouchers.forEach((item) => {
-        item.voucherCoupons.forEach((voucher) => {
-          if (voucher.status === status) {
-            const data = {
-              title: item.title,
-              description: item.description,
-              voucherKey: item.voucherKey,
-              amount: item.amountPerVoucher,
-              couponData: voucher,
-            };
-            sortVouchers.push(data);
-          }
+    // Status filtering
+    if (status) {
+      if (status === "cashed") {
+        query.cashedPercentage = 100; // Fully cashed vouchers
+      } else if (status === "pending") {
+        query.cashedPercentage = { $lt: 100 }; // Pending vouchers
+      } else {
+        return res.status(400).send({
+          success: false,
+          message: `Invalid status value: ${status}`,
         });
-      });
-
-      return res.status(200).send({
-        success: true,
-        data: {
-          vouchers: sortVouchers,
-          page,
-        },
-        message: "Fetched vouchers successfully.",
-      });
+      }
     }
 
-    // Sort by amount
-    if (!from && !to && amount) {
-      const amountVouchers = await voucherModel
-        .find({
-          userId: userId,
-          amountPerVoucher: amount,
-        })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit);
-      // console.log("🚀amountVouchers:", amountVouchers);
-
-      return res.status(200).send({
-        success: true,
-        data: {
-          vouchers: amountVouchers,
-          page,
-        },
-        message: "Fetched vouchers successfully.",
-      });
-    }
-
-    // Sort by status
-    if (!from && !to && status) {
-      const statusVouchers = await voucherModel
-        .find({
-          userId: userId,
-        })
+    try {
+      const vouchers = await voucherModel
+        .find(query)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit);
 
-      statusVouchers.forEach((item) => {
-        item.voucherCoupons.forEach((voucher) => {
-          if (voucher.status === status) {
-            const data = {
-              title: item.title,
-              description: item.description,
-              voucherKey: item.voucherKey,
-              amount: item.amountPerVoucher,
-              couponData: voucher,
-            };
-            sortVouchers.push(data);
-          }
+      if (!vouchers || vouchers.length === 0) {
+        return res.status(404).send({
+          success: false,
+          message: "No vouchers found.",
         });
-      });
+      }
 
       return res.status(200).send({
         success: true,
         data: {
-          vouchers: sortVouchers,
+          vouchers,
           page,
         },
         message: "Fetched vouchers successfully.",
       });
-    }
-
-    // Sort by date, amount & status
-    if (from && to && amount && status) {
-      const statusVouchers = await voucherModel
-        .find({
-          userId: userId,
-          amountPerVoucher: amount,
-          createdAt: { $gte: fromDate, $lt: toDate },
-        })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit);
-
-      statusVouchers.forEach((item) => {
-        item.voucherCoupons.forEach((voucher) => {
-          if (voucher.status === status) {
-            const data = {
-              title: item.title,
-              description: item.description,
-              voucherKey: item.voucherKey,
-              amount: item.amountPerVoucher,
-              couponData: voucher,
-            };
-            sortVouchers.push(data);
-          }
-        });
-      });
-
-      return res.status(200).send({
-        success: true,
-        data: {
-          vouchers: sortVouchers,
-          page,
-        },
-        message: "Fetched vouchers successfully.",
-      });
-    }
-
-    // Sort by amount & status
-    if (amount && status) {
-      const statusVouchers = await voucherModel
-        .find({
-          userId: userId,
-          amountPerVoucher: amount,
-        })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit);
-
-      statusVouchers.forEach((item) => {
-        item.voucherCoupons.forEach((voucher) => {
-          if (voucher.status === status) {
-            const data = {
-              title: item.title,
-              description: item.description,
-              voucherKey: item.voucherKey,
-              amount: item.amountPerVoucher,
-              couponData: voucher,
-            };
-            sortVouchers.push(data);
-          }
-        });
-      });
-
-      return res.status(200).send({
-        success: true,
-        data: {
-          vouchers: sortVouchers,
-          page,
-        },
-        message: "Fetched vouchers successfully.",
+    } catch (error) {
+      return res.status(500).send({
+        success: false,
+        message: "Error fetching vouchers.",
+        error: error.message,
       });
     }
   }),
