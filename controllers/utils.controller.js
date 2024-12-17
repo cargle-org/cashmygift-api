@@ -1973,27 +1973,27 @@ const getCategories = asyncHandler(async (req, res, next) => {
 //   });
 // });
 
-const getUserLinks = asyncHandler(async (req, res, next) => {
-  const { page = 1, pageSize = 50, ...rest } = req.query;
+// const getUserLinks = asyncHandler(async (req, res, next) => {
+//   const { page = 1, pageSize = 50, ...rest } = req.query;
 
-  console.log(
-    "🚀 ~ file:  utils.controller.js:1226 ~ getUserLinks:asyncHandler ~ req.user:",
-    req.user.linkId
-  );
+//   console.log(
+//     "🚀 ~ file:  utils.controller.js:1226 ~ getUserLinks:asyncHandler ~ req.user:",
+//     req.user.linkId
+//   );
 
-  const links = await linkModel
-    .find({ userLinkId: req.user.linkId, isDeleted: false })
-    .select("-userLinkId")
-    .sort({ createdAt: -1 }) // Sorting by date in descending order
-    .skip(pageSize * (page - 1))
-    .limit(pageSize);
+//   const links = await linkModel
+//     .find({ userLinkId: req.user.linkId, isDeleted: false })
+//     .select("-userLinkId")
+//     .sort({ createdAt: -1 }) // Sorting by date in descending order
+//     .skip(pageSize * (page - 1))
+//     .limit(pageSize);
 
-  return res.status(200).json({
-    success: true,
-    message: "Available Links fetched successfully",
-    links: links,
-  });
-});
+//   return res.status(200).json({
+//     success: true,
+//     message: "Available Links fetched successfully",
+//     links: links,
+//   });
+// });
 
 // @desc    Make Payment via Link
 // @route   /link/pay
@@ -2384,6 +2384,80 @@ const postCreateCrowdFundingLink = asyncHandler(async (req, res, next) => {
     success: true,
     message: "Link generated successfully",
     link: findLink,
+  });
+});
+
+const getUserLinks = asyncHandler(async (req, res, next) => {
+  const {
+    page = 1,
+    pageSize = 50,
+    sortBy = "date",
+    status,
+    minAmount,
+    maxAmount,
+    fromDate,
+    toDate,
+    ...rest
+  } = req.query;
+
+  const currentDate = new Date(); // Get the current date
+
+  let query = { userLinkId: req.user.linkId, isDeleted: false }; // Base query
+
+  // Add status filter logic
+  if (status === "expired") {
+    query.linkExpiry = { $lt: currentDate }; // Expired links
+  } else if (status === "active") {
+    query.linkExpiry = { $gte: currentDate }; // Active links
+  }
+
+  // Add amount range filter logic
+  if (minAmount || maxAmount) {
+    query.amount = {};
+    if (minAmount) query.amount.$gte = Number(minAmount); // Minimum amount
+    if (maxAmount) query.amount.$lte = Number(maxAmount); // Maximum amount
+  }
+
+  // Add date range filter logic
+  // if (from || to) {
+  //   query.createdAt = {};
+  //   if (from) query.createdAt.$gte = new Date(from); // From date
+  //   if (to) query.createdAt.$lte = new Date(to); // To date
+  // }
+
+  if (fromDate)
+    query.createdAt = {
+      ...query.createdAt,
+      $gte: new Date(fromDate),
+    };
+  if (toDate)
+    query.createdAt = {
+      ...query.createdAt,
+      $lte: new Date(new Date(toDate).setHours(23, 59, 59, 999)),
+    };
+
+  // Define sort logic
+  let sortCriteria;
+  if (sortBy === "amount") {
+    sortCriteria = { amount: -1 }; // Sort by amount (descending)
+  } else if (sortBy === "date") {
+    sortCriteria = { createdAt: -1 }; // Sort by date (descending)
+  } else {
+    sortCriteria = {}; // Default: no sorting
+  }
+
+  // Fetch links with pagination
+  const links = await linkModel
+    .find(query)
+    .select("-userLinkId")
+    .sort(sortCriteria)
+    .skip(pageSize * (page - 1))
+    .limit(pageSize);
+
+  return res.status(200).json({
+    success: true,
+    message: "Available Links fetched successfully",
+    links: links,
   });
 });
 
