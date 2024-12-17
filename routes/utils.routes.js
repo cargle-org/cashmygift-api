@@ -71,6 +71,8 @@ router.get(
 router.get("/user/links", authenticate, utils.getUserLinks);
 router.get("/links/categories", utils.getCategories);
 router.get("/links/:linkId", utils.getLinkDetails);
+router.get("/links/one", utils.getPaymentLinkById);
+router.delete("/links/delete", utils.deletePaymentLinkById);
 
 // Homepage Stats
 router.get("/homepage-stats", utils.getHomepageStats);

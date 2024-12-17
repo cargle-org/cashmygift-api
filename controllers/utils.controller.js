@@ -2316,6 +2316,14 @@ const getLinkDetails = asyncHandler(async (req, res, next) => {
   });
 });
 
+// **************** //
+// **************** //
+// **************** //
+// PAYMENT LINKS //
+// **************** //
+// **************** //
+// **************** //
+
 // @desc    Create Payment Link
 // @route   /link/create
 // @access  Private
@@ -2377,6 +2385,47 @@ const postCreateCrowdFundingLink = asyncHandler(async (req, res, next) => {
     message: "Link generated successfully",
     link: findLink,
   });
+});
+
+const getPaymentLinkById = asyncHandler(async (req, res, next) => {
+  const { id } = req.query;
+
+  try {
+    const link = await linkModel.findById(id);
+
+    if (!link) {
+      return next(new ErrorResponse("Payment link not found", 404));
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Payment link retrieved successfully",
+      link,
+    });
+  } catch (error) {
+    return next(new ErrorResponse("Error fetching payment link", 500));
+  }
+});
+
+const deletePaymentLinkById = asyncHandler(async (req, res, next) => {
+  const { id } = req.query;
+
+  try {
+    const link = await linkModel.findById(id);
+
+    if (!link) {
+      return next(new ErrorResponse("Payment link not found", 404));
+    }
+
+    await link.remove();
+
+    return res.status(200).json({
+      success: true,
+      message: "Payment link deleted successfully",
+    });
+  } catch (error) {
+    return next(new ErrorResponse("Error deleting payment link", 500));
+  }
 });
 
 const webhook = asyncHandler(async (req, res, next) => {
@@ -2544,4 +2593,6 @@ module.exports = {
   webhook,
   verifyWalletFundWebhook,
   getHomepageStats,
+  getPaymentLinkById,
+  deletePaymentLinkById,
 };
