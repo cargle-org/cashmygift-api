@@ -404,12 +404,15 @@ const verifyWalletFundWebhook = asyncHandler(async (req, res, next) => {
   }
 
   // update transaction
-  transaction.status = "successful";
+  // transaction.status = "successful";
+  transaction.status = payload?.status;
+  transaction.paymentReference = payload?.id;
+  transaction.transactionReference = payload?.id;
+  await transaction.save();
   console.log(
     "🚀 ~ file: utils.controller.js:125 ~ getVerifyController:asyncHandler ~ transaction:",
     transaction
   );
-  await transaction.save();
 
   // find user and update walletBalance
   const user = await userModel.findOne({ _id: transaction.userId });
