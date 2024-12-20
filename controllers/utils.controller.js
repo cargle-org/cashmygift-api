@@ -796,6 +796,16 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     // expiry_date,
   } = req.body;
 
+  console.log(
+    "🚀 ~ postCreateVoucherController ~ totalNumberOfVouchers:",
+    totalNumberOfVouchers
+  );
+
+  console.log(
+    "🚀 ~ postCreateVoucherController ~ amountPerVoucher:",
+    amountPerVoucher
+  );
+
   if (amountPerVoucher < 100) {
     return res.status(400).send({
       success: false,
@@ -815,6 +825,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     cmgFee = parseInt(totalNumberOfVouchers * 100);
   }
   console.log("🚀 ~ postCreateVoucherController ~ cmgFee:", cmgFee);
+
   const totalAmount = parseInt(
     totalNumberOfVouchers * amountPerVoucher + cmgFee
   );
@@ -904,20 +915,6 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
   }
 
   let voucherCoupons = [];
-
-  // create loop based on number of vouchers
-  // for (let i = 1; i <= totalNumberOfVouchers; i++) {
-  //   const voucherCode = `${voucherKey}-${specialKey}-${alphabets[rand4]}${rand}${rand3}${alphabets[rand3]}`;
-
-  //   voucherCoupons.push({
-  //     couponId: i,
-  //     couponCode: voucherCode,
-  //     status: "pending",
-  //     cashedBy: "No one yet",
-  //     cashedDate: "Not yet",
-  //     cashedTime: "Not yet",
-  //   });
-  // }
 
   // create loop based on the number of vouchers
   for (let i = 1; i <= totalNumberOfVouchers; i++) {
@@ -1009,7 +1006,21 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
   //   });
   // }
 
-  user.walletBalance = user.walletBalance - (totalAmount + cmgFee);
+  console.log(
+    "🚀 ~ postCreateVoucherController ~ user.walletBalance 1: ",
+    user.walletBalance
+  );
+  console.log("🚀 ~ postCreateVoucherController ~ totalAmount:", totalAmount);
+  console.log("🚀 ~ postCreateVoucherController ~ cmgFee:", cmgFee);
+  console.log(
+    "🚀 ~ postCreateVoucherController ~ totalAmount + cmgFee:",
+    totalAmount + cmgFee
+  );
+  user.walletBalance = user.walletBalance - totalAmount;
+  console.log(
+    "🚀 ~ postCreateVoucherController ~ user.walletBalance 2 : ",
+    user.walletBalance
+  );
   await user.save();
 
   console.log(
