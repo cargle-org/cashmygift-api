@@ -21,6 +21,8 @@ const sendMail = require("../services/mailer.services");
 // Templates
 const emailVerifyMail = require("../templates/emailVerifyMail.templates");
 const resetPasswordMail = require("../templates/resetPasswordMail.templates");
+const sendRegisterMail = require("../templates/sendRegisterMail.templates");
+const sendLoginMail = require("../templates/sendLoginMail.templates");
 
 module.exports = {
   //   Test API connection
@@ -171,7 +173,7 @@ module.exports = {
       user
     );
 
-    // Send email
+    // Send verification email
     const mailOptions = {
       to: user.email,
       subject: "Email verification mail",
@@ -179,6 +181,15 @@ module.exports = {
     };
 
     sendMail(mailOptions);
+
+    // Send register notification email
+    const registerNotificationMail = {
+      to: "chike.sn@gmail.com",
+      subject: "New User Registration",
+      html: sendRegisterMail(user.name),
+    };
+
+    sendMail(registerNotificationMail);
 
     return res.status(200).send({
       success: true,
@@ -271,6 +282,15 @@ module.exports = {
 
     //   Generate JWT Token
     const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
+
+    // Send login notification email
+    const loginNotificationMail = {
+      to: "chike.sn@gmail.com",
+      subject: "New User Login",
+      html: sendLoginMail(user.name),
+    };
+
+    sendMail(loginNotificationMail);
 
     return res.status(200).send({
       success: true,

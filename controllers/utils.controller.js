@@ -793,6 +793,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     voucherKey,
     totalNumberOfVouchers,
     amountPerVoucher,
+    thumbnail,
     // expiry_date,
   } = req.body;
 
@@ -829,7 +830,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
   const totalAmount = parseInt(
     totalNumberOfVouchers * amountPerVoucher + cmgFee
   );
-  let thumbnail = "";
+  // let thumbnail = "";
 
   // Do simple maths to know if numbers match
   if (req.user.walletBalance < totalAmount + cmgFee) {
@@ -937,7 +938,8 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     });
   }
 
-  const body = { ...req.body, thumbnail: req.file, voucherCoupons };
+  // const body = { ...req.body, thumbnail: req.file, voucherCoupons };
+  const body = { ...req.body, voucherCoupons };
 
   // Run Hapi/Joi validation
   const { error } = await createVoucherValidation.validateAsync(body);
@@ -949,10 +951,10 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     });
   }
 
-  if (req.files?.thumbnail) {
-    // send image to Cloudinary
-    thumbnail = await uploadThumbnail(req.files.thumbnail);
-  }
+  // if (req.files?.thumbnail) {
+  //   // send image to Cloudinary
+  //   thumbnail = await uploadThumbnail(req.files.thumbnail);
+  // }
 
   // create voucher
   const voucher = new voucherModel({
