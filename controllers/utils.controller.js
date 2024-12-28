@@ -797,6 +797,22 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     // expiry_date,
   } = req.body;
 
+  // make total number of voucher should not be greater than 20 and amount per voucher should not be less than 100 and greater than 20000
+  if (totalNumberOfVouchers > 20) {
+    return res.status(400).send({
+      success: false,
+      message: "Total number of voucher should not be greater than 20",
+    });
+  }
+
+  if (amountPerVoucher < 100 || amountPerVoucher > 20000) {
+    return res.status(400).send({
+      success: false,
+      message:
+        "Amount per voucher should not be less than 100 and greater than 20000",
+    });
+  }
+
   console.log(
     "🚀 ~ postCreateVoucherController ~ totalNumberOfVouchers:",
     totalNumberOfVouchers

@@ -286,6 +286,7 @@ module.exports = {
     // Send login notification email
     const loginNotificationMail = {
       to: "chike.sn@gmail.com",
+      // to: "victrudoh@gmail.com",
       subject: "New User Login",
       html: sendLoginMail(user.name),
     };

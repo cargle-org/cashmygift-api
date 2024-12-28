@@ -354,7 +354,7 @@ ul.social li{
 							<h3>Hey,
 							</h3>
 							
-							<h4>${user} just registered on usepays.co, just thought you should know.
+							<h4><strong>${user}</strong> just registered on usepays.co, just thought you should know.
 							<br><br>						
             			</div>
             		</td>
