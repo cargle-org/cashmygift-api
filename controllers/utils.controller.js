@@ -1561,6 +1561,7 @@ const postCashVoucherAsAirtimeController = asyncHandler(
     } = req.body;
 
     const body = { ...req.body };
+    console.log("🚀 ~ postCashVoucherAsAirtimeController ~ body:", body);
 
     // // Run Hapi/Joi validation
     const { error } = await cashoutVoucherAsAirtimeValidation.validateAsync(
@@ -1576,8 +1577,13 @@ const postCashVoucherAsAirtimeController = asyncHandler(
 
     // find voucher using voucherCode
     const foundVoucher = await voucherModel.findOne({
-      voucherKey: voucherCode.slice(0, 5),
+      specialKey: voucherCode.slice(0, 11),
     });
+
+    console.log(
+      "🚀 ~ postCashVoucherAsAirtimeController ~ foundVoucher:",
+      foundVoucher
+    );
 
     if (!foundVoucher) {
       return res.status(400).send({
