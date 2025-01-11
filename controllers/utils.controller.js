@@ -385,14 +385,30 @@ const verifyWalletFundWebhook = asyncHandler(async (req, res, next) => {
   const payload = req.body;
   console.log("🚀 ~ verifyWalletFundWebhook ~ payload:", payload);
 
-  const transaction = await transactionModel.findOne({
-    tx_ref: payload.tx_ref,
-  });
+  let transaction;
+  if (payload?.tx_ref) {
+    transaction = await transactionModel.findOne({
+      tx_ref: payload?.tx_ref,
+    });
+  } else if (payload?.id) {
+    transaction = await transactionModel.findOne({
+      transactionReference: payload?.id,
+    });
+  }
 
   if (!transaction) {
     return res.status(200).send({
       success: false,
       message: "Transaction not found",
+    });
+  }
+
+  if (payload?.status === "cancelled") {
+    transaction.status = "cancelled";
+    await transaction.save();
+    return res.status(200).send({
+      success: false,
+      message: "Transaction cancelled.",
     });
   }
 
