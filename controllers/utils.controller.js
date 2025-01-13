@@ -1149,6 +1149,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
 //     message: "Updated voucher.",
 //   });
 // });
+
 const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
   const { specialKey } = req.query;
 
@@ -1255,9 +1256,9 @@ const postFindVoucherController = asyncHandler(async (req, res, next) => {
 
     // find voucher using voucherCode
     const foundVoucher = await voucherModel.findOne({
-      specialKey: voucherCode.slice(0, 11),
+      // specialKey: voucherCode.slice(0, 11),
+      specialKey: `${voucherCode.split("-")[0]}-${voucherCode.split("-")[1]}`,
     });
-
     console.log("🚀 ~ postFindVoucherController ~ foundVoucher:", foundVoucher);
 
     if (!foundVoucher) {
