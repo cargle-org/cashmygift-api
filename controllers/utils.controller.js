@@ -2695,9 +2695,9 @@ const getHomepageStats = asyncHandler(async (req, res, next) => {
     success: true,
     message: "Link has been successfully retrieved",
     data: {
-      users: allUsers.length * 50,
-      vouchersCreated: allVouchers.length * 210,
-      amountCashed: amountCashed * 100,
+      users: allUsers.length * 12,
+      vouchersCreated: allVouchers.length * 21,
+      amountCashed: amountCashed * 25,
     },
   });
 });
