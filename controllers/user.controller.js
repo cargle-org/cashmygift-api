@@ -426,6 +426,10 @@ module.exports = {
   //   get one  voucher
   getOneVouchersController: asyncHandler(async (req, res, next) => {
     const { voucherId, status } = req.query;
+    console.log(
+      "🚀 ~ getOneVouchersController:asyncHandler ~ req.query:",
+      req.query
+    );
     let sortVouchers = [];
 
     //   check if user exist

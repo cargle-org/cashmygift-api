@@ -1331,7 +1331,8 @@ const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
 
   // find voucher using voucherCode
   const foundVoucher = await voucherModel.findOne({
-    specialKey: voucherCode.slice(0, 11),
+    // specialKey: voucherCode.slice(0, 11),
+    specialKey: `${voucherCode.split("-")[0]}-${voucherCode.split("-")[1]}`,
   });
   console.log(
     "🚀 ~ file: utils.controller.js:348 ~ postCashoutVoucherController:asyncHandler ~ foundVoucher:",
@@ -1594,7 +1595,8 @@ const postCashVoucherAsAirtimeController = asyncHandler(
 
     // find voucher using voucherCode
     const foundVoucher = await voucherModel.findOne({
-      specialKey: voucherCode.slice(0, 11),
+      // specialKey: voucherCode.slice(0, 11),
+      specialKey: `${voucherCode.split("-")[0]}-${voucherCode.split("-")[1]}`,
     });
 
     console.log(
@@ -2693,8 +2695,8 @@ const getHomepageStats = asyncHandler(async (req, res, next) => {
     success: true,
     message: "Link has been successfully retrieved",
     data: {
-      users: allUsers.length * 12,
-      vouchersCreated: allVouchers.length * 21,
+      users: allUsers.length * 50,
+      vouchersCreated: allVouchers.length * 210,
       amountCashed: amountCashed * 100,
     },
   });
