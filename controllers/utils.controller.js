@@ -865,7 +865,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
   // let thumbnail = "";
 
   // Do simple maths to know if numbers match
-  if (req.user.walletBalance < totalAmount + cmgFee) {
+  if (req.user.walletBalance < totalAmount) {
     return res.status(400).send({
       success: false,
       message: "Insufficient wallet balance, please fund wallet",
