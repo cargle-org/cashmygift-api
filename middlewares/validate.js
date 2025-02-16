@@ -29,9 +29,9 @@ const editProfileValidation = Joi.object({
 });
 
 const createVoucherValidation = Joi.object({
-  title: Joi.string().min(2).required(),
-  // thumbnail: Joi.object(),
-  thumbnail: Joi.string().min(4).required(),
+  title: Joi.string().min(4).max(23).required(),
+  logo: Joi.string().allow(""),
+  backgroundStyle: Joi.string().min(4).required(),
   description: Joi.string().min(4).required(),
   voucherKey: Joi.string().min(5).max(5).required(),
   totalNumberOfVouchers: Joi.number().required(),
