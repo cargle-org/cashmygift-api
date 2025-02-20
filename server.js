@@ -43,7 +43,7 @@ app.use(xss());
 app.use(hpp());
 
 app.get('/', (req, res) => {
-  res.send('Hello, World!');
+  res.send('Hello, World!!');
 });
 
 // Set Routes
