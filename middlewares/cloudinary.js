@@ -56,6 +56,7 @@ const uploadLogo = async (file, publicIdPrefix) => {
         const fileBuffer = logoDataUri(file);
         console.log("--reached 1 Cloudinary--");
         const result = await uploader.upload(fileBuffer, {
+          folder: "usepays/logo-uploads",
           public_id: `${publicIdPrefix}-${Date.now()}`,
 
         });
