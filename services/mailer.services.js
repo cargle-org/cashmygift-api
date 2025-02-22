@@ -8,9 +8,8 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.MAIL_USER, // Replace with your Improvmx username
     pass: process.env.MAIL_PASSWORD, // Replace with your Improvmx password
-  },
-});
-
+  }
+}),
 
 const paysLogo = path.join(__dirname, "..", 'public', 'images', 'pays_logo.png');
 
