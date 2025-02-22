@@ -32,7 +32,7 @@ const createVoucherValidation = Joi.object({
   title: Joi.string().min(4).max(23).required(),
   logo: Joi.string().allow(""),
   backgroundStyle: Joi.string().min(4).required(),
-  description: Joi.string().min(4).required(),
+  description: Joi.string().min(3).required(),
   voucherKey: Joi.string().min(5).max(5).required(),
   totalNumberOfVouchers: Joi.number().required(),
   amountPerVoucher: Joi.number().required(),

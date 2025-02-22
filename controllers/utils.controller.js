@@ -812,7 +812,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     totalNumberOfVouchers,
     amountPerVoucher,
     backgroundStyle,
-    // logo,
+    logo,
     // expiry_date,
   } = req.body;
 
@@ -821,9 +821,8 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
 
   // send image to Cloudinary
   if (req.files && req.files.logo && req.files.logo[0]) {
-    logoUploadUrl = await uploadLogo(req.files.logo[0], "logo");
+    logoUploadUrl = await uploadLogo(req.files?.logo[0], "logo");
   }
-
 
   // make total number of voucher should not be greater than 20 and amount per voucher should not be less than 100 and greater than 20000
   if (totalNumberOfVouchers > 20) {
