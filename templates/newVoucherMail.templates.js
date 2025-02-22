@@ -1,20 +1,26 @@
-const newVoucherMail = (voucherId, owner_name, code, amount, logo, title, backgroundStyle) => {
-  console.log(voucherId);
+const newVoucherMail = (owner_name, code, amount, logo, title, backgroundStyle) => {
+  const bgType = `${backgroundStyle.includes(".png")}`
+  console.log(bgType === false)
   return `
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="UTF-8" />
+     <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+
     <title>${title} Voucher</title>
     <style type="text/css">
   /* Desktop default */
   .card {
     height: 240px;
-  }
-  /* Mobile Styles */
-  @media only screen and (max-width: 600px) {
-    .card {
-      height: 230px !important;
+    background-color: ${backgroundStyle} !important;
+
+    }
+    /* Mobile Styles */
+    @media only screen and (max-width: 600px) {
+      .card {
+      height: 230px;
     }
   }
 </style>
@@ -57,7 +63,7 @@ const newVoucherMail = (voucherId, owner_name, code, amount, logo, title, backgr
                         <a href="https://www.usepays.co/cashout" style="
                               display: inline-block;
                               padding: 8px 10px;
-                              border-radius: 4px;
+                              border-radius: 8px !important;
                               font-weight: 600;
                               font-size: 13px;
                               color: #ffffff;
@@ -73,8 +79,10 @@ const newVoucherMail = (voucherId, owner_name, code, amount, logo, title, backgr
               <table role="presentation" style="width:100%; border-collapse:collapse; background-color:#ffffff;" cellpadding="0" cellspacing="0">
                 <tr>
                   <td class="inner-content" style="padding: 20px;">
-                    <p style="margin: 0; font-size: 16px; line-height: 1.5; color: #333;">Here are the details:</p>
-                  </td>
+                    <p style="margin: 0; font-size: 16px; line-height: 1.5; color: #333;">Here is the Voucher Code: 
+                      <span style="margin: 0; font-size: 16px; font-weight:600; color: #1f0047;">"${code}"</span>
+                    </p>
+                    </td>
                 </tr>
                 <tr>
                   <td align="center">
@@ -87,7 +95,7 @@ const newVoucherMail = (voucherId, owner_name, code, amount, logo, title, backgr
                           class="card"
                           style="
                             width:180px;
-                            background-color: ${backgroundStyle};
+                           background-image:  ${bgType ? `url('${backgroundStyle}') !important; background-size: cover; background-repeat: no-repeat;` : ""};
                             border: 1px solid #ddd;
                             border-radius: 8px;
                             overflow: hidden;
@@ -100,7 +108,7 @@ const newVoucherMail = (voucherId, owner_name, code, amount, logo, title, backgr
                             </td>
                          </tr>
                          <tr>
-                         <td style="text-align:center; padding-top:70px; font-size:17px; font-weight:600; color:#333; letter-spacing:-2px;">
+                         <td style="text-align:center; padding-top:70px; font-size:17px; font-weight:600; letter-spacing:-2px;">
                          From: ${owner_name}
                          </td>
                          </tr>
@@ -119,7 +127,7 @@ const newVoucherMail = (voucherId, owner_name, code, amount, logo, title, backgr
                           <div class="card"
                           style="
                             width:180px;
-                            background-color: ${backgroundStyle};
+                            ${bgType && `background-image: url('${backgroundStyle}'); background-size: cover; background-repeat: no-repeat;`};
                             border: 1px solid #ddd;
                             border-radius: 8px;
                             overflow: hidden;
@@ -127,22 +135,22 @@ const newVoucherMail = (voucherId, owner_name, code, amount, logo, title, backgr
                             padding: 10px;">
                             <table role="presentation" style="width:100%; border-collapse:collapse;" cellpadding="0" cellspacing="0">
                               <tr>
-                                <td style="text-align:left; font-size:17px; font-weight:bold; color:#333;">
+                                <td style="padding:10px; text-align:left; font-size:17px; font-weight:bold; letter-spacing:-2px;">
                                   ${title}
                                 </td>
                               </tr>                           
                               <tr>
-                                <td style="padding-top:5px; text-align:center; font-size:14px; color:#333; font-weight:500;">
+                                <td style="${logo === null ? "" : `padding-top:5px;`} text-align:center; font-size:14px; font-weight:500;">
                                   Scan to Redeem
                                 </td>
                               </tr>
                               <tr>
                                 <td style="text-align:center;">
-                                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x120&data=https://www.usepays.co/cashout" alt="QR Code" style="display:block; border:0; background-color:transparent; margin:auto; width:130px; height:120px;" />
+                                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x120&data=https://www.usepays.co/cashout" alt="QR Code" style="display:block; border:0; background-color:transparent; margin:auto; width:130px; height:120px; border-radius:8px;" />
                                 </td>
                               </tr>
                               <tr>
-                                <td style="text-align:center; font-size:12px; color:#333;">
+                                <td style="text-align:center; font-size:12px; font-weight:600;">
                                   ${code}
                                 </td>
                               </tr>
