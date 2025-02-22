@@ -15,9 +15,10 @@ const dataUri = (req) => {
   );
 };
 
-const thumbnailDataUri = (req) => {
-  console.log(req);
-  return parser.format(path.extname(req.originalname).toString(), req.buffer);
+const logoDataUri = (file) => {
+  const extName = path.extname(file.originalname).toString();
+  return parser.format(extName, file.buffer).content;
 };
 
-module.exports = { multerUploads, dataUri, thumbnailDataUri };
+
+module.exports = { multerUploads, dataUri, logoDataUri };
