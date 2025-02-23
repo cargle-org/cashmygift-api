@@ -42,8 +42,8 @@ app.use(xss());
 // Prevent http param pollution
 app.use(hpp());
 
-app.get('/', (req, res) => {
-  res.send('Hello, World!');
+app.get("/", (req, res) => {
+  res.send("Hello, World!!!");
 });
 
 // Set Routes
@@ -64,7 +64,7 @@ mongoose
   })
   .catch((err) => console.log("Connection Error: ", err.message));
 
-  //Handle Unhandled Rejections
+//Handle Unhandled Rejections
 process.on("unhandledRejection", (err, promise) => {
   console.log(`Error: ${err.message}`.red);
   server.close(() => process.exit(1));
