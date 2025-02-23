@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
 });
 
 
-const paysLogo = path.join(__dirname, "..", 'public', 'images', 'pays_logo.png');
+let paysLogo = path.join(__dirname, "..", 'public', 'images', 'pays_logo.png');
 
 const sendMail = (mailOptions) => {
   transporter.sendMail(
