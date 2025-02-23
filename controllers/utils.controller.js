@@ -34,7 +34,7 @@ const {
 const asyncHandler = require("../middlewares/asyncHandler");
 const {
   uploadImageSingle,
-  uploadThumbnail,
+  uploadLogo
 } = require("../middlewares/cloudinary");
 const tx_ref = require("../middlewares/tx_ref");
 
@@ -800,17 +800,28 @@ const postWithdrawFromWalletController = asyncHandler(
 //   });
 // });
 
+
 // create voucher
 const postCreateVoucherController = asyncHandler(async (req, res, next) => {
+
   const {
     title,
     description,
     voucherKey,
     totalNumberOfVouchers,
     amountPerVoucher,
-    thumbnail,
+    backgroundStyle,
+    logo,
     // expiry_date,
   } = req.body;
+
+  //Initialize empty variables
+  let logoUploadUrl = null;
+
+  // send image to Cloudinary
+  if (req.files && req.files.logo && req.files.logo[0]) {
+    logoUploadUrl = await uploadLogo(req.files?.logo[0], "logo");
+  }
 
   // make total number of voucher should not be greater than 20 and amount per voucher should not be less than 100 and greater than 20000
   if (totalNumberOfVouchers > 20) {
@@ -970,7 +981,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
   }
 
   // const body = { ...req.body, thumbnail: req.file, voucherCoupons };
-  const body = { ...req.body, voucherCoupons };
+  const body = { ...req.body, logo: logoUploadUrl ?? "", voucherCoupons };
 
   // Run Hapi/Joi validation
   const { error } = await createVoucherValidation.validateAsync(body);
@@ -991,7 +1002,8 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
   const voucher = new voucherModel({
     userId: req.user.id,
     title,
-    thumbnail,
+    backgroundStyle,
+    logo: `${logoUploadUrl}` ?? "",
     description,
     voucherKey,
     specialKey: `${voucherKey}-${specialKey}`,
@@ -1002,7 +1014,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     voucherCoupons,
   });
   await voucher.save();
-
+  console.log("🚀 ~ postCreateVoucherController ~ voucher:", voucher);
   // get user
   const user = await userModel.findOne({ _id: req.user._id });
   if (!user) {
@@ -1224,8 +1236,10 @@ const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
           user?.name,
           // recipient?.recipient_name ? recipient?.recipient_name : "",
           foundVoucher?.voucherCoupons[i]?.couponCode,
-          foundVoucher?.amountPerVoucher
-          // foundVoucher?.expiryDate
+          foundVoucher?.amountPerVoucher,
+          foundVoucher?.logo,
+          foundVoucher?.title,
+          foundVoucher?.backgroundStyle
         ),
       };
 
@@ -2113,7 +2127,7 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
     dailyTransactions.length > 0 ? dailyTransactions[0].totalAmount : 0;
   if (
     Number(totalSum) + Number(amount) >
-      Number(process.env.MAXIMUM_AMOUNT_PER_DAY) ||
+    Number(process.env.MAXIMUM_AMOUNT_PER_DAY) ||
     Number(totalSum) + Number(amount) > findLink.amount
   )
     return next(

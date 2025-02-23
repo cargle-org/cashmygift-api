@@ -1,7 +1,17 @@
-const { dataUri, thumbnailDataUri } = require("../middlewares/multer");
+const { dataUri, logoDataUri } = require("../middlewares/multer");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 const { uploader } = require("../configs/cloudinary.config");
+
+
+
+/**
+ * Uploads a Multer file to Cloudinary.
+ * @param {Object} file - The file object from Multer.
+ * @param {string} publicIdPrefix - A prefix for the Cloudinary public_id.
+ * @returns {Promise<string>} - The URL of the uploaded file.
+ */
+
 
 const imageFileFilter = (file) =>
   file.mimetype === "image/png" ||
@@ -37,17 +47,20 @@ const uploadImageSingle = async (req, res, next) => {
   }
 };
 
-const uploadThumbnail = async (req, res, next) => {
-  //specially for vouchers
+
+
+const uploadLogo = async (file, publicIdPrefix) => {
   try {
-    if (req[0]) {
-      if (imageFileFilter(req[0])) {
-        const file = thumbnailDataUri(req[0]).content;
+    if (file) {
+      if (imageFileFilter(file)) {
+        const fileBuffer = logoDataUri(file);
         console.log("--reached 1 Cloudinary--");
-        const result = await uploader.upload(file, {
-          public_id: `Damaged-${Date.now()}`,
+        const result = await uploader.upload(fileBuffer, {
+          folder: "usepays/logo-uploads",
+          public_id: `${publicIdPrefix}-${Date.now()}`,
+
         });
-        console.log("result.url", result.url);
+        console.log("resultUrl", result.url);
         return result.url;
       } else {
         return res.status(500).send({
@@ -69,5 +82,5 @@ const uploadThumbnail = async (req, res, next) => {
 
 module.exports = {
   uploadImageSingle,
-  uploadThumbnail,
-};
+  uploadLogo
+}

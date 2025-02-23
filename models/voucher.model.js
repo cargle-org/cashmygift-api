@@ -16,7 +16,7 @@ const voucherSchema = new Schema(
       type: String,
       required: true,
     },
-    thumbnail: {
+    backgroundStyle: {
       type: String,
       default: "",
       required: false,
@@ -28,6 +28,11 @@ const voucherSchema = new Schema(
     voucherKey: {
       type: String,
       required: true,
+    },
+    logo: {
+      type: String,
+      default: "",
+      required: false
     },
     specialKey: {
       type: String,

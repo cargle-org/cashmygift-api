@@ -19,7 +19,7 @@ router.post(
   authenticate,
   // multerUploads.single("thumbnail"),
   multerUploads.fields([
-    { name: "thumbnail", maxCount: 10 }, // Assuming thumbnail field can have up to 10 files
+    { name: "logo", maxCount: 1 }, // Assuming logo field can only a single
     { name: "recipients", maxCount: 1 }, // Assuming recipients field is a single file
   ]),
   utils.postCreateVoucherController
