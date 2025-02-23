@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// const paysLogo = require('path').join(__dirname, "..", 'public', 'images', 'pays_logo.png');
+const paysLogo = require('path').join(__dirname, "..", 'public', 'images', 'pays_logo.png');
 
 const sendMail = (mailOptions) => {
   transporter.sendMail(
@@ -21,14 +21,14 @@ const sendMail = (mailOptions) => {
       subject: mailOptions.subject, // Email subject
       html: mailOptions.html, // HTML content of the email
       head: mailOptions.html, // HTML content of the email
-      // attachments: [
-      //   {
-      //     // Pays Logo
-      //     filename: 'pays_logo.png',
-      //     path: paysLogo,
-      //     cid: 'pays-logo-cid',
-      //   },
-      // ],
+      attachments: [
+        {
+          // Pays Logo
+          filename: 'pays_logo.png',
+          path: paysLogo,
+          cid: 'pays-logo-cid',
+        },
+      ],
     },
     function (error, info) {
       if (error) {
