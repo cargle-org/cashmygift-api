@@ -71,6 +71,7 @@ const getPingController = (req, res) => {
 const postFundWalletController = asyncHandler(async (req, res, next) => {
   try {
     const { amount, portal } = req.body;
+    console.log({ portal });
 
     const currency = "NGN";
     const transREf = tx_ref.get_Tx_Ref();
@@ -114,6 +115,7 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
     }
 
     if (chosenPortal === "monnify") {
+      console.log("MOnnify");
       const MNF_payload = {
         amount,
         name: req.user.name,
@@ -124,6 +126,7 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
 
       const token = await monnify.obtainAccessToken();
       const MNF_response = await monnify.initializePayment(MNF_payload, token);
+      console.log({ MNF_response });
       paymentReference = MNF_response.paymentReference;
       transactionReference = MNF_response.transactionReference;
       response = MNF_response.checkoutUrl;
@@ -198,30 +201,109 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
 
 // Verify "Fund wallet transaction"
 const getVerifyController = asyncHandler(async (req, res, next) => {
-  const id = req.query.transaction_id || null;
-  const tx_ref = req.query.tx_ref || null;
-  const status = req.query.status || null;
-  const paymentReference = req.query.paymentReference || null;
+  const id = req.query.transaction_id;
+  const tx_ref = req.query.tx_ref;
+  const status = req.query.status;
+  const paymentReference = req.query.paymentReference;
   console.log("🚀 ~ getVerifyController ~ req.query:", req.query);
+  console.log({ paymentReference, id, tx_ref });
+  console.log(!tx_ref && !id);
+  console.log(tx_ref === "null" && id === "null");
 
   let transaction = null;
-  if (tx_ref) {
-    transaction = await transactionModel.findOne({ tx_ref });
-  } else if (id) {
-    transaction = await transactionModel.findOne({ transactionReference: id });
-  } else if (paymentReference) {
-    transaction = await transactionModel.findOne({ paymentReference });
-  }
-  console.log("🚀 ~ getVerifyController ~ transaction:", transaction);
 
-  if (!transaction) {
-    return res.status(400).json({
-      success: false,
-      message: "Transaction not found",
-    });
-  }
+  // Check if both tx_ref and id are null
+  if (tx_ref === "null" && id === "null") {
+    // If both are null, check for paymentReference to proceed to Monnify
+    if (paymentReference) {
+      transaction = await transactionModel.findOne({ paymentReference });
+      if (!transaction) {
+        return res.status(400).json({
+          success: false,
+          message: "Transaction not found",
+        });
+      }
 
-  if (id || tx_ref) {
+      const token = await monnify.obtainAccessToken();
+      const verify = await monnify.verifyPayment(
+        transaction.transactionReference,
+        token
+      );
+      console.log({ verify });
+
+      if (verify.paymentStatus === "PAID") {
+        if (transaction.status === "successful") {
+          return res.status(400).json({
+            success: false,
+            message: "Failed: Possible duplicate Transaction",
+          });
+        }
+
+        transaction.status = "successful";
+        await transaction.save();
+
+        // find user and update walletBalance
+        const user = await userModel.findOne({ _id: transaction.userId });
+
+        if (!user) {
+          return res.status(400).send({
+            success: false,
+            message: "User not found",
+          });
+        }
+
+        user.walletBalance += transaction.amount;
+        await user.save();
+
+        return res.status(200).send({
+          success: true,
+          data: {
+            transaction,
+            user,
+          },
+          message: "Transaction Successful",
+        });
+      } else if (verify.paymentStatus === "PENDING") {
+        transaction.status = verify.paymentStatus;
+        await transaction.save();
+        return res.status(200).json({
+          success: true,
+          data: { transaction },
+          message: "Transaction Pending",
+        });
+      } else if (verify.paymentStatus === "EXPIRED") {
+        transaction.status = verify.paymentStatus;
+        await transaction.save();
+        return res.status(200).json({
+          success: true,
+          data: { transaction },
+          message: "Transaction Expired",
+        });
+      } else {
+        transaction.status = verify.paymentStatus;
+        await transaction.save();
+        return res.status(400).json({
+          success: false,
+          message: "Transaction was not successful",
+          errMessage: verify,
+        });
+      }
+    } else {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Both transaction_id and tx_ref cannot be null, and paymentReference is required.",
+      });
+    }
+  } else if (tx_ref !== "null" || id !== "null") {
+    if (tx_ref) {
+      transaction = await transactionModel.findOne({ tx_ref });
+    } else if (id) {
+      transaction = await transactionModel.findOne({
+        transactionReference: id,
+      });
+    }
+
     if (status === "cancelled") {
       transaction.status = "cancelled";
       await transaction.save();
@@ -271,73 +353,15 @@ const getVerifyController = asyncHandler(async (req, res, next) => {
       data: { transaction, user },
       message: "Transaction Successful",
     });
-  } else if (paymentReference) {
-    const token = await monnify.obtainAccessToken();
-    const verify = await monnify.verifyPayment(
-      transaction.transactionReference,
-      token
-    );
-    console.log({ verify });
+  }
 
-    if (verify.paymentStatus === "PAID") {
-      if (transaction.status === "successful") {
-        return res.status(400).json({
-          success: false,
-          message: "Failed: Possible duplicate Transaction",
-        });
-      }
+  console.log("🚀 ~ getVerifyController ~ transaction:", transaction);
 
-      transaction.status = "successful";
-      await transaction.save();
-
-      // find user and update walletBalance
-      const user = await userModel.findOne({ _id: transaction.userId });
-
-      if (!user) {
-        return res.status(400).send({
-          success: false,
-          message: "User not found",
-        });
-      }
-
-      user.walletBalance = user.walletBalance + transaction.amount;
-      await user.save();
-
-      return res.status(200).send({
-        success: true,
-        data: {
-          transaction,
-          user,
-        },
-        message: "Transaction Successful",
-      });
-    } else if (verify.paymentStatus === "PENDING") {
-      transaction.status = verify.paymentStatus;
-      await transaction.save();
-      return res.status(200).json({
-        success: true,
-        data: { transaction },
-        message: "Transaction Pending",
-      });
-    } else if (verify.paymentStatus === "EXPIRED") {
-      transaction.status = verify.paymentStatus;
-      await transaction.save();
-      return res.status(200).json({
-        success: true,
-        data: { transaction },
-        message: "Transaction Expired",
-      });
-    } else {
-      transaction.status = verify.paymentStatus;
-      await transaction.save();
-      return res.status(400).json({
-        success: false,
-        message: "Transaction was not successful",
-        errMessage: verify,
-      });
-    }
-  } else {
-    return next(new ErrorResponse("Invalid query parameters", 400));
+  if (!transaction) {
+    return res.status(400).json({
+      success: false,
+      message: "Transaction not found",
+    });
   }
 });
 
