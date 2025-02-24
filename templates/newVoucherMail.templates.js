@@ -104,11 +104,11 @@ const newVoucherMail = (owner_name, code, amount, logo, title, backgroundStyle) 
                        <table role="presentation" style="width:100%; border-collapse:collapse;" cellpadding="0" cellspacing="0">
                          <tr>
                             <td style="text-align:left; vertical-align:top; padding:8px;">
-                              <img src="cid:pays-logo-cid" alt="Pays Logo" style="display:block; border:0; width:46px; height:14px;" />
+                              <img src="https://res.cloudinary.com/dpz3rs8ay/image/upload/v1740418577/usepays/payslogo_zgnvlb.png" alt="Pays Logo" style="display:block; border:0; width:46px; height:14px;" />
                             </td>
                          </tr>
                          <tr>
-                         <td style="text-align:center; padding-top:70px; font-size:17px; font-weight:600; letter-spacing:-2px;">
+                         <td style="text-align:center; padding-top:70px; font-size:17px; font-weight:600; letter-spacing:-1px;">
                          From: ${owner_name}
                          </td>
                          </tr>
@@ -135,7 +135,7 @@ const newVoucherMail = (owner_name, code, amount, logo, title, backgroundStyle) 
                             padding: 10px;">
                             <table role="presentation" style="width:100%; border-collapse:collapse;" cellpadding="0" cellspacing="0">
                               <tr>
-                                <td style="padding:10px; text-align:left; font-size:17px; font-weight:bold; letter-spacing:-2px;">
+                                <td style="padding:10px; text-align:left; font-size:17px; font-weight:bold; letter-spacing:-1px;">
                                   ${title}
                                 </td>
                               </tr>                           
