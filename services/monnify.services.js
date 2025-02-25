@@ -87,8 +87,8 @@ exports.initializePayment = asyncHandler(async (details, accessToken) => {
     //   "🚀 ~ file: monnify.services.js:84 ~ exports.initializePayment=asyncHandler ~ response:",
     //   response
     // );
-    // return response.data.responseBody;
-    return response.data.responseBody.checkoutUrl;
+    return response.data.responseBody;
+    // return response.data.responseBody.checkoutUrl;
   } catch (error) {
     console.log(
       "🚀 ~ file: monnify.services.js:77 ~ exports.initializePayment=asyncHandler ~ error:",
