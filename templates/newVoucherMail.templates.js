@@ -104,7 +104,7 @@ const newVoucherMail = (owner_name, code, amount, logo, title, backgroundStyle) 
                        <table role="presentation" style="width:100%; border-collapse:collapse;" cellpadding="0" cellspacing="0">
                          <tr>
                             <td style="text-align:left; vertical-align:top; padding:8px;">
-                              <img src="https://res.cloudinary.com/dpz3rs8ay/image/upload/v1740418577/usepays/payslogo_zgnvlb.png" alt="Pays Logo" style="display:block; border:0; width:48.97px; height:16.32px;" />
+                             <img src="https://res.cloudinary.com/dpz3rs8ay/image/upload/v1740588086/usepays/emailpays_vkhxgc.png" alt="Pays Logo" style="display:block; border:0; max-width:48.97px; height:16.32px;" />
                             </td>
                          </tr>
                          <tr>
@@ -114,7 +114,7 @@ const newVoucherMail = (owner_name, code, amount, logo, title, backgroundStyle) 
                          </tr>
                          <tr>
                             <td style="text-align:left; padding-top:70px;">
-                              ${logo !== 'null' ? `<img src="${logo}" alt="Brand Logo" style="display:block; border:0; max-width:66px; height:30px; padding:10px;" />` : ""}
+                              ${logo !== 'null' && logo !== "undefined" ? `<img src="${logo}" alt="Brand Logo" style="display:block; border:0; max-width:90px; height:30px; padding:10px;" />` : ""}
                             </td>
                           </tr>
                       </table>
@@ -140,7 +140,7 @@ const newVoucherMail = (owner_name, code, amount, logo, title, backgroundStyle) 
                                 </td>
                               </tr>                           
                               <tr>
-                                <td style="${logo === null ? "" : `padding-top:5px;`} text-align:center; font-size:14px; font-weight:500;">
+                                <td style="${logo === null || logo === undefined ? "" : `padding-top:5px;`} text-align:center; font-size:14px; font-weight:500;">
                                   Scan to Redeem
                                 </td>
                               </tr>
@@ -156,7 +156,7 @@ const newVoucherMail = (owner_name, code, amount, logo, title, backgroundStyle) 
                               </tr>
                               <tr>
                                 <td style="text-align:left;">
-                                  ${logo !== 'null' ? `<img src="${logo}" alt="Brand Logo" style="display:block; border:0; max-width:90px; height:30px; padding-top:10px;" />` : ""}
+                                  ${logo !== 'null' && logo !== "undefined" ? `<img src="${logo}" alt="Brand Logo" style="display:block; border:0; max-width:90px; height:30px; padding-top:10px;" />` : ""}
                                 </td>
                               </tr>
                             </table>
