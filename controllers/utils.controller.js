@@ -32,10 +32,7 @@ const {
   cashoutVoucherAsAirtimeValidation,
 } = require("../middlewares/validate");
 const asyncHandler = require("../middlewares/asyncHandler");
-const {
-  uploadImageSingle,
-  uploadLogo
-} = require("../middlewares/cloudinary");
+const { uploadImageSingle, uploadLogo } = require("../middlewares/cloudinary");
 const tx_ref = require("../middlewares/tx_ref");
 
 // Services
@@ -800,10 +797,8 @@ const postWithdrawFromWalletController = asyncHandler(
 //   });
 // });
 
-
 // create voucher
 const postCreateVoucherController = asyncHandler(async (req, res, next) => {
-
   const {
     title,
     description,
@@ -1448,69 +1443,69 @@ const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
     transREf
   );
 
-  // The bulk that is FLUTTERWAVE...*sigh*
-  // withdraw money to <<fullName>>
-  const payload = {
-    account_bank: bankCode,
-    account_number: accountNumber,
-    amount: foundVoucher.amountPerVoucher,
-    narration: "Voucher Redemption at usepays.co",
-    currency: "NGN",
-    // reference: transREf,
-    // reference: "dfs23fhr7ntg0293039_PMCK",
-    callback_url: "https://www.usepays.co/",
-    debit_currency: "NGN",
-  };
-
-  const details = {
-    // account_bank: "044",
-    // account_number: "0768010549",
-    account_bank: bankCode,
-    account_number: accountNumber,
-    amount: 100,
-    currency: "NGN",
-    narration: "Payment for things",
-    ref: tx_ref.get_Tx_Ref(),
-  };
-
-  const transfer = await FLW_services.transferMoney(payload);
-  if (transfer.status == "error")
-    return next(new ErrorResponse(transfer.message, 403));
-  // const transfer = await FLW_services.runTF(details);
-  console.log(
-    "🚀 ~ file: utils.controller.js:934 ~ postCashoutVoucherController:asyncHandler ~ transfer:",
-    transfer
-  );
-
-  if (!transfer) {
-    return res.status(400).send({
-      success: false,
-      message: "Transfer was not successful.",
-    });
-  }
-
-  // // Good ol' monnify
-  // payload = {
+  // // The bulk that is FLUTTERWAVE...*sigh*
+  // // withdraw money to <<fullName>>
+  // const payload = {
+  //   account_bank: bankCode,
+  //   account_number: accountNumber,
   //   amount: foundVoucher.amountPerVoucher,
-  //   destinationBankCode: bankCode,
-  //   destinationAccountNumber: accountNumber,
-  //   destinationAccountName: fullName,
-  //   tx_ref: transREf,
+  //   narration: "Voucher Redemption at usepays.co",
+  //   currency: "NGN",
+  //   // reference: transREf,
+  //   // reference: "dfs23fhr7ntg0293039_PMCK",
+  //   callback_url: "https://www.usepays.co/",
+  //   debit_currency: "NGN",
   // };
 
-  // const token = await monnify.obtainAccessToken();
-  // const withdrawMoney = await monnify.withdraw(payload, token);
+  // const details = {
+  //   // account_bank: "044",
+  //   // account_number: "0768010549",
+  //   account_bank: bankCode,
+  //   account_number: accountNumber,
+  //   amount: 100,
+  //   currency: "NGN",
+  //   narration: "Payment for things",
+  //   ref: tx_ref.get_Tx_Ref(),
+  // };
+
+  // const transfer = await FLW_services.transferMoney(payload);
+  // if (transfer.status == "error")
+  //   return next(new ErrorResponse(transfer.message, 403));
+  // // const transfer = await FLW_services.runTF(details);
   // console.log(
-  //   "🚀 ~ file: utils.controller.js:720 ~ postCashoutVoucherController:asyncHandler ~ withdrawMoney:",
-  //   withdrawMoney
+  //   "🚀 ~ file: utils.controller.js:934 ~ postCashoutVoucherController:asyncHandler ~ transfer:",
+  //   transfer
   // );
 
-  // if (withdrawMoney?.status !== "SUCCESS") {
+  // if (!transfer) {
   //   return res.status(400).send({
   //     success: false,
   //     message: "Transfer was not successful.",
   //   });
   // }
+
+  // Good ol' monnify
+  payload = {
+    amount: foundVoucher.amountPerVoucher,
+    destinationBankCode: bankCode,
+    destinationAccountNumber: accountNumber,
+    destinationAccountName: fullName,
+    tx_ref: transREf,
+  };
+
+  const token = await monnify.obtainAccessToken();
+  const withdrawMoney = await monnify.withdraw(payload, token);
+  console.log(
+    "🚀 ~ file: utils.controller.js:720 ~ postCashoutVoucherController:asyncHandler ~ withdrawMoney:",
+    withdrawMoney
+  );
+
+  if (withdrawMoney?.status !== "SUCCESS") {
+    return res.status(400).send({
+      success: false,
+      message: "Transfer was not successful.",
+    });
+  }
 
   sendMail(mailOptions);
   sendMail(winnerMailOptions);
@@ -1531,7 +1526,8 @@ const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
     data: {
       voucher: foundVoucher,
       winner,
-      details: transfer,
+      // details: transfer,
+      details: withdrawMoney,
     },
     message: "Claimed Coupon from Voucher successfully.",
   });
@@ -2127,7 +2123,7 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
     dailyTransactions.length > 0 ? dailyTransactions[0].totalAmount : 0;
   if (
     Number(totalSum) + Number(amount) >
-    Number(process.env.MAXIMUM_AMOUNT_PER_DAY) ||
+      Number(process.env.MAXIMUM_AMOUNT_PER_DAY) ||
     Number(totalSum) + Number(amount) > findLink.amount
   )
     return next(
