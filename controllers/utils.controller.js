@@ -2696,8 +2696,16 @@ const getHomepageStats = asyncHandler(async (req, res, next) => {
   const allUsers = await userModel.find();
   const allVouchers = await voucherModel.find();
   let amountCashed = 0;
+  let voucherCashed = 0
+
   allVouchers.map((voucher) => {
     amountCashed = amountCashed + voucher.totalCashedAmount;
+
+    const cashedCoupons = voucher.voucherCoupons.filter(
+      (coupon) => coupon.status === "cashed"
+    );
+    voucherCashed += cashedCoupons.length;
+
   });
   // console.log("🚀 ~ getHomepageStats ~ allVouchers:", allVouchers);
   return res.status(200).json({
@@ -2707,6 +2715,7 @@ const getHomepageStats = asyncHandler(async (req, res, next) => {
       users: allUsers.length * 12,
       vouchersCreated: allVouchers.length * 21,
       amountCashed: amountCashed * 25,
+      voucherCashed: voucherCashed * 35
     },
   });
 });
