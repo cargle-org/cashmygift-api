@@ -375,7 +375,12 @@ const verifyWalletFundWebhook = asyncHandler(async (req, res, next) => {
     FLW_SECRET_HASH
   );
   if (!signature || signature !== FLW_SECRET_HASH) {
-    res.status(401).end();
+    // res.status(401).end();
+    // res.status(200).end();
+    return res.status(200).send({
+      success: false,
+      message: "Invalid hash signature",
+    });
   }
 
   const payload = req.body;
@@ -491,40 +496,47 @@ const postWithdrawFromWalletController = asyncHandler(
     }
 
     // withdraw money to user
-    const payload = {
-      account_bank: bankCode,
-      account_number: accountNumber,
-      amount: amount,
-      ref: tx_ref.get_Tx_Ref(),
-      narration: "Withdrawal from usepays.co wallet",
-      currency: "NGN",
-      // callback_url: "https://6f83-197-210-77-13.ngrok.io/api/utils/transfer/webhook",
-      // debit_currency: "NGN",
-    };
-
-    const transfer = await FLW_services.transferMoney(payload);
-    if (transfer.status == "error")
-      return next(new ErrorResponse(transfer.message, 403));
-    console.log(
-      "🚀 ~ file: utils.controller.js:339 ~ postWithdrawFromWalletController:asyncHandler ~ transfer:",
-      transfer
-    );
-
-    // Good ol' monnify
-    // payload = {
+    // const payload = {
+    //   account_bank: bankCode,
+    //   account_number: accountNumber,
     //   amount: amount,
-    //   destinationBankCode: bankCode,
-    //   destinationAccountNumber: accountNumber,
-    //   destinationAccountName: user.name,
-    //   tx_ref: transREf,
+    //   ref: tx_ref.get_Tx_Ref(),
+    //   narration: "Withdrawal from usepays.co wallet",
+    //   currency: "NGN",
+    //   // callback_url: "https://6f83-197-210-77-13.ngrok.io/api/utils/transfer/webhook",
+    //   // debit_currency: "NGN",
     // };
 
-    // const token = await monnify.obtainAccessToken();
-    // const withdrawToWallet = await monnify.withdraw(payload, token);
+    // const transfer = await FLW_services.transferMoney(payload);
+    // if (transfer.status == "error")
+    //   return next(new ErrorResponse(transfer.message, 403));
     // console.log(
-    //   "🚀 ~ file: utils.controller.js:359 ~ postWithdrawFromWalletController:asyncHandler ~ withdrawToWallet:",
-    //   withdrawToWallet
+    //   "🚀 ~ file: utils.controller.js:339 ~ postWithdrawFromWalletController:asyncHandler ~ transfer:",
+    //   transfer
     // );
+
+    // Good ol' monnify
+    payload = {
+      amount: amount,
+      destinationBankCode: bankCode,
+      destinationAccountNumber: accountNumber,
+      destinationAccountName: user.name,
+      tx_ref: transREf,
+    };
+
+    const token = await monnify.obtainAccessToken();
+    const withdrawFromWallet = await monnify.withdraw(payload, token);
+    console.log(
+      "🚀 ~ file: utils.controller.js:359 ~ postWithdrawFromWalletController:asyncHandler ~ withdrawFromWallet:",
+      withdrawFromWallet
+    );
+
+    if (withdrawFromWallet?.status !== "SUCCESS") {
+      return res.status(400).send({
+        success: false,
+        message: "Transfer was not successful.",
+      });
+    }
 
     // // remove money from dashboard wallet to it doesn't still appear
     user.walletBalance = user.walletBalance - amount;
@@ -2696,7 +2708,7 @@ const getHomepageStats = asyncHandler(async (req, res, next) => {
   const allUsers = await userModel.find();
   const allVouchers = await voucherModel.find();
   let amountCashed = 0;
-  let voucherCashed = 0
+  let voucherCashed = 0;
 
   allVouchers.map((voucher) => {
     amountCashed = amountCashed + voucher.totalCashedAmount;
@@ -2705,7 +2717,6 @@ const getHomepageStats = asyncHandler(async (req, res, next) => {
       (coupon) => coupon.status === "cashed"
     );
     voucherCashed += cashedCoupons.length;
-
   });
   // console.log("🚀 ~ getHomepageStats ~ allVouchers:", allVouchers);
   return res.status(200).json({
@@ -2715,7 +2726,7 @@ const getHomepageStats = asyncHandler(async (req, res, next) => {
       users: allUsers.length * 12,
       vouchersCreated: allVouchers.length * 21,
       amountCashed: amountCashed * 25,
-      voucherCashed: voucherCashed * 35
+      voucherCashed: voucherCashed * 35,
     },
   });
 });

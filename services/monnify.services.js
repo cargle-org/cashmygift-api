@@ -22,7 +22,8 @@ const options = {
 exports.obtainAccessToken = asyncHandler(async (payload) => {
   const response = await axios.post(
     `${process.env.MONNIFY_BASE_URL}/api/v1/auth/login`,
-    payload,
+    // payload,
+    {},
     options
   );
   return response.data.responseBody.accessToken;
@@ -173,6 +174,7 @@ exports.verifyPayment = async (transactionReference, accessToken) => {
 };
 
 exports.withdraw = async (details, accessToken) => {
+  console.log({ accessToken });
   let requestBody = {
     amount: details.amount,
     reference: new String(new Date().getTime()),
@@ -192,7 +194,7 @@ exports.withdraw = async (details, accessToken) => {
       `${process.env.MONNIFY_BASE_URL}/api/v2/disbursements/single`,
       requestBody,
       {
-        // timeout: 1000 * 60,
+        timeout: 1000 * 60,
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
