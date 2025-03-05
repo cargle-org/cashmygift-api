@@ -1215,6 +1215,41 @@ const getOneVoucherDraftController = asyncHandler(async (req, res, next) => {
   }
 });
 
+// find all voucher drafts
+const getAllVoucherDraftsController = asyncHandler(async (req, res, next) => {
+  const { userId } = req.body;
+
+  try {
+    const allDrafts = await voucherDraftModel.find({
+      userId: userId,
+    });
+    console.log(
+      "🚀 ~ file: utils.controller.js:1183 ~ getAllVoucherDraftsController:asyncHandler ~ allDrafts:",
+      allDrafts
+    );
+
+    if (!allDrafts) {
+      return res.status(400).send({
+        success: false,
+        message: "Draft not found",
+      });
+    }
+
+    return res.status(200).send({
+      success: true,
+      data: allDrafts,
+      message: "All Voucher Drafts fetched successfully.",
+    });
+  } catch (error) {
+    console.log("🚀 ~ getAllVoucherDraftsController ~ error:", error);
+    return res.status(400).send({
+      success: false,
+      message: "Couldn't find all voucher drafts.",
+    });
+  }
+});
+
+
 // update voucher
 // const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
 //   const { specialKey } = req.query;
@@ -2890,4 +2925,5 @@ module.exports = {
   deletePaymentLinkById,
   postCreateVoucherDraftController,
   getOneVoucherDraftController,
+  getAllVoucherDraftsController
 };
