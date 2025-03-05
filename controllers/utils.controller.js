@@ -20,6 +20,7 @@ const FLW_SECRET_HASH = FLW_secKey; // For webhook
 
 // Models
 const voucherModel = require("../models/voucher.model");
+const voucherDraftModel = require("../models/draft.model");
 const transactionModel = require("../models/transaction.model");
 const userModel = require("../models/user.model");
 const winnerModel = require("../models/winner.model");
@@ -30,6 +31,7 @@ const {
   createVoucherValidation,
   cashoutVoucherValidation,
   cashoutVoucherAsAirtimeValidation,
+  createVoucherDraftValidation
 } = require("../middlewares/validate");
 const asyncHandler = require("../middlewares/asyncHandler");
 const {
@@ -1082,6 +1084,91 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
   });
 });
 
+//create voucher draft
+const postCreateVoucherDraftController = asyncHandler(async (req, res, next) => {
+
+  const {
+    title,
+    description,
+    voucherKey,
+    totalNumberOfVouchers,
+    amountPerVoucher,
+    backgroundStyle,
+    logo,
+    expiry_date,
+  } = req.body;
+
+  //Initialize empty variables
+  let logoUploadUrl = null;
+
+  // send image to Cloudinary
+  if (req.files && req.files.logo && req.files.logo[0]) {
+    logoUploadUrl = await uploadLogo(req.files?.logo[0], "logo");
+  }
+
+  const body = { ...req.body };
+
+  // Run Hapi/Joi validation
+  const { error } = await createVoucherDraftValidation.validateAsync(body);
+  if (error) {
+    return res.status(400).send({
+      success: false,
+      message: "Validation failed",
+      errMessage: error.details[0].message,
+    });
+  }
+
+  // create voucher draft
+  const voucherDraft = new voucherDraftModel({
+    userId: req.user.id,
+    title,
+    backgroundStyle,
+    logo,
+    description,
+    voucherKey,
+    totalNumberOfVouchers,
+    amountPerVoucher,
+    expiry_date,
+  });
+  await voucherDraft.save();
+
+  console.log("🚀 ~ postCreateVoucherDraftController ~ voucher:", voucherDraft);
+
+  // get current user
+  const user = await userModel.findOne({ _id: req.user._id });
+  console.log(user)
+  if (!user) {
+    return res.status(400).send({
+      success: false,
+      message: "Couldn't find user",
+    });
+  }
+
+  // format expiry date
+  // Parse the expiry date string
+  // const expiryDate = moment(expiry_date, "YYYY-MM-DD:HH:mm:ss");
+
+  // Format the expiry date in your desired format
+  // const formattedExpiryDate = expiryDate?.format("YYYY-MMM-DD HH:mm:ss");
+
+
+
+  await user.save();
+
+  console.log(
+    "🚀 ~ file: utils.controller.js:50 ~ Draft:asyncHandler ~ voucher:",
+    voucher
+  );
+
+  return res.status(200).send({
+    success: true,
+    data: {
+      voucher: voucher,
+    },
+    message: "Created new voucher draft.",
+  });
+});
+
 // update voucher
 // const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
 //   const { specialKey } = req.query;
@@ -1308,7 +1395,7 @@ const postFindVoucherController = asyncHandler(async (req, res, next) => {
       data: {
         voucher: {
           title: foundVoucher.title,
-          thumbnail: foundVoucher.thumbnail,
+          logo: foundVoucher.logo,
           description: foundVoucher.description,
           amount: foundVoucher.amountPerVoucher,
           description: foundVoucher.description,
@@ -1325,6 +1412,8 @@ const postFindVoucherController = asyncHandler(async (req, res, next) => {
     });
   }
 });
+
+
 
 // Cashout voucher
 const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
@@ -2753,4 +2842,5 @@ module.exports = {
   getHomepageStats,
   getPaymentLinkById,
   deletePaymentLinkById,
+  postCreateVoucherDraftController,
 };
