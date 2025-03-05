@@ -2731,6 +2731,34 @@ const getHomepageStats = asyncHandler(async (req, res, next) => {
   });
 });
 
+// Get IP address
+const getIPAddress = async () => {
+  const options = {
+    timeout: 1000 * 60,
+    headers: {
+      "content-type": "application/json",
+    },
+  };
+  console.log("GET IP");
+  try {
+    const response = await axios.get(
+      "https://api64.ipify.org?format=json",
+      options
+    );
+    console.log({ IP: response.data.ip });
+    if (!response) {
+      return res.status(400).send({
+        success: false,
+        message: "IP address not found",
+      });
+    }
+    return response.data;
+  } catch (error) {
+    console.log("Error fetching IP address: ", error);
+    return null;
+  }
+};
+
 module.exports = {
   getAllBanksMonnifyController,
   getAllTransactionsController,
@@ -2760,4 +2788,5 @@ module.exports = {
   getHomepageStats,
   getPaymentLinkById,
   deletePaymentLinkById,
+  getIPAddress,
 };

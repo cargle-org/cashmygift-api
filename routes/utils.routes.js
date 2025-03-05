@@ -78,4 +78,6 @@ router.delete("/links/delete", utils.deletePaymentLinkById);
 // Homepage Stats
 router.get("/homepage-stats", utils.getHomepageStats);
 
+router.get("/get-ip", utils.getIPAddress);
+
 module.exports = router;
