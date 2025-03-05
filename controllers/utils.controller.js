@@ -1169,6 +1169,52 @@ const postCreateVoucherDraftController = asyncHandler(async (req, res, next) => 
   });
 });
 
+// find one voucher draft
+const getOneVoucherDraftController = asyncHandler(async (req, res, next) => {
+  const { draftId } = req.query;
+  const { userId } = req.body;
+
+  try {
+    const draft = await voucherDraftModel.findOne({
+      _id: draftId,
+      userId: userId,
+    });
+    console.log(
+      "🚀 ~ file: utils.controller.js:1183 ~ getOneVoucherDraftController:asyncHandler ~ draft:",
+      draft
+    );
+
+    if (!draft) {
+      return res.status(400).send({
+        success: false,
+        message: "Draft not found",
+      });
+    }
+
+    return res.status(200).send({
+      success: true,
+      data: {
+        voucher: {
+          title: draft.title,
+          logo: draft.logo,
+          voucherKey: draft.voucherKey,
+          description: draft.description,
+          amount: draft.amountPerVoucher,
+          backgroundStyle: draft.backgroundStyle,
+          totalNumberOfVouchers: draft.totalNumberOfVouchers,
+        },
+      },
+      message: "Voucher Draft fetched successfully.",
+    });
+  } catch (error) {
+    console.log("🚀 ~ getOneVoucherDraftController ~ error:", error);
+    return res.status(400).send({
+      success: false,
+      message: "Couldn't find voucher draft.",
+    });
+  }
+});
+
 // update voucher
 // const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
 //   const { specialKey } = req.query;
@@ -2843,4 +2889,5 @@ module.exports = {
   getPaymentLinkById,
   deletePaymentLinkById,
   postCreateVoucherDraftController,
+  getOneVoucherDraftController,
 };
