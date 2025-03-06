@@ -173,6 +173,32 @@ exports.verifyPayment = async (transactionReference, accessToken) => {
   }
 };
 
+// *********************************** //
+// ****** SPIKK Temp withdrawal ****** //
+// *********************************** //
+
+var Spikk_key = Buffer.from(
+  process.env.SPIKK_MONNIFY_API_KEY + ":" + process.env.SPIKK_MONNIFY_SECRET_KEY
+).toString("base64");
+
+const Spikk_options = {
+  timeout: 1000 * 60,
+  headers: {
+    "content-type": "application/json",
+    Authorization: `Basic ${Spikk_key}`,
+  },
+};
+
+exports.obtainSpikkAccessToken = asyncHandler(async (payload) => {
+  const response = await axios.post(
+    `${process.env.SPIKK_MONNIFY_BASE_URL}/api/v1/auth/login`,
+    // payload,
+    {},
+    Spikk_options
+  );
+  return response.data.responseBody.accessToken;
+});
+
 exports.withdraw = async (details, accessToken) => {
   console.log({ accessToken });
   let requestBody = {
@@ -182,7 +208,7 @@ exports.withdraw = async (details, accessToken) => {
     destinationBankCode: details.destinationBankCode,
     destinationAccountNumber: details.destinationAccountNumber,
     currency: "NGN",
-    sourceAccountNumber: process.env.MONNIFY_WALLET_ACCOUNT_NUMBER,
+    sourceAccountNumber: process.env.SPIKK_MONNIFY_WALLET_ACCOUNT_NUMBER,
     destinationAccountName: details.destinationAccountName,
   };
   console.log(
@@ -191,7 +217,7 @@ exports.withdraw = async (details, accessToken) => {
   );
   try {
     const response = await axios.post(
-      `${process.env.MONNIFY_BASE_URL}/api/v2/disbursements/single`,
+      `${process.env.SPIKK_MONNIFY_BASE_URL}/api/v2/disbursements/single`,
       requestBody,
       {
         timeout: 1000 * 60,
@@ -213,6 +239,47 @@ exports.withdraw = async (details, accessToken) => {
     );
   }
 };
+
+// exports.withdraw = async (details, accessToken) => {
+//   console.log({ accessToken });
+//   let requestBody = {
+//     amount: details.amount,
+//     reference: new String(new Date().getTime()),
+//     narration: "Withdraw from Usepays Wallet",
+//     destinationBankCode: details.destinationBankCode,
+//     destinationAccountNumber: details.destinationAccountNumber,
+//     currency: "NGN",
+//     sourceAccountNumber: process.env.MONNIFY_WALLET_ACCOUNT_NUMBER,
+//     destinationAccountName: details.destinationAccountName,
+//   };
+//   console.log(
+//     "🚀 ~ file: monnify.services.js:128 ~ exports.withdraw= ~ requestBody:",
+//     requestBody
+//   );
+//   try {
+//     const response = await axios.post(
+//       `${process.env.MONNIFY_BASE_URL}/api/v2/disbursements/single`,
+//       requestBody,
+//       {
+//         timeout: 1000 * 60,
+//         headers: {
+//           Authorization: `Bearer ${accessToken}`,
+//           "Content-Type": "application/json",
+//         },
+//       }
+//     );
+//     console.log(
+//       "🚀 ~ file: monnify.services.js:138 ~ exports.withdraw= ~ response:",
+//       response.data
+//     );
+//     return response.data.responseBody;
+//   } catch (error) {
+//     console.log(
+//       "🚀 ~ file: monnify.services.js:146 ~ exports.withdraw= ~ error:",
+//       error
+//     );
+//   }
+// };
 
 exports.validateBankAccount = asyncHandler(
   async (accountNumber, bankCode, accessToken) => {

@@ -524,7 +524,8 @@ const postWithdrawFromWalletController = asyncHandler(
       tx_ref: transREf,
     };
 
-    const token = await monnify.obtainAccessToken();
+    // const token = await monnify.obtainAccessToken();
+    const token = await monnify.obtainSpikkAccessToken();
     const withdrawFromWallet = await monnify.withdraw(payload, token);
     console.log(
       "🚀 ~ file: utils.controller.js:359 ~ postWithdrawFromWalletController:asyncHandler ~ withdrawFromWallet:",
@@ -1505,7 +1506,8 @@ const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
     tx_ref: transREf,
   };
 
-  const token = await monnify.obtainAccessToken();
+  // const token = await monnify.obtainAccessToken();
+  const token = await monnify.obtainSpikkAccessToken();
   const withdrawMoney = await monnify.withdraw(payload, token);
   console.log(
     "🚀 ~ file: utils.controller.js:720 ~ postCashoutVoucherController:asyncHandler ~ withdrawMoney:",
