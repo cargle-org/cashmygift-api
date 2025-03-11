@@ -34,7 +34,7 @@ router.put(
 );
 router.post("/voucher/one", utils.postFindVoucherController);
 router.post("/voucher/save-draft", utils.postCreateVoucherDraftController);
-router.get("/voucher/find-draft", utils.getOneVoucherDraftController);
+router.get("/voucher/find-draft/:draftId", utils.getOneVoucherDraftController);
 router.get("/voucher/all-drafts", utils.getAllVoucherDraftsController);
 router.post("/voucher/claim", utils.postCashoutVoucherController);
 router.post("/wallet/fund", authenticate, utils.postFundWalletController);
