@@ -39,6 +39,7 @@ router.get("/voucher/all-drafts", utils.getAllVoucherDraftsController);
 router.post("/voucher/claim", utils.postCashoutVoucherController);
 router.post("/wallet/fund", authenticate, utils.postFundWalletController);
 router.post("/wallet/verify-wallet-fund", utils.verifyWalletFundWebhook);
+router.get("/wallet/verify-wallet-fund", utils.verifyWalletFundWebhook); // for webhook
 router.get("/wallet/verifyTrx", authenticate, utils.getVerifyController);
 router.post(
   "/wallet/withdraw",
@@ -79,5 +80,7 @@ router.delete("/links/delete", utils.deletePaymentLinkById);
 
 // Homepage Stats
 router.get("/homepage-stats", utils.getHomepageStats);
+
+router.get("/get-ip", utils.getIPAddress);
 
 module.exports = router;

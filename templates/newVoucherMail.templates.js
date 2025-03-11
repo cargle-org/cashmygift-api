@@ -114,7 +114,7 @@ const newVoucherMail = (owner_name, code, amount, logo, title, backgroundStyle) 
                          </tr>
                          <tr>
                             <td style="text-align:left; padding-top:70px;">
-                              ${logo !== 'null' && logo !== "undefined" ? `<img src="${logo}" alt="Brand Logo" style="display:block; border:0; max-width:90px; height:30px; padding:10px;" />` : ""}
+                              ${logo !== 'null' && logo !== "undefined" ? `<img src="${logo}" alt="Brand Logo" style="display:block; border:0; max-width:90px; height:30px; padding:8px;" />` : ""}
                             </td>
                           </tr>
                       </table>
@@ -150,13 +150,13 @@ const newVoucherMail = (owner_name, code, amount, logo, title, backgroundStyle) 
                                 </td>
                               </tr>
                               <tr>
-                                <td style="text-align:center; font-size:12px; font-weight:600;">
+                                <td style="${logo === null || logo === undefined ? "" : `padding-bottom:8px;`} text-align:center; font-size:12px; font-weight:600;">
                                   ${code}
                                 </td>
                               </tr>
                               <tr>
                                 <td style="text-align:left;">
-                                  ${logo !== 'null' && logo !== "undefined" ? `<img src="${logo}" alt="Brand Logo" style="display:block; border:0; max-width:90px; height:30px; padding-top:10px;" />` : ""}
+                                  ${logo !== 'null' && logo !== "undefined" ? `<img src="${logo}" alt="Brand Logo" style="display:block; border:0; max-width:90px; height:30px; padding:8px;" />` : ""}
                                 </td>
                               </tr>
                             </table>
