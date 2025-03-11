@@ -109,7 +109,6 @@ const newVoucherMail = (owner_name, code, amount, logo, title, backgroundStyle) 
                          </tr>
                          <tr>
                          <td style="text-align:center; padding-top:70px; font-size:17px; font-weight:600;">
-                         <td style="text-align:center; padding-top:70px; font-size:17px; font-weight:600;">
                          From: ${owner_name}
                          </td>
                          </tr>
@@ -136,7 +135,6 @@ const newVoucherMail = (owner_name, code, amount, logo, title, backgroundStyle) 
                             padding: 10px;">
                             <table role="presentation" style="width:100%; border-collapse:collapse;" cellpadding="0" cellspacing="0">
                               <tr>
-                                <td style="padding:10px; text-align:left; font-size:17px; font-weight:bold;">
                                 <td style="padding:10px; text-align:left; font-size:17px; font-weight:bold;">
                                   ${title}
                                 </td>
