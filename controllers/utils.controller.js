@@ -54,6 +54,9 @@ const linkModel = require("../models/link.model");
 const ErrorResponse = require("../utils/errorResponse");
 const { default: mongoose } = require("mongoose");
 
+// /Date Format
+const { fromZonedTime } = require("date-fns-tz");
+
 //   Test API connection
 const getPingController = (req, res) => {
   try {
@@ -1088,6 +1091,7 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
 const postCreateVoucherDraftController = asyncHandler(async (req, res, next) => {
 
   const {
+    userId,
     title,
     description,
     voucherKey,
@@ -1095,8 +1099,20 @@ const postCreateVoucherDraftController = asyncHandler(async (req, res, next) => 
     amountPerVoucher,
     backgroundStyle,
     logo,
-    expiry_date,
+    expiryDate,
   } = req.body;
+
+  //   check if user exist
+  const user = await userModel.findOne({ _id: userId });
+
+  if (!user) {
+    return res.status(400).send({
+      success: false,
+      message: "Couldn't find user",
+    });
+  }
+
+  await user.save();
 
   //Initialize empty variables
   let logoUploadUrl = null;
@@ -1106,7 +1122,7 @@ const postCreateVoucherDraftController = asyncHandler(async (req, res, next) => 
     logoUploadUrl = await uploadLogo(req.files?.logo[0], "logo");
   }
 
-  const body = { ...req.body };
+  const body = { ...req.body }
 
   // Run Hapi/Joi validation
   const { error } = await createVoucherDraftValidation.validateAsync(body);
@@ -1120,7 +1136,7 @@ const postCreateVoucherDraftController = asyncHandler(async (req, res, next) => 
 
   // create voucher draft
   const voucherDraft = new voucherDraftModel({
-    userId: req.user.id,
+    userId: user._id,
     title,
     backgroundStyle,
     logo,
@@ -1128,21 +1144,14 @@ const postCreateVoucherDraftController = asyncHandler(async (req, res, next) => 
     voucherKey,
     totalNumberOfVouchers,
     amountPerVoucher,
-    expiry_date,
+    expiryDate,
   });
+
   await voucherDraft.save();
 
   console.log("🚀 ~ postCreateVoucherDraftController ~ voucher:", voucherDraft);
 
-  // get current user
-  const user = await userModel.findOne({ _id: req.user._id });
-  console.log(user)
-  if (!user) {
-    return res.status(400).send({
-      success: false,
-      message: "Couldn't find user",
-    });
-  }
+
 
   // format expiry date
   // Parse the expiry date string
@@ -1151,28 +1160,16 @@ const postCreateVoucherDraftController = asyncHandler(async (req, res, next) => 
   // Format the expiry date in your desired format
   // const formattedExpiryDate = expiryDate?.format("YYYY-MMM-DD HH:mm:ss");
 
-
-
-  await user.save();
-
-  console.log(
-    "🚀 ~ file: utils.controller.js:50 ~ Draft:asyncHandler ~ voucher:",
-    voucher
-  );
-
   return res.status(200).send({
     success: true,
-    data: {
-      voucher: voucher,
-    },
-    message: "Created new voucher draft.",
+    message: "Draft sucessfully saved.",
   });
 });
 
 // find one voucher draft
 const getOneVoucherDraftController = asyncHandler(async (req, res, next) => {
-  const { draftId } = req.query;
-  const { userId } = req.body;
+  const { draftId } = req.params;
+  const { userId } = req.query;
 
   try {
     const draft = await voucherDraftModel.findOne({
@@ -1197,27 +1194,29 @@ const getOneVoucherDraftController = asyncHandler(async (req, res, next) => {
         voucher: {
           title: draft.title,
           logo: draft.logo,
+          createdAt: draft.createdAt,
+          expiryDate: draft.expiryDate,
           voucherKey: draft.voucherKey,
           description: draft.description,
-          amount: draft.amountPerVoucher,
+          amountPerVoucher: draft.amountPerVoucher,
           backgroundStyle: draft.backgroundStyle,
           totalNumberOfVouchers: draft.totalNumberOfVouchers,
         },
       },
-      message: "Voucher Draft fetched successfully.",
+      message: "Draft fetched successfully.",
     });
   } catch (error) {
     console.log("🚀 ~ getOneVoucherDraftController ~ error:", error);
     return res.status(400).send({
       success: false,
-      message: "Couldn't find voucher draft.",
+      message: "Couldn't find draft.",
     });
   }
 });
 
 // find all voucher drafts
 const getAllVoucherDraftsController = asyncHandler(async (req, res, next) => {
-  const { userId } = req.body;
+  const { userId } = req.query;
 
   try {
     const allDrafts = await voucherDraftModel.find({
@@ -1238,13 +1237,13 @@ const getAllVoucherDraftsController = asyncHandler(async (req, res, next) => {
     return res.status(200).send({
       success: true,
       data: allDrafts,
-      message: "All Voucher Drafts fetched successfully.",
+      message: "All Drafts fetched successfully.",
     });
   } catch (error) {
     console.log("🚀 ~ getAllVoucherDraftsController ~ error:", error);
     return res.status(400).send({
       success: false,
-      message: "Couldn't find all voucher drafts.",
+      message: "Couldn't find all drafts.",
     });
   }
 });
@@ -1396,6 +1395,13 @@ const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
         console.log("THE VOUCHERS FINISH, LOL!");
         return;
       }
+
+      const { schedule_date, time_zone } = recipient;
+      console.log("🚀 ~ putUpdateVoucherController ~ schedule_date:", schedule_date);
+
+      // Convert to UTC in the specified time zone
+      const utcDate = fromZonedTime(schedule_date, time_zone);
+
       // Send email
       const mailOptions = {
         to: recipient.recipient_email,
@@ -1409,6 +1415,7 @@ const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
           foundVoucher?.title,
           foundVoucher?.backgroundStyle
         ),
+        deliveryTime: utcDate ?? "",
       };
 
       sendMail(mailOptions);
@@ -1493,8 +1500,6 @@ const postFindVoucherController = asyncHandler(async (req, res, next) => {
     });
   }
 });
-
-
 
 // Cashout voucher
 const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
@@ -2925,5 +2930,5 @@ module.exports = {
   deletePaymentLinkById,
   postCreateVoucherDraftController,
   getOneVoucherDraftController,
-  getAllVoucherDraftsController
+  getAllVoucherDraftsController,
 };
