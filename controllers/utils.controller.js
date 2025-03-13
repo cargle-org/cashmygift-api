@@ -20,6 +20,7 @@ const FLW_SECRET_HASH = FLW_secKey; // For webhook
 
 // Models
 const voucherModel = require("../models/voucher.model");
+const voucherDraftModel = require("../models/draft.model");
 const transactionModel = require("../models/transaction.model");
 const userModel = require("../models/user.model");
 const winnerModel = require("../models/winner.model");
@@ -30,6 +31,7 @@ const {
   createVoucherValidation,
   cashoutVoucherValidation,
   cashoutVoucherAsAirtimeValidation,
+  createVoucherDraftValidation
 } = require("../middlewares/validate");
 const asyncHandler = require("../middlewares/asyncHandler");
 const { uploadImageSingle, uploadLogo } = require("../middlewares/cloudinary");
@@ -48,6 +50,9 @@ const contactUsMail = require("../templates/contactUsMail.templates");
 const linkModel = require("../models/link.model");
 const ErrorResponse = require("../utils/errorResponse");
 const { default: mongoose } = require("mongoose");
+
+// /Date Format
+const { fromZonedTime } = require("date-fns-tz");
 
 //   Test API connection
 const getPingController = (req, res) => {
@@ -1090,6 +1095,168 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
   });
 });
 
+//create voucher draft
+const postCreateVoucherDraftController = asyncHandler(async (req, res, next) => {
+
+  const {
+    userId,
+    title,
+    description,
+    voucherKey,
+    totalNumberOfVouchers,
+    amountPerVoucher,
+    backgroundStyle,
+    logo,
+    expiryDate,
+  } = req.body;
+
+  //   check if user exist
+  const user = await userModel.findOne({ _id: userId });
+
+  if (!user) {
+    return res.status(400).send({
+      success: false,
+      message: "Couldn't find user",
+    });
+  }
+
+  await user.save();
+
+  //Initialize empty variables
+  let logoUploadUrl = null;
+
+  // send image to Cloudinary
+  if (req.files && req.files.logo && req.files.logo[0]) {
+    logoUploadUrl = await uploadLogo(req.files?.logo[0], "logo");
+  }
+
+  const body = { ...req.body }
+
+  // Run Hapi/Joi validation
+  const { error } = await createVoucherDraftValidation.validateAsync(body);
+  if (error) {
+    return res.status(400).send({
+      success: false,
+      message: "Validation failed",
+      errMessage: error.details[0].message,
+    });
+  }
+
+  // create voucher draft
+  const voucherDraft = new voucherDraftModel({
+    userId: user._id,
+    title,
+    backgroundStyle,
+    logo,
+    description,
+    voucherKey,
+    totalNumberOfVouchers,
+    amountPerVoucher,
+    expiryDate,
+  });
+
+  await voucherDraft.save();
+
+  console.log("🚀 ~ postCreateVoucherDraftController ~ voucher:", voucherDraft);
+
+
+
+  // format expiry date
+  // Parse the expiry date string
+  // const expiryDate = moment(expiry_date, "YYYY-MM-DD:HH:mm:ss");
+
+  // Format the expiry date in your desired format
+  // const formattedExpiryDate = expiryDate?.format("YYYY-MMM-DD HH:mm:ss");
+
+  return res.status(200).send({
+    success: true,
+    message: "Draft sucessfully saved.",
+  });
+});
+
+// find one voucher draft
+const getOneVoucherDraftController = asyncHandler(async (req, res, next) => {
+  const { draftId } = req.params;
+  const { userId } = req.query;
+
+  try {
+    const draft = await voucherDraftModel.findOne({
+      _id: draftId,
+      userId: userId,
+    });
+    console.log(
+      "🚀 ~ file: utils.controller.js:1183 ~ getOneVoucherDraftController:asyncHandler ~ draft:",
+      draft
+    );
+
+    if (!draft) {
+      return res.status(400).send({
+        success: false,
+        message: "Draft not found",
+      });
+    }
+
+    return res.status(200).send({
+      success: true,
+      data: {
+        voucher: {
+          title: draft.title,
+          logo: draft.logo,
+          createdAt: draft.createdAt,
+          expiryDate: draft.expiryDate,
+          voucherKey: draft.voucherKey,
+          description: draft.description,
+          amountPerVoucher: draft.amountPerVoucher,
+          backgroundStyle: draft.backgroundStyle,
+          totalNumberOfVouchers: draft.totalNumberOfVouchers,
+        },
+      },
+      message: "Draft fetched successfully.",
+    });
+  } catch (error) {
+    console.log("🚀 ~ getOneVoucherDraftController ~ error:", error);
+    return res.status(400).send({
+      success: false,
+      message: "Couldn't find draft.",
+    });
+  }
+});
+
+// find all voucher drafts
+const getAllVoucherDraftsController = asyncHandler(async (req, res, next) => {
+  const { userId } = req.query;
+
+  try {
+    const allDrafts = await voucherDraftModel.find({
+      userId: userId,
+    });
+    console.log(
+      "🚀 ~ file: utils.controller.js:1183 ~ getAllVoucherDraftsController:asyncHandler ~ allDrafts:",
+      allDrafts
+    );
+
+    if (!allDrafts) {
+      return res.status(400).send({
+        success: false,
+        message: "Draft not found",
+      });
+    }
+
+    return res.status(200).send({
+      success: true,
+      data: allDrafts,
+      message: "All Drafts fetched successfully.",
+    });
+  } catch (error) {
+    console.log("🚀 ~ getAllVoucherDraftsController ~ error:", error);
+    return res.status(400).send({
+      success: false,
+      message: "Couldn't find all drafts.",
+    });
+  }
+});
+
+
 // update voucher
 // const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
 //   const { specialKey } = req.query;
@@ -1236,6 +1403,13 @@ const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
         console.log("THE VOUCHERS FINISH, LOL!");
         return;
       }
+
+      const { schedule_date, time_zone } = recipient;
+      console.log("🚀 ~ putUpdateVoucherController ~ schedule_date:", schedule_date);
+
+      // Convert to UTC in the specified time zone
+      const utcDate = fromZonedTime(schedule_date, time_zone);
+
       // Send email
       const mailOptions = {
         to: recipient.recipient_email,
@@ -1249,6 +1423,7 @@ const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
           foundVoucher?.title,
           foundVoucher?.backgroundStyle
         ),
+        deliveryTime: utcDate ?? "",
       };
 
       sendMail(mailOptions);
@@ -1316,7 +1491,7 @@ const postFindVoucherController = asyncHandler(async (req, res, next) => {
       data: {
         voucher: {
           title: foundVoucher.title,
-          thumbnail: foundVoucher.thumbnail,
+          logo: foundVoucher.logo,
           description: foundVoucher.description,
           amount: foundVoucher.amountPerVoucher,
           description: foundVoucher.description,
@@ -2137,7 +2312,7 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
     dailyTransactions.length > 0 ? dailyTransactions[0].totalAmount : 0;
   if (
     Number(totalSum) + Number(amount) >
-      Number(process.env.MAXIMUM_AMOUNT_PER_DAY) ||
+    Number(process.env.MAXIMUM_AMOUNT_PER_DAY) ||
     Number(totalSum) + Number(amount) > findLink.amount
   )
     return next(
@@ -2791,4 +2966,7 @@ module.exports = {
   getPaymentLinkById,
   deletePaymentLinkById,
   getIPAddress,
+  postCreateVoucherDraftController,
+  getOneVoucherDraftController,
+  getAllVoucherDraftsController,
 };

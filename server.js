@@ -50,6 +50,7 @@ app.get("/", (req, res) => {
 require("./routes/index.routes")(app);
 app.use(errorHandler);
 
+let server
 // Connect to DB and start server
 mongoose
   .connect(MONGODB_URI, {
@@ -58,7 +59,7 @@ mongoose
   })
   .then(() => {
     console.log("***Database Connected***");
-    app.listen(port, () => {
+    server = app.listen(port, () => {
       console.log(`<<<Server running on ${port}>>>`);
     });
   })

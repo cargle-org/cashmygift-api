@@ -10,10 +10,10 @@ const createLink = Joi.object({
 });
 
 const payToLink = Joi.object({
-    amount: Joi.number().required(),
-    name: Joi.string().required(),
-    email: Joi.string().email().required(),
-    link: Joi.string().uri().required()
+  amount: Joi.number().required(),
+  name: Joi.string().required(),
+  email: Joi.string().email().required(),
+  link: Joi.string().uri().required()
 })
 
 module.exports = {
