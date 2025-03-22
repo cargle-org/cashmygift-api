@@ -24,9 +24,9 @@ const linkSchema = new mongoose.Schema(
       unique: true,
       required: true,
     },
-    amount:{
+    amount: {
       type: Number,
-      required: true
+      required: false
     },
     description: {
       type: String,
