@@ -72,8 +72,8 @@ const getPingController = (req, res) => {
 // Fund wallet
 const postFundWalletController = asyncHandler(async (req, res, next) => {
   try {
-    const { amount, portal } = req.body;
-    console.log({ portal });
+    const { amount, portal = "flutterwave" } = req.body;
+    console.log("PORTAL*************", { portal });
 
     const currency = "NGN";
     const transREf = tx_ref.get_Tx_Ref();
@@ -89,6 +89,7 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
 
     let response;
     if (chosenPortal === "flutterwave") {
+      console.log("flutterwave")
       const FLW_payload = {
         tx_ref: transREf,
         amount,
@@ -1496,6 +1497,7 @@ const postFindVoucherController = asyncHandler(async (req, res, next) => {
           amount: foundVoucher.amountPerVoucher,
           description: foundVoucher.description,
           coupon: matchingCoupon,
+          backgroundStyle: foundVoucher.backgroundStyle,
         },
       },
       message: "Claimed Coupon from Voucher successfully.",
@@ -2260,7 +2262,8 @@ const getCategories = asyncHandler(async (req, res, next) => {
 // @access  Public
 const postCrowdFundingController = asyncHandler(async (req, res, next) => {
   // const { amount, name, email, link } = req.body;
-  const { name, email, link } = req.body;
+  const { name, email, link, amount } = req.body;
+
 
   // const findLink = await linkModel.findById(link);
   const findLink = await linkModel.findOne({ link });
@@ -2270,18 +2273,24 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
   if (!user) return next("Invalid Link", 404);
   const useLinkId = new mongoose.Types.ObjectId(findLink.id);
 
-  const amount = findLink.amount;
+  const setAmount = req.body.amount ?? findLink.amount;
+  if (!findLink.amount) {
+    await linkModel.findByIdAndUpdate(useLinkId, { amount: setAmount });
+  }
 
-  if (Number(amount) > Number(process.env.MAXIMUM_AMOUNT_PER_TRANSACTION))
+  // const setAmount = findLink.amount;
+
+  if (Number(setAmount) > Number(process.env.MAXIMUM_AMOUNT_PER_TRANSACTION))
     return next(
       new ErrorResponse(
         `Transaction limit per transaction is ${process.env.MAXIMUM_AMOUNT_PER_TRANSACTION}k`,
         401
       )
     );
+
   const { error } = await Validator.payToLink.validateAsync({
     ...req.body,
-    amount,
+    amount: setAmount,
   });
   if (error) {
     return next(new ErrorResponse(error.message, 400));
@@ -2311,9 +2320,9 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
   const totalSum =
     dailyTransactions.length > 0 ? dailyTransactions[0].totalAmount : 0;
   if (
-    Number(totalSum) + Number(amount) >
+    Number(totalSum) + Number(setAmount) >
     Number(process.env.MAXIMUM_AMOUNT_PER_DAY) ||
-    Number(totalSum) + Number(amount) > findLink.amount
+    Number(totalSum) + Number(amount) > setAmount
   )
     return next(
       new ErrorResponse(
@@ -2325,7 +2334,7 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
 
   const payload = {
     tx_ref: transREf,
-    amount: findLink.amount,
+    amount: setAmount,
     currency: "NGN",
     payment_options: "card",
     // redirect_url: "https://www.usepays.co/payment/depositecompleted",
@@ -2352,7 +2361,7 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
     paymentReference: transREf,
     transactionReference: transREf,
     userId: user.id,
-    amount,
+    amount: setAmount,
     currency: "NGN",
     type: "credit",
     status: "initiated",
