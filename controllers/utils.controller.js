@@ -516,7 +516,178 @@ const getVerifyController = asyncHandler(async (req, res, next) => {
   }
 });
 
+// Verify "Fund Guest Voucher transaction"
+const getVerifyGuestFundController = asyncHandler(async (req, res, next) => {
+  const { tId } = req.query
+  console.log(tId)
 
+  //extract paymentReference, tx_ref and status from db
+  const oneTransaction = await guestTransactionModel.findOne({ _id: tId });
+  console.log(oneTransaction)
+
+  const tx_ref = oneTransaction.tx_ref;
+  const status = oneTransaction.status;
+  const transactionId = oneTransaction.transactionReference
+  const paymentReference = oneTransaction.paymentReference;
+  console.log("🚀 ~ getVerifyController ~ req.query:", req.query);
+  console.log({ paymentReference, transactionId, tx_ref });
+  console.log(!tx_ref && !transactionId);
+  console.log(tx_ref === "null" && transactionId === "null");
+
+  let transaction = null;
+
+  // Check if both tx_ref and id are null
+  if (tx_ref === "null" && transactionId === null) {
+    // If both are null, check for paymentReference to proceed to Monnify
+    if (paymentReference) {
+      transaction = await guestTransactionModel.findOne({ paymentReference });
+      if (!transaction) {
+        return res.status(400).json({
+          success: false,
+          message: "Transaction not found",
+        });
+      }
+
+      const token = await monnify.obtainAccessToken();
+      const verify = await monnify.verifyPayment(
+        transaction.transactionReference,
+        token
+      );
+      console.log({ verify });
+
+      if (verify.paymentStatus === "PAID") {
+        if (transaction.status === "successful") {
+          return res.status(400).json({
+            success: false,
+            message: "Failed: Possible duplicate Transaction",
+          });
+        }
+
+        transaction.status = "successful";
+        await transaction.save();
+
+        // find voucher 
+        const voucher = await guestVoucherModel.findOne({ _id: transaction.voucherId });
+
+        if (!voucher) {
+          return res.status(400).send({
+            success: false,
+            message: "Voucher not found",
+          });
+        }
+
+        // user.walletBalance += transaction.amount;
+        // await user.save();
+
+        return res.status(200).send({
+          success: true,
+          data: {
+            transaction,
+            voucher,
+          },
+          message: "Transaction Successful",
+        });
+      } else if (verify.paymentStatus === "PENDING") {
+        transaction.status = verify.paymentStatus;
+        await transaction.save();
+        return res.status(200).json({
+          success: true,
+          data: { transaction },
+          message: "Transaction Pending",
+        });
+      } else if (verify.paymentStatus === "EXPIRED") {
+        transaction.status = verify.paymentStatus;
+        await transaction.save();
+        return res.status(200).json({
+          success: true,
+          data: { transaction },
+          message: "Transaction Expired",
+        });
+      } else {
+        transaction.status = verify.paymentStatus;
+        await transaction.save();
+        return res.status(400).json({
+          success: false,
+          message: "Transaction was not successful",
+          errMessage: verify,
+        });
+      }
+    } else {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Both transaction_id and tx_ref cannot be null, and paymentReference is required.",
+      });
+    }
+  } else if (tx_ref !== "null" || transactionId !== "null") {
+    if (tx_ref) {
+      transaction = await guestTransactionModel.findOne({ tx_ref });
+    } else if (id) {
+      transaction = await guestTransactionModel.findOne({
+        transactionReference: id,
+      });
+    }
+
+    if (status === "cancelled") {
+      transaction.status = "cancelled";
+      await transaction.save();
+      return res.status(400).json({
+        success: false,
+        message: "Transaction cancelled.",
+      });
+    }
+
+    const verify = await FLW_services.verifyTransaction(transactionId);
+    console.log("🚀 ~ getVerifyController ~ verify:", verify);
+
+    if (verify?.status === "error") {
+      return res.status(400).json({
+        success: false,
+        message: verify?.message,
+      });
+    }
+
+    if (verify?.status === "successful") {
+      if (transaction.status === "successful") {
+        return res.status(400).json({
+          success: false,
+          message: "Failed: Possible duplicate Transaction",
+        });
+      }
+
+      transaction.status = verify?.status;
+      transaction.paymentReference = verify?.id || transactionId;
+      transaction.transactionReference = verify?.id || transactionId;
+      await transaction.save();
+    }
+
+    // const user = await userModel.findOne({ _id: transaction?.userId });
+    // if (!user) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "User not found",
+    //   });
+    // }
+
+    // user.walletBalance += transaction.amount;
+    // await user.save();
+
+    return res.status(200).json({
+      success: true,
+      data: { transaction, voucher },
+      message: "Transaction Successful",
+    });
+  }
+
+  console.log("🚀 ~ getVerifyController ~ transaction:", transaction);
+
+  if (!transaction) {
+    return res.status(400).json({
+      success: false,
+      message: "Transaction not found",
+    });
+  }
+});
 
 // Verify "Fund wallet transaction webhook"
 const verifyWalletFundWebhook = asyncHandler(async (req, res, next) => {
