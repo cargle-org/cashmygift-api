@@ -25,6 +25,8 @@ const transactionModel = require("../models/transaction.model");
 const userModel = require("../models/user.model");
 const winnerModel = require("../models/winner.model");
 const contactModel = require("../models/contact.model");
+const guestTransactionModel = require("../models/guestTransaction.model");
+const guestVoucherModel = require("../models/guestVoucher.model");
 
 // Middlewares
 const {
@@ -143,6 +145,152 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
       userId: req.user._id,
       amount,
       currency,
+      type: "credit",
+      status: "initiated",
+    });
+
+    await transaction.save();
+
+    return res.status(200).send({
+      success: true,
+      data: {
+        response,
+      },
+      message: "Payment Initiated",
+    });
+  } catch (err) {
+    console.log("🚀 ~ postFundWalletController ~ err:", err);
+    return res.status(500).send({
+      success: false,
+      message: err.message,
+    });
+  }
+
+  // //  Good ol' monnify
+  // const { amount } = req.body;
+
+  // const currency = "NGN";
+  // const transREf = await tx_ref.get_Tx_Ref();
+  // // const tx_ref = "" + Math.floor(Math.random() * 1000000000 + 1);
+
+  // const payload = {
+  //   amount,
+  //   name: req.user.name,
+  //   email: req.user.email,
+  //   description: "Funding Usepays wallet",
+  //   tx_ref: transREf,
+  // };
+
+  // const token = await monnify.obtainAccessToken();
+  // const makePayment = await monnify.initializePayment(payload, token);
+
+  // const transaction = await new transactionModel({
+  //   tx_ref: transREf,
+  //   paymentReference: makePayment.paymentReference,
+  //   transactionReference: makePayment.transactionReference,
+  //   userId: req.user._id,
+  //   amount,
+  //   currency,
+  //   type: "credit",
+  //   status: "initiated",
+  // });
+
+  // await transaction.save();
+
+  // return res.status(200).send({
+  //   success: true,
+  //   data: makePayment.checkoutUrl,
+  //   message: "Payment Initiated",
+  // });
+});
+
+// Guest Fund wallet
+const postGuestFundWalletController = asyncHandler(async (req, res, next) => {
+
+  try {
+    const { email, portal } = req.body;
+    console.log("PORTAL*************", portal);
+
+    const currency = "NGN";
+    const transREf = tx_ref.get_Tx_Ref();
+    let chosenPortal;
+    let paymentReference;
+    let transactionReference;
+
+    const { voucherId } = req.params
+    const voucher = await guestVoucherModel.findOne({ _id: voucherId })
+
+
+    if (!voucher) {
+      return res.status(404).send({
+        success: false,
+        message: "This voucher does not exist, please try another.",
+      });
+    }
+
+    if (portal) {
+      chosenPortal = portal;
+    } else if (!portal) {
+      chosenPortal = "flutterwave";
+    }
+
+    let response;
+    if (chosenPortal === "flutterwave") {
+      console.log("flutterwave")
+      const FLW_payload = {
+        tx_ref: transREf,
+        amount: voucher?.totalAmount,
+        currency,
+        payment_options: "card",
+        // redirect_url: "https://usepays.up.railway.app/dashboard/transactions",
+        // redirect_url: "https://www.usepays.co/dashboard/transactions",
+        redirect_url: process.env.FLW_REDIRECT_URL,
+        customer: {
+          email: email,
+          // phonenumber: req.user.phone,
+          // name: req.user.name,
+        },
+        meta: {
+          customer_id: voucher?._id
+        },
+        customizations: {
+          title: "Pays",
+          description: "Pay with card",
+          logo: "#",
+        },
+      };
+      response = await FLW_services.initiateTransaction(FLW_payload);
+      paymentReference = transREf;
+      transactionReference = transREf;
+    }
+
+    if (chosenPortal === "monnify") {
+      console.log("MOnnify");
+      const MNF_payload = {
+        amount,
+        name: req.user.name,
+        email: req.user.email,
+        description: "Funding Usepays wallet",
+        tx_ref: transREf,
+      };
+
+      const token = await monnify.obtainAccessToken();
+      const MNF_response = await monnify.initializePayment(MNF_payload, token);
+      console.log({ MNF_response });
+      paymentReference = MNF_response.paymentReference;
+      transactionReference = MNF_response.transactionReference;
+      response = MNF_response.checkoutUrl;
+    }
+
+    // paymentReference
+    const transaction = await new guestTransactionModel({
+      tx_ref: transREf,
+      paymentReference,
+      transactionReference,
+      voucherId: voucher?._id, //pass voucher Id from valid voucher
+      amount: voucher?.totalAmount,
+      currency,
+      email,
       type: "credit",
       status: "initiated",
     });
@@ -367,6 +515,8 @@ const getVerifyController = asyncHandler(async (req, res, next) => {
     });
   }
 });
+
+
 
 // Verify "Fund wallet transaction webhook"
 const verifyWalletFundWebhook = asyncHandler(async (req, res, next) => {
@@ -1081,6 +1231,528 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
     user.walletBalance
   );
   await user.save();
+
+  console.log(
+    "🚀 ~ file: utils.controller.js:50 ~ postCreateVoucherController:asyncHandler ~ voucher:",
+    voucher
+  );
+
+  return res.status(200).send({
+    success: true,
+    data: {
+      voucher: voucher,
+    },
+    message: "Created new voucher(s).",
+  });
+});
+
+// create guest voucher
+// const postCreateVoucherController = asyncHandler(async (req, res, next) => {
+//   const {
+//     title,
+//     description,
+//     voucherKey,
+//     totalNumberOfVouchers,
+//     amountPerVoucher,
+//     expiry_date,
+//     amount,
+//   } = req.body;
+
+//   if (amountPerVoucher < 100) {
+//     return res.status(400).send({
+//       success: false,
+//       message: "Amount cannot be less than 100, please increase the amount",
+//     });
+//   }
+
+//   // ******** FETCH RECIPIENTS ******* //
+//   let recipients = [];
+//   // get from body
+//   if (req.body?.recipients) recipients = req.body.recipients;
+//   // get from files
+//   if (req.files?.recipients) {
+//     // Accessing recipients file
+//     const recipientsFile = req.files.recipients[0];
+//     // Parse recipients Excel file
+//     const workbook = xlsx.read(recipientsFile.buffer, { type: "buffer" });
+//     const sheet = workbook.Sheets[workbook.SheetNames[0]];
+//     const recipientsData = xlsx.utils.sheet_to_json(sheet);
+//     recipients = recipientsData;
+//   }
+
+//   const cmgFee = parseInt(totalNumberOfVouchers * 10);
+//   const totalAmount = parseInt(totalNumberOfVouchers * amountPerVoucher);
+//   let thumbnail = "";
+
+//   // Do simple maths to know if numbers match
+//   if (req.user.walletBalance < totalAmount + cmgFee) {
+//     return res.status(400).send({
+//       success: false,
+//       message: "Insufficient wallet balance, please fund wallet",
+//     });
+//   }
+
+//   // Generate voucher code
+//   const alphabets = [
+//     "a",
+//     "b",
+//     "c",
+//     "d",
+//     "e",
+//     "f",
+//     "g",
+//     "h",
+//     "i",
+//     "j",
+//     "k",
+//     "l",
+//     "m",
+//     "n",
+//     "o",
+//     "p",
+//     "q",
+//     "r",
+//     "s",
+//     "t",
+//     "u",
+//     "v",
+//     "w",
+//     "x",
+//     "y",
+//     "z",
+//     "A",
+//     "B",
+//     "C",
+//     "D",
+//     "E",
+//     "F",
+//     "G",
+//     "H",
+//     "I",
+//     "J",
+//     "K",
+//     "L",
+//     "M",
+//     "N",
+//     "O",
+//     "P",
+//     "Q",
+//     "R",
+//     "S",
+//     "T",
+//     "U",
+//     "V",
+//     "W",
+//     "X",
+//     "Y",
+//     "Z",
+//   ];
+
+//   const rand = Math.floor(Math.random() * 48);
+//   const rand2 = Math.floor(Math.random() * 48);
+//   const rand3 = Math.floor(Math.random() * 48);
+//   const rand4 = Math.floor(Math.random() * 48);
+
+//   const specialKey = `${alphabets[rand]}${rand}${alphabets[rand3]}${alphabets[rand2]}`;
+
+//   console.log("🚀 ~ postCreateVoucherController ~ specialKey:", specialKey);
+//   // // Do simple maths to know if numbers match again just to be safe
+//   // if (totalNumberOfVouchers * amountPerVoucher != totalAmount) {
+//   //     return res.status(400).send({
+//   //         success: false,
+//   //         message: "Error! please check numbers and try again",
+//   //     });
+//   // }
+
+//   // // Check walletBalance before transaction
+//   // if (req.user.walletBalance < totalAmount) {
+//   //     return res.status(400).send({
+//   //         success: false,
+//   //         message: "Insufficient wallet balance, please fund wallet",
+//   //     });
+//   // }
+
+//   // Check if voucherKEy already exists
+//   const foundVoucherKey = await voucherModel.findOne({
+//     specialKey: `${voucherKey}-${specialKey}`,
+//   });
+//   if (foundVoucherKey) {
+//     return res
+//       .status(400)
+//       .send("Voucher Key already exists, please try another.");
+//   }
+
+//   let voucherCoupons = [];
+
+//   // create loop based on number of vouchers
+//   for (let i = 1; i <= totalNumberOfVouchers; i++) {
+//     // const time = moment().format("yy-MM-DD hh:mm:ss");
+//     // const ref = time.replace(/[\-]|[\s]|[\:]/g, "");
+
+//     const voucherCode = `${voucherKey}-${specialKey}-${alphabets[rand4]}${rand}${rand3}${alphabets[rand3]}`;
+
+//     voucherCoupons.push({
+//       couponId: i,
+//       couponCode: voucherCode,
+//       status: "pending",
+//       cashedBy: "No one yet",
+//       cashedDate: "Not yet",
+//       cashedTime: "Not yet",
+//     });
+//   }
+
+//   const body = { ...req.body, thumbnail: req.file, voucherCoupons };
+
+//   // Run Hapi/Joi validation
+//   const { error } = await createVoucherValidation.validateAsync(body);
+//   if (error) {
+//     return res.status(400).send({
+//       success: false,
+//       message: "Validation failed",
+//       errMessage: error.details[0].message,
+//     });
+//   }
+
+//   if (req.files?.thumbnail) {
+//     // send image to Cloudinary
+//     thumbnail = await uploadThumbnail(req.files.thumbnail);
+//   }
+
+//   // create voucher
+//   const voucher = new voucherModel({
+//     userId: req.user.id,
+//     title,
+//     thumbnail,
+//     description,
+//     voucherKey,
+//     specialKey: `${voucherKey}-${specialKey}`,
+//     totalNumberOfVouchers,
+//     amountPerVoucher,
+//     totalAmount,
+//     expiry_date,
+//     voucherCoupons,
+//     recipients,
+//   });
+//   await voucher.save();
+
+//   // get user
+//   const user = await userModel.findOne({ _id: req.user._id });
+//   if (!user) {
+//     return res.status(400).send({
+//       success: false,
+//       message: "Couldn't find user",
+//     });
+//   }
+
+//   // format expiry date
+//   // Parse the expiry date string
+//   const expiryDate = moment(expiry_date, "YYYY-MM-DD:HH:mm:ss");
+
+//   // Format the expiry date in your desired format
+//   const formattedExpiryDate = expiryDate?.format("YYYY-MMM-DD HH:mm:ss");
+
+//   // send mail to recipients
+//   if (recipients) {
+//     recipients.map((recipient, i) => {
+//       // Send email
+//       const mailOptions = {
+//         to: recipient.recipient_email,
+//         subject: `New coupon from ${user?.name}`,
+//         html: newVoucherMail(
+//           user?.name,
+//           recipient?.recipient_name ? recipient?.recipient_name : "",
+//           voucherCoupons[i]?.couponCode,
+//           amountPerVoucher,
+//           formattedExpiryDate
+//         ),
+//       };
+
+//       sendMail(mailOptions);
+//     });
+//   }
+
+//   user.walletBalance = user.walletBalance - (totalAmount + cmgFee);
+//   await user.save();
+
+//   console.log(
+//     "🚀 ~ file: utils.controller.js:50 ~ postCreateVoucherController:asyncHandler ~ voucher:",
+//     voucher
+//   );
+
+//   return res.status(200).send({
+//     success: true,
+//     data: {
+//       voucher: voucher,
+//     },
+//     message: "Created new voucher(s).",
+//   });
+// });
+
+// create voucher
+const postCreateGuestVoucherController = asyncHandler(async (req, res, next) => {
+  const {
+    title,
+    description,
+    voucherKey,
+    totalNumberOfVouchers,
+    amountPerVoucher,
+    backgroundStyle,
+    logo,
+    // expiry_date,
+  } = req.body;
+
+  //Initialize empty variables
+  let logoUploadUrl = null;
+
+  // send image to Cloudinary
+  if (req.files && req.files.logo && req.files.logo[0]) {
+    logoUploadUrl = await uploadLogo(req.files?.logo[0], "logo");
+  }
+
+  // make total number of voucher should not be greater than 20 and amount per voucher should not be less than 100 and greater than 20000
+  if (totalNumberOfVouchers > 20) {
+    return res.status(400).send({
+      success: false,
+      message: "Total number of voucher should not be greater than 20",
+    });
+  }
+
+  if (amountPerVoucher < 100 || amountPerVoucher > 20000) {
+    return res.status(400).send({
+      success: false,
+      message:
+        "Amount per voucher should not be less than 100 and greater than 20000",
+    });
+  }
+
+  console.log(
+    "🚀 ~ postCreateVoucherController ~ totalNumberOfVouchers:",
+    totalNumberOfVouchers
+  );
+
+  console.log(
+    "🚀 ~ postCreateVoucherController ~ amountPerVoucher:",
+    amountPerVoucher
+  );
+
+  if (amountPerVoucher < 100) {
+    return res.status(400).send({
+      success: false,
+      message: "Amount cannot be less than 100, please increase the amount",
+    });
+  }
+
+  let cmgFee;
+  // cmgFee = parseInt(totalNumberOfVouchers * 150);
+  if (totalNumberOfVouchers > 0 && totalNumberOfVouchers <= 10) {
+    cmgFee = parseInt(totalNumberOfVouchers * 150);
+  }
+  if (totalNumberOfVouchers > 10 && totalNumberOfVouchers <= 50) {
+    cmgFee = parseInt(totalNumberOfVouchers * 120);
+  }
+  if (totalNumberOfVouchers > 50) {
+    cmgFee = parseInt(totalNumberOfVouchers * 100);
+  }
+  console.log("🚀 ~ postCreateVoucherController ~ cmgFee:", cmgFee);
+
+  const totalAmount = parseInt(
+    totalNumberOfVouchers * amountPerVoucher + cmgFee
+  );
+  // let thumbnail = "";
+
+  // Do simple maths to know if numbers match
+  // if (req.user.walletBalance < totalAmount) {
+  //   return res.status(400).send({
+  //     success: false,
+  //     message: "Insufficient wallet balance, please fund wallet",
+  //   });
+  // }
+
+  // Generate voucher code
+  const alphabets = [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "w",
+    "x",
+    "y",
+    "z",
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "J",
+    "K",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "Q",
+    "R",
+    "S",
+    "T",
+    "U",
+    "V",
+    "W",
+    "X",
+    "Y",
+    "Z",
+  ];
+
+  const rand = Math.floor(Math.random() * 48);
+  const rand2 = Math.floor(Math.random() * 48);
+  const rand3 = Math.floor(Math.random() * 48);
+  const rand4 = Math.floor(Math.random() * 48);
+
+  const specialKey = `${alphabets[rand]}${rand}${alphabets[rand3]}${alphabets[rand2]}`;
+
+  console.log("🚀 ~ postCreateVoucherController ~ specialKey:", specialKey);
+
+  // Check if voucherKEy already exists
+  const foundVoucherKey = await voucherModel.findOne({
+    specialKey: `${voucherKey}-${specialKey}`,
+  });
+  if (foundVoucherKey) {
+    return res
+      .status(400)
+      .send("Voucher Key already exists, please try another.");
+  }
+
+  let voucherCoupons = [];
+
+  // create loop based on the number of vouchers
+  for (let i = 1; i <= totalNumberOfVouchers; i++) {
+    // Generate new random indices for each voucher
+    const rand = Math.floor(Math.random() * alphabets.length);
+    const rand2 = Math.floor(Math.random() * alphabets.length);
+    const rand3 = Math.floor(Math.random() * alphabets.length);
+    const rand4 = Math.floor(Math.random() * alphabets.length);
+
+    // Generate a unique voucher code using the new random values
+    const voucherCode = `${voucherKey}-${specialKey}-${alphabets[rand4]}${rand}${rand3}${alphabets[rand3]}`;
+
+    voucherCoupons.push({
+      couponId: i,
+      couponCode: voucherCode,
+      status: "pending",
+      cashedBy: "No one yet",
+      cashedDate: "Not yet",
+      cashedTime: "Not yet",
+    });
+  }
+
+  // const body = { ...req.body, thumbnail: req.file, voucherCoupons };
+  const body = { ...req.body, logo: logoUploadUrl ?? "", voucherCoupons };
+
+  // Run Hapi/Joi validation
+  const { error } = await createVoucherValidation.validateAsync(body);
+  if (error) {
+    return res.status(400).send({
+      success: false,
+      message: "Validation failed",
+      errMessage: error.details[0].message,
+    });
+  }
+
+  // if (req.files?.thumbnail) {
+  //   // send image to Cloudinary
+  //   thumbnail = await uploadThumbnail(req.files.thumbnail);
+  // }
+
+  // create voucher
+  const voucher = new guestVoucherModel({
+    // userId: req.user.id,
+    title,
+    backgroundStyle,
+    logo: `${logoUploadUrl}` ?? "",
+    description,
+    voucherKey,
+    specialKey: `${voucherKey}-${specialKey}`,
+    totalNumberOfVouchers,
+    amountPerVoucher,
+    totalAmount,
+    // expiry_date,
+    voucherCoupons,
+  });
+  await voucher.save();
+  console.log("🚀 ~ postCreateGuestVoucherController ~ voucher:", voucher);
+  // get user
+  // const user = await userModel.findOne({ _id: req.user._id });
+  // if (!user) {
+  //   return res.status(400).send({
+  //     success: false,
+  //     message: "Couldn't find user",
+  //   });
+  // }
+
+  // format expiry date
+  // Parse the expiry date string
+  // const expiryDate = moment(expiry_date, "YYYY-MM-DD:HH:mm:ss");
+
+  // Format the expiry date in your desired format
+  // const formattedExpiryDate = expiryDate?.format("YYYY-MMM-DD HH:mm:ss");
+
+  // // send mail to recipients
+  // if (recipients) {
+  //   recipients.map((recipient, i) => {
+  //     // Send email
+  //     const mailOptions = {
+  //       to: recipient.recipient_email,
+  //       subject: `New coupon from ${user?.name}`,
+  //       html: newVoucherMail(
+  //         user?.name,
+  //         recipient?.recipient_name ? recipient?.recipient_name : "",
+  //         voucherCoupons[i]?.couponCode,
+  //         amountPerVoucher,
+  //         formattedExpiryDate
+  //       ),
+  //     };
+
+  //     sendMail(mailOptions);
+  //   });
+  // }
+
+  // console.log(
+  //   "🚀 ~ postCreateVoucherController ~ user.walletBalance 1: ",
+  //   user.walletBalance
+  // );
+  console.log("🚀 ~ postCreateVoucherController ~ totalAmount:", totalAmount);
+  console.log("🚀 ~ postCreateVoucherController ~ cmgFee:", cmgFee);
+  console.log(
+    "🚀 ~ postCreateVoucherController ~ totalAmount + cmgFee:",
+    totalAmount + cmgFee
+  );
+  // user.walletBalance = user.walletBalance - totalAmount;
+  // console.log(
+  //   "🚀 ~ postCreateVoucherController ~ user.walletBalance 2 : ",
+  //   user.walletBalance
+  // );
+  // await user.save();
 
   console.log(
     "🚀 ~ file: utils.controller.js:50 ~ postCreateVoucherController:asyncHandler ~ voucher:",
@@ -2978,4 +3650,7 @@ module.exports = {
   postCreateVoucherDraftController,
   getOneVoucherDraftController,
   getAllVoucherDraftsController,
+  postGuestFundWalletController,
+  postCreateGuestVoucherController,
+  getVerifyGuestFundController
 };
