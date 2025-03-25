@@ -281,8 +281,7 @@ const postGuestFundWalletController = asyncHandler(async (req, res, next) => {
       response = MNF_response.checkoutUrl;
     }
 
-    // paymentReference
-    const transaction = await new guestTransactionModel({
+    const transaction = await guestTransactionModel.create({
       tx_ref: transREf,
       paymentReference,
       transactionReference,
@@ -295,13 +294,17 @@ const postGuestFundWalletController = asyncHandler(async (req, res, next) => {
     });
 
     await transaction.save();
+    // console.log("trans1", transaction)
 
     //add the transactionId to the voucher
-    await guestVoucherModel.findOneAndUpdate({
-      _id: transaction?.voucherId
-    }, {
-      transactionId: transaction._id
-    })
+    if (voucher) {
+      await guestVoucherModel.findByIdAndUpdate(
+        voucher._id
+        , {
+          transactionId: transaction._id
+        }, { new: true })
+      // console.log("trans2", updatedVoucher)
+    }
 
 
     return res.status(200).send({
@@ -319,6 +322,33 @@ const postGuestFundWalletController = asyncHandler(async (req, res, next) => {
     });
   }
 });
+
+//get one Guest voucher
+const getFindGuestVoucherController = asyncHandler(async (req, res, next) => {
+  const { voucherId } = req.params;
+  console.log(
+    "🚀 ~ getOneGuestVouchersController:asyncHandler ~ req.query:",
+    req.query
+  );
+
+  // check if Voucher exist
+  const voucher = await guestVoucherModel.findOne({ _id: voucherId });
+
+  if (!voucher) {
+    return res.status(400).send({
+      success: false,
+      message: "voucher not found.",
+    });
+  }
+
+  return res.status(200).send({
+    success: true,
+    data: {
+      voucher: voucher,
+    },
+    message: "Voucher fetched successfully.",
+  });
+})
 
 // Verify "Fund wallet transaction"
 const getVerifyController = asyncHandler(async (req, res, next) => {
@@ -489,11 +519,9 @@ const getVerifyController = asyncHandler(async (req, res, next) => {
 // Verify "Fund Guest Voucher transaction"
 const getVerifyGuestFundController = asyncHandler(async (req, res, next) => {
   const { tId } = req.query
-  console.log(tId)
 
   //extract paymentReference, tx_ref and status from db
   const oneTransaction = await guestTransactionModel.findOne({ _id: tId });
-  console.log(oneTransaction)
 
   const tx_ref = oneTransaction.tx_ref;
   const status = oneTransaction.status;
@@ -3808,5 +3836,6 @@ module.exports = {
   getAllVoucherDraftsController,
   postGuestFundWalletController,
   postCreateGuestVoucherController,
-  getVerifyGuestFundController
+  getVerifyGuestFundController,
+  getFindGuestVoucherController
 };
