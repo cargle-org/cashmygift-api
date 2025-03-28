@@ -326,10 +326,10 @@ const postGuestFundWalletController = asyncHandler(async (req, res, next) => {
 //get one Guest voucher
 const getFindGuestVoucherController = asyncHandler(async (req, res, next) => {
   const { voucherId } = req.params;
-  console.log(
-    "🚀 ~ getOneGuestVouchersController:asyncHandler ~ req.query:",
-    req.query
-  );
+  // console.log(
+  //   "🚀 ~ getOneGuestVouchersController:asyncHandler ~ req.query:",
+  //   req.query
+  // );
 
   // check if Voucher exist
   const voucher = await guestVoucherModel.findOne({ _id: voucherId });
@@ -347,6 +347,29 @@ const getFindGuestVoucherController = asyncHandler(async (req, res, next) => {
       voucher: voucher,
     },
     message: "Voucher fetched successfully.",
+  });
+})
+
+//get one Guest transaction
+const getFindGuestTransactionController = asyncHandler(async (req, res, next) => {
+  const { transactionId } = req.params;
+
+  // check if Transaction exist
+  const transaction = await guestTransactionModel.findOne({ _id: transactionId });
+
+  if (!transaction) {
+    return res.status(400).send({
+      success: false,
+      message: "Transaction not found.",
+    });
+  }
+
+  return res.status(200).send({
+    success: true,
+    data: {
+      transaction: transaction
+    },
+    message: "Transaction fetched successfully.",
   });
 })
 
@@ -2275,6 +2298,105 @@ const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
   });
 });
 
+//update Guest recipient
+const putUpdateGuestVoucherController = asyncHandler(async (req, res, next) => {
+  const { voucherId } = req.params;
+
+  // find voucher using voucherCode
+  const foundVoucher = await guestVoucherModel.findOne({
+    _id: voucherId,
+  });
+
+  if (!foundVoucher) {
+    return res.status(400).send({
+      success: false,
+      message: "This coupon does not exist, please try another.",
+    });
+  }
+
+  // ******** FETCH RECIPIENTS ******* //
+  let recipients = [];
+  // get from body
+  if (req.body?.recipients) recipients = req.body.recipients;
+  // get from files
+  if (req.files?.recipients) {
+    // Accessing recipients file
+    const recipientsFile = req.files.recipients[0];
+    // Parse recipients Excel file
+    const workbook = xlsx.read(recipientsFile.buffer, { type: "buffer" });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const recipientsData = xlsx.utils.sheet_to_json(sheet);
+    recipients = recipientsData;
+  }
+
+  // Ensure recipients is an array and properly formatted
+  if (!Array.isArray(recipients)) {
+    return res.status(400).send({
+      success: false,
+      message: "Recipients data is not in the correct format.",
+    });
+  }
+
+  foundVoucher.recipients = recipients;
+
+  try {
+    await foundVoucher.save();
+  } catch (error) {
+    console.error("Error saving voucher:", error);
+    return res.status(500).send({
+      success: false,
+      message: "Failed to save voucher.",
+    });
+  }
+
+  // send mail to recipients
+  if (recipients) {
+    recipients.map((recipient, i) => {
+      if (!foundVoucher?.voucherCoupons[i]) {
+        console.log("THE VOUCHERS FINISH, LOL!");
+        return;
+      }
+
+      const { schedule_date, time_zone } = recipient;
+      console.log("🚀 ~ putUpdateGuestVoucherController ~ schedule_date:", schedule_date);
+
+      // Convert to UTC in the specified time zone
+      const utcDate = fromZonedTime(schedule_date, time_zone);
+
+      // Send email
+      const mailOptions = {
+        to: recipient.recipient_email,
+        subject: `New coupon from Anonymous`,
+        html: newVoucherMail(
+          "Anonymous",
+          // recipient?.recipient_name ? recipient?.recipient_name : "",
+          foundVoucher?.voucherCoupons[i]?.couponCode,
+          foundVoucher?.amountPerVoucher,
+          foundVoucher?.logo,
+          foundVoucher?.title,
+          foundVoucher?.backgroundStyle
+        ),
+        deliveryTime: utcDate ?? "",
+      };
+
+      sendMail(mailOptions);
+    });
+  }
+
+  console.log(
+    "🚀 ~ file: utils.controller.js:50 ~ putUpdateGuestVoucherController:asyncHandler ~ foundVoucher: ",
+    foundVoucher
+  );
+
+  return res.status(200).send({
+    success: true,
+    data: {
+      voucher: foundVoucher,
+    },
+    message: "Voucher Recipient added.",
+  });
+});
+
 // find voucher
 const postFindVoucherController = asyncHandler(async (req, res, next) => {
   try {
@@ -3837,5 +3959,7 @@ module.exports = {
   postGuestFundWalletController,
   postCreateGuestVoucherController,
   getVerifyGuestFundController,
-  getFindGuestVoucherController
+  getFindGuestVoucherController,
+  getFindGuestTransactionController,
+  putUpdateGuestVoucherController
 };
