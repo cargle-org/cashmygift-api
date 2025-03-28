@@ -58,7 +58,7 @@ exports.initializePayment = asyncHandler(async (details, accessToken) => {
   // );
   let requestBody = {
     amount: details.amount,
-    customerName: details.name,
+    customerName: details.name ?? "",
     customerEmail: details.email,
     // paymentReference: new String(new Date().getTime()),
     // paymentReference: "1239230423134023",
@@ -191,7 +191,7 @@ const Spikk_options = {
 
 exports.obtainSpikkAccessToken = asyncHandler(async (payload) => {
   const response = await axios.post(
-    `${process.env.SPIKK_MONNIFY_BASE_URL}/api/v1/auth/login`,
+    `${process.env.MONNIFY_BASE_URL}/api/v1/auth/login`,
     // payload,
     {},
     Spikk_options
