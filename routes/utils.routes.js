@@ -24,6 +24,15 @@ router.post(
   ]),
   utils.postCreateVoucherController
 );
+router.post(
+  "/guest/voucher/create",
+  // multerUploads.single("thumbnail"),
+  multerUploads.fields([
+    { name: "logo", maxCount: 1 }, // Assuming logo field can only a single
+    { name: "recipients", maxCount: 1 }, // Assuming recipients field is a single file
+  ]),
+  utils.postCreateGuestVoucherController
+);
 router.put(
   "/voucher/update",
   authenticate,
@@ -32,14 +41,25 @@ router.put(
   ]),
   utils.putUpdateVoucherController
 );
+router.put(
+  "/guest/voucher/update/:voucherId",
+  multerUploads.fields([
+    { name: "recipients", maxCount: 1 }, // Assuming recipients field is a single file
+  ]),
+  utils.putUpdateGuestVoucherController
+);
 router.post("/voucher/one", utils.postFindVoucherController);
+router.get("/guest/voucher/one/:voucherId", utils.getFindGuestVoucherController);
+router.get("/guest/transaction/:transactionId", utils.getFindGuestTransactionController);
 router.post("/voucher/save-draft", utils.postCreateVoucherDraftController);
 router.get("/voucher/find-draft/:draftId", utils.getOneVoucherDraftController);
 router.get("/voucher/all-drafts", utils.getAllVoucherDraftsController);
 router.post("/voucher/claim", utils.postCashoutVoucherController);
 router.post("/wallet/fund", authenticate, utils.postFundWalletController);
+router.post("/guest/fund/:voucherId", utils.postGuestFundWalletController);
 router.post("/wallet/verify-wallet-fund", utils.verifyWalletFundWebhook);
 router.get("/wallet/verify-wallet-fund", utils.verifyWalletFundWebhook); // for webhook
+router.get("/guest/verify-fund", utils.getVerifyGuestFundController);
 router.get("/wallet/verifyTrx", authenticate, utils.getVerifyController);
 router.post(
   "/wallet/withdraw",
