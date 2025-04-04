@@ -2404,8 +2404,8 @@ const postFindVoucherController = asyncHandler(async (req, res, next) => {
     console.log("🚀 ~ postFindVoucherController ~ voucherCode:", voucherCode);
 
     // find voucher using voucherCode
-    const foundVoucher = await voucherModel.findOne({
-      // specialKey: voucherCode.slice(0, 11),
+    const foundVoucher = await guestVoucherModel.findOne({
+      // specialKey: "TRUSB-j9wo"
       specialKey: `${voucherCode.split("-")[0]}-${voucherCode.split("-")[1]}`,
     });
     console.log("🚀 ~ postFindVoucherController ~ foundVoucher:", foundVoucher);
@@ -2480,10 +2480,19 @@ const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
   }
 
   // find voucher using voucherCode
-  const foundVoucher = await voucherModel.findOne({
-    // specialKey: voucherCode.slice(0, 11),
-    specialKey: `${voucherCode.split("-")[0]}-${voucherCode.split("-")[1]}`,
-  });
+  // const foundVoucher = await voucherModel.findOne({
+  //   // specialKey: voucherCode.slice(0, 11),
+  //   specialKey: `${voucherCode.split("-")[0]}-${voucherCode.split("-")[1]}`,
+  // });
+
+  // First, try to find the voucher in voucherModel.
+  let foundVoucher = await voucherModel.findOne({ specialKey: `${voucherCode.split("-")[0]}-${voucherCode.split("-")[1]}` });
+
+  // If not found in vucherModel, search in guestVoucherModel
+  if (!foundVoucher) {
+    foundVoucher = await guestVoucherModel.findOne({ specialKey: `${voucherCode.split("-")[0]}-${voucherCode.split("-")[1]}` });
+  }
+
   console.log(
     "🚀 ~ file: utils.controller.js:348 ~ postCashoutVoucherController:asyncHandler ~ foundVoucher:",
     foundVoucher
@@ -2555,17 +2564,22 @@ const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
   const creator = await userModel.findOne({ _id: foundVoucher.userId });
 
   // Send email to Voucher creator
-  const mailOptions = {
-    to: creator.email,
-    subject: "Voucher Claim Mail",
-    html: voucherClaimMail(
-      fullName,
-      voucherCode,
-      creator.name,
-      foundVoucher.title,
-      foundVoucher.amountPerVoucher
-    ),
-  };
+  if (creator) {
+    const mailOptions = {
+      to: creator.email,
+      subject: "Voucher Claim Mail",
+      html: voucherClaimMail(
+        fullName,
+        voucherCode,
+        creator.name,
+        foundVoucher.title,
+        foundVoucher.amountPerVoucher
+      ),
+    };
+
+    sendMail(mailOptions);
+
+  }
 
   // Send email to Voucher winner
   const winnerMailOptions = {
@@ -2650,7 +2664,6 @@ const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
     });
   }
 
-  sendMail(mailOptions);
   sendMail(winnerMailOptions);
   await foundVoucher.save();
 
@@ -3186,7 +3199,7 @@ const getOneTransactionController = asyncHandler(async (req, res) => {
 
 // Crowd Funding
 const getCategories = asyncHandler(async (req, res, next) => {
-  const categories = ["birthday", "wedding", "others"];
+  const categories = ["Birthday", "Wedding", "Anniversary", "Baby shower", "Graduation", "Housewarming", "Holiday", "Gift", "Thank You", "Get Well Soon", "Engagement", "Corporate Gifting", "Charity/Donation", "Travel Fund", "Party/Event", "Special Occasion", "Honeymoon", "Retirement", "Bridal Shower", "Appreciation", "others"];
   return res.status(200).json({
     success: true,
     message: "Categories fetched successfully",
@@ -3252,13 +3265,20 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
   const useLinkId = new mongoose.Types.ObjectId(findLink.id);
 
   const setAmount = req.body.amount ?? findLink.amount;
-  if (!findLink.amount) {
-    await linkModel.findByIdAndUpdate(useLinkId, { amount: setAmount });
-  }
 
+  // Ensure findLink.amount is a number (default to 0 if null)
+  const existingAmount = Number(findLink.amount) || 0;
+  const newAmount = Number(amount) || 0;
+
+  // Calculate the final amount (existing + new)
+  const finalSetAmount = existingAmount + newAmount;
+
+  if (!findLink.amount || findLink.amount < finalSetAmount) {
+    await linkModel.findByIdAndUpdate(useLinkId, { amount: finalSetAmount });
+  }
   // const setAmount = findLink.amount;
 
-  if (Number(setAmount) > Number(process.env.MAXIMUM_AMOUNT_PER_TRANSACTION))
+  if (Number(finalSetAmount) > Number(process.env.MAXIMUM_AMOUNT_PER_TRANSACTION))
     return next(
       new ErrorResponse(
         `Transaction limit per transaction is ${process.env.MAXIMUM_AMOUNT_PER_TRANSACTION}k`,
@@ -3268,7 +3288,7 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
 
   const { error } = await Validator.payToLink.validateAsync({
     ...req.body,
-    amount: setAmount,
+    amount: finalSetAmount,
   });
   if (error) {
     return next(new ErrorResponse(error.message, 400));
@@ -3298,9 +3318,9 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
   const totalSum =
     dailyTransactions.length > 0 ? dailyTransactions[0].totalAmount : 0;
   if (
-    Number(totalSum) + Number(setAmount) >
+    Number(totalSum) + Number(finalSetAmount) >
     Number(process.env.MAXIMUM_AMOUNT_PER_DAY) ||
-    Number(totalSum) + Number(amount) > setAmount
+    Number(totalSum) + Number(amount) > finalSetAmount
   )
     return next(
       new ErrorResponse(
@@ -3339,7 +3359,7 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
     paymentReference: transREf,
     transactionReference: transREf,
     userId: user.id,
-    amount: setAmount,
+    amount: finalSetAmount,
     currency: "NGN",
     type: "credit",
     status: "initiated",
