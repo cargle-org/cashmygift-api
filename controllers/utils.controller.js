@@ -2148,70 +2148,70 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
     );
   const transREf = await tx_ref.get_Tx_Ref();
 
-  const payload = {
-    tx_ref: transREf,
-    amount: findLink.amount,
-    currency: "NGN",
-    payment_options: "card",
-    // redirect_url: "https://www.usepays.co/payment/depositecompleted",
-    redirect_url: "https://www.usepays.co/dashboard/transactions",
-    customer: {
-      email: email,
-      phonenumber: " ",
-      name: name,
-    },
-    meta: {
-      customer_id: transREf,
-    },
-    customizations: {
-      title: "Pays",
-      description: "Pay with card",
-      logo: "#",
-    },
-  };
-
-  const response = await FLW_services.initiateTransaction(payload);
-  // paymentReference
-  const transaction = await new transactionModel({
-    tx_ref: transREf,
-    paymentReference: transREf,
-    transactionReference: transREf,
-    userId: user.id,
-    amount,
-    currency: "NGN",
-    type: "credit",
-    status: "initiated",
-  });
-
-  await transaction.save();
-
-  // // Good Ol monnify
   // const payload = {
-  //   amount,
-  //   name,
-  //   email,
-  //   description: "Crowd Funding Account",
   //   tx_ref: transREf,
+  //   amount: findLink.amount,
+  //   currency: "NGN",
+  //   payment_options: "card",
+  //   // redirect_url: "https://www.usepays.co/payment/depositecompleted",
+  //   redirect_url: "https://www.usepays.co/dashboard/transactions",
+  //   customer: {
+  //     email: email,
+  //     phonenumber: " ",
+  //     name: name,
+  //   },
+  //   meta: {
+  //     customer_id: transREf,
+  //   },
+  //   customizations: {
+  //     title: "Pays",
+  //     description: "Pay with card",
+  //     logo: "#",
+  //   },
   // };
 
-  // const token = await monnify.obtainAccessToken();
-  // const makePayment = await monnify.initializePaymentForLink(payload, token);
-
-  // const transaction = new transactionModel({
+  // const response = await FLW_services.initiateTransaction(payload);
+  // // paymentReference
+  // const transaction = await new transactionModel({
   //   tx_ref: transREf,
-  //   paymentReference: makePayment.paymentReference,
-  //   transactionReference: makePayment.transactionReference,
+  //   paymentReference: transREf,
+  //   transactionReference: transREf,
   //   userId: user.id,
   //   amount,
-  //   currency: findLink.currency,
+  //   currency: "NGN",
   //   type: "credit",
   //   status: "initiated",
-  //   name,
-  //   link: findLink.id,
-  //   fundingType: "crowdFunding",
   // });
 
   // await transaction.save();
+
+  // Good Ol monnify
+  const payload = {
+    amount,
+    name,
+    email,
+    description: "Crowd Funding Account",
+    tx_ref: transREf,
+  };
+
+  const token = await monnify.obtainAccessToken();
+  const makePayment = await monnify.initializePaymentForLink(payload, token);
+
+  const transaction = new transactionModel({
+    tx_ref: transREf,
+    paymentReference: makePayment.paymentReference,
+    transactionReference: makePayment.transactionReference,
+    userId: user.id,
+    amount,
+    currency: findLink.currency,
+    type: "credit",
+    status: "initiated",
+    name,
+    link: findLink.id,
+    fundingType: "crowdFunding",
+  });
+
+  await transaction.save();
   return res.status(200).send({
     success: true,
     data: response,
