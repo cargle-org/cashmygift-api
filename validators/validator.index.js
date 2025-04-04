@@ -6,14 +6,14 @@ const createLink = Joi.object({
   description: Joi.string().required(),
   link: Joi.string().uri().required(),
   linkExpiry: Joi.string().allow(''),
-  amount: Joi.number().positive().max(200000).required()
+  amount: Joi.number().positive().max(200000).allow("")
 });
 
 const payToLink = Joi.object({
-    amount: Joi.number().required(),
-    name: Joi.string().required(),
-    email: Joi.string().email().required(),
-    link: Joi.string().uri().required()
+  amount: Joi.number().required(),
+  name: Joi.string().required(),
+  email: Joi.string().email().required(),
+  link: Joi.string().uri().required()
 })
 
 module.exports = {

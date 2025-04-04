@@ -42,6 +42,28 @@ const createVoucherValidation = Joi.object({
   recipients: Joi.array(),
 });
 
+const createVoucherDraftValidation = Joi.object({
+  title: Joi.string().min(4).max(23).required(),
+  logo: Joi.string().allow(""),
+  backgroundStyle: Joi.string().min(4).allow(""),
+  description: Joi.string().min(3).allow(""),
+  voucherKey: Joi.string().min(5).max(5).allow(""),
+  totalNumberOfVouchers: Joi.number().allow(""),
+  amountPerVoucher: Joi.number().allow(""),
+  // totalAmount: Joi.number().required(),
+  // voucherCoupons: Joi.array().required(),
+  expiry_date: Joi.string().allow(""),
+  // recipients: Joi.array(),
+}).unknown(true);
+
+const scheduleDeliveryValidation = Joi.object({
+  to: Joi.string().min(4).max(23).required(),
+  subject: Joi.string().min(4).max(23).required(),
+  html: Joi.string().min(4).max(23).required(),
+  deliveryTime: Joi.number().allow(""),
+  status: Joi.string().min(4).max(23).required(),
+}).unknown(true);
+
 const cashoutVoucherValidation = Joi.object({
   fullName: Joi.string().min(2).required(),
   email: Joi.string().min(6).required().email(),
@@ -65,5 +87,7 @@ module.exports = {
   editProfileValidation,
   createVoucherValidation,
   cashoutVoucherValidation,
+  createVoucherDraftValidation,
   cashoutVoucherAsAirtimeValidation,
+  scheduleDeliveryValidation
 };
