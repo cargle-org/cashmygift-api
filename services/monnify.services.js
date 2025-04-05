@@ -70,7 +70,7 @@ exports.initializePayment = asyncHandler(async (details, accessToken) => {
       process.env.MONNIFY_CARD_PAYMENT_METHOD,
       process.env.MONNIFY_ACCOUNT_TRANSFER_PAYMENT_METHOD,
     ],
-    redirectUrl: process.env.MONNIFY_REDIRECT_URL,
+    redirectUrl: details.id ? process.env.MONNIFY_REDIRECT_URL : process.env.MONNIFY_GUEST_REDIRECT_URL
   };
 
   try {
@@ -119,8 +119,9 @@ exports.initializePaymentForLink = asyncHandler(
         process.env.MONNIFY_CARD_PAYMENT_METHOD,
         process.env.MONNIFY_ACCOUNT_TRANSFER_PAYMENT_METHOD,
       ],
-      redirectUrl: process.env.MONNIFY_LINK_REDIRECT_URL,
-    };
+      redirectUrl: process.env.MONNIFY_REDIRECT_URL,
+    }
+
 
     try {
       const response = await axios.post(
