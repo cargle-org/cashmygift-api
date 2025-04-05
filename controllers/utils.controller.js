@@ -125,6 +125,7 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
         amount,
         name: req.user.name,
         email: req.user.email,
+        id: req.user._id,
         description: "Funding Usepays wallet",
         tx_ref: transREf,
       };
@@ -1434,609 +1435,363 @@ const postCreateVoucherController = asyncHandler(async (req, res, next) => {
 });
 
 // create guest voucher
-// const postCreateVoucherController = asyncHandler(async (req, res, next) => {
-//   const {
-//     title,
-//     description,
-//     voucherKey,
-//     totalNumberOfVouchers,
-//     amountPerVoucher,
-//     expiry_date,
-//     amount,
-//   } = req.body;
+const postCreateGuestVoucherController = asyncHandler(async (req, res, next) => {
+  const {
+    title,
+    description,
+    voucherKey,
+    totalNumberOfVouchers,
+    amountPerVoucher,
+    backgroundStyle,
+    logo,
+    // expiry_date,
+  } = req.body;
 
-//   if (amountPerVoucher < 100) {
-//     return res.status(400).send({
-//       success: false,
-//       message: "Amount cannot be less than 100, please increase the amount",
-//     });
-//   }
+  //Initialize empty variables
+  let logoUploadUrl = null;
 
-//   // ******** FETCH RECIPIENTS ******* //
-//   let recipients = [];
-//   // get from body
-//   if (req.body?.recipients) recipients = req.body.recipients;
-//   // get from files
-//   if (req.files?.recipients) {
-//     // Accessing recipients file
-//     const recipientsFile = req.files.recipients[0];
-//     // Parse recipients Excel file
-//     const workbook = xlsx.read(recipientsFile.buffer, { type: "buffer" });
-//     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-//     const recipientsData = xlsx.utils.sheet_to_json(sheet);
-//     recipients = recipientsData;
-//   }
+  // send image to Cloudinary
+  if (req.files && req.files.logo && req.files.logo[0]) {
+    logoUploadUrl = await uploadLogo(req.files?.logo[0], "logo");
+  }
 
-//   const cmgFee = parseInt(totalNumberOfVouchers * 10);
-//   const totalAmount = parseInt(totalNumberOfVouchers * amountPerVoucher);
-//   let thumbnail = "";
-
-//   // Do simple maths to know if numbers match
-//   if (req.user.walletBalance < totalAmount + cmgFee) {
-//     return res.status(400).send({
-//       success: false,
-//       message: "Insufficient wallet balance, please fund wallet",
-//     });
-//   }
-
-//   // Generate voucher code
-//   const alphabets = [
-//     "a",
-//     "b",
-//     "c",
-//     "d",
-//     "e",
-//     "f",
-//     "g",
-//     "h",
-//     "i",
-//     "j",
-//     "k",
-//     "l",
-//     "m",
-//     "n",
-//     "o",
-//     "p",
-//     "q",
-//     "r",
-//     "s",
-//     "t",
-//     "u",
-//     "v",
-//     "w",
-//     "x",
-//     "y",
-//     "z",
-//     "A",
-//     "B",
-//     "C",
-//     "D",
-//     "E",
-//     "F",
-//     "G",
-//     "H",
-//     "I",
-//     "J",
-//     "K",
-//     "L",
-//     "M",
-//     "N",
-//     "O",
-//     "P",
-//     "Q",
-//     "R",
-//     "S",
-//     "T",
-//     "U",
-//     "V",
-//     "W",
-//     "X",
-//     "Y",
-//     "Z",
-//   ];
-
-//   const rand = Math.floor(Math.random() * 48);
-//   const rand2 = Math.floor(Math.random() * 48);
-//   const rand3 = Math.floor(Math.random() * 48);
-//   const rand4 = Math.floor(Math.random() * 48);
-
-//   const specialKey = `${alphabets[rand]}${rand}${alphabets[rand3]}${alphabets[rand2]}`;
-
-//   console.log("🚀 ~ postCreateVoucherController ~ specialKey:", specialKey);
-//   // // Do simple maths to know if numbers match again just to be safe
-//   // if (totalNumberOfVouchers * amountPerVoucher != totalAmount) {
-//   //     return res.status(400).send({
-//   //         success: false,
-//   //         message: "Error! please check numbers and try again",
-//   //     });
-//   // }
-
-//   // // Check walletBalance before transaction
-//   // if (req.user.walletBalance < totalAmount) {
-//   //     return res.status(400).send({
-//   //         success: false,
-//   //         message: "Insufficient wallet balance, please fund wallet",
-//   //     });
-//   // }
-
-//   // Check if voucherKEy already exists
-//   const foundVoucherKey = await voucherModel.findOne({
-//     specialKey: `${voucherKey}-${specialKey}`,
-//   });
-//   if (foundVoucherKey) {
-//     return res
-//       .status(400)
-//       .send("Voucher Key already exists, please try another.");
-//   }
-
-//   let voucherCoupons = [];
-
-//   // create loop based on number of vouchers
-//   for (let i = 1; i <= totalNumberOfVouchers; i++) {
-//     // const time = moment().format("yy-MM-DD hh:mm:ss");
-//     // const ref = time.replace(/[\-]|[\s]|[\:]/g, "");
-
-//     const voucherCode = `${voucherKey}-${specialKey}-${alphabets[rand4]}${rand}${rand3}${alphabets[rand3]}`;
-
-//     voucherCoupons.push({
-//       couponId: i,
-//       couponCode: voucherCode,
-//       status: "pending",
-//       cashedBy: "No one yet",
-//       cashedDate: "Not yet",
-//       cashedTime: "Not yet",
-//     });
-//   }
-
-//   const body = { ...req.body, thumbnail: req.file, voucherCoupons };
-
-//   // Run Hapi/Joi validation
-//   const { error } = await createVoucherValidation.validateAsync(body);
-//   if (error) {
-//     return res.status(400).send({
-//       success: false,
-//       message: "Validation failed",
-//       errMessage: error.details[0].message,
-//     });
-//   }
-
-//   if (req.files?.thumbnail) {
-//     // send image to Cloudinary
-//     thumbnail = await uploadThumbnail(req.files.thumbnail);
-//   }
-
-//   // create voucher
-//   const voucher = new voucherModel({
-//     userId: req.user.id,
-//     title,
-//     thumbnail,
-//     description,
-//     voucherKey,
-//     specialKey: `${voucherKey}-${specialKey}`,
-//     totalNumberOfVouchers,
-//     amountPerVoucher,
-//     totalAmount,
-//     expiry_date,
-//     voucherCoupons,
-//     recipients,
-//   });
-//   await voucher.save();
-
-//   // get user
-//   const user = await userModel.findOne({ _id: req.user._id });
-//   if (!user) {
-//     return res.status(400).send({
-//       success: false,
-//       message: "Couldn't find user",
-//     });
-//   }
-
-//   // format expiry date
-//   // Parse the expiry date string
-//   const expiryDate = moment(expiry_date, "YYYY-MM-DD:HH:mm:ss");
-
-//   // Format the expiry date in your desired format
-//   const formattedExpiryDate = expiryDate?.format("YYYY-MMM-DD HH:mm:ss");
-
-//   // send mail to recipients
-//   if (recipients) {
-//     recipients.map((recipient, i) => {
-//       // Send email
-//       const mailOptions = {
-//         to: recipient.recipient_email,
-//         subject: `New coupon from ${user?.name}`,
-//         html: newVoucherMail(
-//           user?.name,
-//           recipient?.recipient_name ? recipient?.recipient_name : "",
-//           voucherCoupons[i]?.couponCode,
-//           amountPerVoucher,
-//           formattedExpiryDate
-//         ),
-//       };
-
-//       sendMail(mailOptions);
-//     });
-//   }
-
-//   user.walletBalance = user.walletBalance - (totalAmount + cmgFee);
-//   await user.save();
-
-//   console.log(
-//     "🚀 ~ file: utils.controller.js:50 ~ postCreateVoucherController:asyncHandler ~ voucher:",
-//     voucher
-//   );
-
-//   return res.status(200).send({
-//     success: true,
-//     data: {
-//       voucher: voucher,
-//     },
-//     message: "Created new voucher(s).",
-//   });
-// });
-
-// create voucher
-const postCreateGuestVoucherController = asyncHandler(
-  async (req, res, next) => {
-    const {
-      title,
-      description,
-      voucherKey,
-      totalNumberOfVouchers,
-      amountPerVoucher,
-      backgroundStyle,
-      logo,
-      // expiry_date,
-    } = req.body;
-
-    //Initialize empty variables
-    let logoUploadUrl = null;
-
-    // send image to Cloudinary
-    if (req.files && req.files.logo && req.files.logo[0]) {
-      logoUploadUrl = await uploadLogo(req.files?.logo[0], "logo");
-    }
-
-    // make total number of voucher should not be greater than 20 and amount per voucher should not be less than 100 and greater than 20000
-    if (totalNumberOfVouchers > 20) {
-      return res.status(400).send({
-        success: false,
-        message: "Total number of voucher should not be greater than 20",
-      });
-    }
-
-    if (amountPerVoucher < 100 || amountPerVoucher > 20000) {
-      return res.status(400).send({
-        success: false,
-        message:
-          "Amount per voucher should not be less than 100 and greater than 20000",
-      });
-    }
-
-    console.log(
-      "🚀 ~ postCreateVoucherController ~ totalNumberOfVouchers:",
-      totalNumberOfVouchers
-    );
-
-    console.log(
-      "🚀 ~ postCreateVoucherController ~ amountPerVoucher:",
-      amountPerVoucher
-    );
-
-    if (amountPerVoucher < 100) {
-      return res.status(400).send({
-        success: false,
-        message: "Amount cannot be less than 100, please increase the amount",
-      });
-    }
-
-    let cmgFee;
-    // cmgFee = parseInt(totalNumberOfVouchers * 150);
-    if (totalNumberOfVouchers > 0 && totalNumberOfVouchers <= 10) {
-      cmgFee = parseInt(totalNumberOfVouchers * 150);
-    }
-    if (totalNumberOfVouchers > 10 && totalNumberOfVouchers <= 50) {
-      cmgFee = parseInt(totalNumberOfVouchers * 120);
-    }
-    if (totalNumberOfVouchers > 50) {
-      cmgFee = parseInt(totalNumberOfVouchers * 100);
-    }
-    console.log("🚀 ~ postCreateVoucherController ~ cmgFee:", cmgFee);
-
-    const totalAmount = parseInt(
-      totalNumberOfVouchers * amountPerVoucher + cmgFee
-    );
-    // let thumbnail = "";
-
-    // Do simple maths to know if numbers match
-    // if (req.user.walletBalance < totalAmount) {
-    //   return res.status(400).send({
-    //     success: false,
-    //     message: "Insufficient wallet balance, please fund wallet",
-    //   });
-    // }
-
-    // Generate voucher code
-    const alphabets = [
-      "a",
-      "b",
-      "c",
-      "d",
-      "e",
-      "f",
-      "g",
-      "h",
-      "i",
-      "j",
-      "k",
-      "l",
-      "m",
-      "n",
-      "o",
-      "p",
-      "q",
-      "r",
-      "s",
-      "t",
-      "u",
-      "v",
-      "w",
-      "x",
-      "y",
-      "z",
-      "A",
-      "B",
-      "C",
-      "D",
-      "E",
-      "F",
-      "G",
-      "H",
-      "I",
-      "J",
-      "K",
-      "L",
-      "M",
-      "N",
-      "O",
-      "P",
-      "Q",
-      "R",
-      "S",
-      "T",
-      "U",
-      "V",
-      "W",
-      "X",
-      "Y",
-      "Z",
-    ];
-
-    const rand = Math.floor(Math.random() * 48);
-    const rand2 = Math.floor(Math.random() * 48);
-    const rand3 = Math.floor(Math.random() * 48);
-    const rand4 = Math.floor(Math.random() * 48);
-
-    const specialKey = `${alphabets[rand]}${rand}${alphabets[rand3]}${alphabets[rand2]}`;
-
-    console.log("🚀 ~ postCreateVoucherController ~ specialKey:", specialKey);
-
-    // Check if voucherKEy already exists
-    const foundVoucherKey = await voucherModel.findOne({
-      specialKey: `${voucherKey}-${specialKey}`,
-    });
-    if (foundVoucherKey) {
-      return res
-        .status(400)
-        .send("Voucher Key already exists, please try another.");
-    }
-
-    let voucherCoupons = [];
-
-    // create loop based on the number of vouchers
-    for (let i = 1; i <= totalNumberOfVouchers; i++) {
-      // Generate new random indices for each voucher
-      const rand = Math.floor(Math.random() * alphabets.length);
-      const rand2 = Math.floor(Math.random() * alphabets.length);
-      const rand3 = Math.floor(Math.random() * alphabets.length);
-      const rand4 = Math.floor(Math.random() * alphabets.length);
-
-      // Generate a unique voucher code using the new random values
-      const voucherCode = `${voucherKey}-${specialKey}-${alphabets[rand4]}${rand}${rand3}${alphabets[rand3]}`;
-
-      voucherCoupons.push({
-        couponId: i,
-        couponCode: voucherCode,
-        status: "pending",
-        cashedBy: "No one yet",
-        cashedDate: "Not yet",
-        cashedTime: "Not yet",
-      });
-    }
-
-    // const body = { ...req.body, thumbnail: req.file, voucherCoupons };
-    const body = { ...req.body, logo: logoUploadUrl ?? "", voucherCoupons };
-
-    // Run Hapi/Joi validation
-    const { error } = await createVoucherValidation.validateAsync(body);
-    if (error) {
-      return res.status(400).send({
-        success: false,
-        message: "Validation failed",
-        errMessage: error.details[0].message,
-      });
-    }
-
-    // if (req.files?.thumbnail) {
-    //   // send image to Cloudinary
-    //   thumbnail = await uploadThumbnail(req.files.thumbnail);
-    // }
-
-    // create voucher
-    const voucher = new guestVoucherModel({
-      // userId: req.user.id,
-      title,
-      backgroundStyle,
-      logo: `${logoUploadUrl}` ?? "",
-      description,
-      voucherKey,
-      specialKey: `${voucherKey}-${specialKey}`,
-      totalNumberOfVouchers,
-      amountPerVoucher,
-      totalAmount,
-      // expiry_date,
-      voucherCoupons,
-    });
-    await voucher.save();
-    console.log("🚀 ~ postCreateGuestVoucherController ~ voucher:", voucher);
-    // get user
-    // const user = await userModel.findOne({ _id: req.user._id });
-    // if (!user) {
-    //   return res.status(400).send({
-    //     success: false,
-    //     message: "Couldn't find user",
-    //   });
-    // }
-
-    // format expiry date
-    // Parse the expiry date string
-    // const expiryDate = moment(expiry_date, "YYYY-MM-DD:HH:mm:ss");
-
-    // Format the expiry date in your desired format
-    // const formattedExpiryDate = expiryDate?.format("YYYY-MMM-DD HH:mm:ss");
-
-    // // send mail to recipients
-    // if (recipients) {
-    //   recipients.map((recipient, i) => {
-    //     // Send email
-    //     const mailOptions = {
-    //       to: recipient.recipient_email,
-    //       subject: `New coupon from ${user?.name}`,
-    //       html: newVoucherMail(
-    //         user?.name,
-    //         recipient?.recipient_name ? recipient?.recipient_name : "",
-    //         voucherCoupons[i]?.couponCode,
-    //         amountPerVoucher,
-    //         formattedExpiryDate
-    //       ),
-    //     };
-
-    //     sendMail(mailOptions);
-    //   });
-    // }
-
-    // console.log(
-    //   "🚀 ~ postCreateVoucherController ~ user.walletBalance 1: ",
-    //   user.walletBalance
-    // );
-    console.log("🚀 ~ postCreateVoucherController ~ totalAmount:", totalAmount);
-    console.log("🚀 ~ postCreateVoucherController ~ cmgFee:", cmgFee);
-    console.log(
-      "🚀 ~ postCreateVoucherController ~ totalAmount + cmgFee:",
-      totalAmount + cmgFee
-    );
-    // user.walletBalance = user.walletBalance - totalAmount;
-    // console.log(
-    //   "🚀 ~ postCreateVoucherController ~ user.walletBalance 2 : ",
-    //   user.walletBalance
-    // );
-    // await user.save();
-
-    console.log(
-      "🚀 ~ file: utils.controller.js:50 ~ postCreateVoucherController:asyncHandler ~ voucher:",
-      voucher
-    );
-
-    return res.status(200).send({
-      success: true,
-      data: {
-        voucher: voucher,
-      },
-      message: "Created new voucher(s).",
+  // make total number of voucher should not be greater than 20 and amount per voucher should not be less than 100 and greater than 20000
+  if (totalNumberOfVouchers > 20) {
+    return res.status(400).send({
+      success: false,
+      message: "Total number of voucher should not be greater than 20",
     });
   }
-);
+
+  if (amountPerVoucher < 100 || amountPerVoucher > 20000) {
+    return res.status(400).send({
+      success: false,
+      message:
+        "Amount per voucher should not be less than 100 and greater than 20000",
+    });
+  }
+
+  console.log(
+    "🚀 ~ postCreateVoucherController ~ totalNumberOfVouchers:",
+    totalNumberOfVouchers
+  );
+
+  console.log(
+    "🚀 ~ postCreateVoucherController ~ amountPerVoucher:",
+    amountPerVoucher
+  );
+
+  if (amountPerVoucher < 100) {
+    return res.status(400).send({
+      success: false,
+      message: "Amount cannot be less than 100, please increase the amount",
+    });
+  }
+
+  let cmgFee;
+  // cmgFee = parseInt(totalNumberOfVouchers * 150);
+  if (totalNumberOfVouchers > 0 && totalNumberOfVouchers <= 10) {
+    cmgFee = parseInt(totalNumberOfVouchers * 150);
+  }
+  if (totalNumberOfVouchers > 10 && totalNumberOfVouchers <= 50) {
+    cmgFee = parseInt(totalNumberOfVouchers * 120);
+  }
+  if (totalNumberOfVouchers > 50) {
+    cmgFee = parseInt(totalNumberOfVouchers * 100);
+  }
+  console.log("🚀 ~ postCreateVoucherController ~ cmgFee:", cmgFee);
+
+  const totalAmount = parseInt(
+    totalNumberOfVouchers * amountPerVoucher + cmgFee
+  );
+  // let thumbnail = "";
+
+  // Do simple maths to know if numbers match
+  // if (req.user.walletBalance < totalAmount) {
+  //   return res.status(400).send({
+  //     success: false,
+  //     message: "Insufficient wallet balance, please fund wallet",
+  //   });
+  // }
+
+  // Generate voucher code
+  const alphabets = [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "w",
+    "x",
+    "y",
+    "z",
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "J",
+    "K",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "Q",
+    "R",
+    "S",
+    "T",
+    "U",
+    "V",
+    "W",
+    "X",
+    "Y",
+    "Z",
+  ];
+
+  const rand = Math.floor(Math.random() * 48);
+  const rand2 = Math.floor(Math.random() * 48);
+  const rand3 = Math.floor(Math.random() * 48);
+  const rand4 = Math.floor(Math.random() * 48);
+
+  const specialKey = `${alphabets[rand]}${rand}${alphabets[rand3]}${alphabets[rand2]}`;
+
+  console.log("🚀 ~ postCreateVoucherController ~ specialKey:", specialKey);
+
+  // Check if voucherKEy already exists
+  const foundVoucherKey = await voucherModel.findOne({
+    specialKey: `${voucherKey}-${specialKey}`,
+  });
+  if (foundVoucherKey) {
+    return res
+      .status(400)
+      .send("Voucher Key already exists, please try another.");
+  }
+
+  let voucherCoupons = [];
+
+  // create loop based on the number of vouchers
+  for (let i = 1; i <= totalNumberOfVouchers; i++) {
+    // Generate new random indices for each voucher
+    const rand = Math.floor(Math.random() * alphabets.length);
+    const rand2 = Math.floor(Math.random() * alphabets.length);
+    const rand3 = Math.floor(Math.random() * alphabets.length);
+    const rand4 = Math.floor(Math.random() * alphabets.length);
+
+    // Generate a unique voucher code using the new random values
+    const voucherCode = `${voucherKey}-${specialKey}-${alphabets[rand4]}${rand}${rand3}${alphabets[rand3]}`;
+
+    voucherCoupons.push({
+      couponId: i,
+      couponCode: voucherCode,
+      status: "pending",
+      cashedBy: "No one yet",
+      cashedDate: "Not yet",
+      cashedTime: "Not yet",
+    });
+  }
+
+  // const body = { ...req.body, thumbnail: req.file, voucherCoupons };
+  const body = { ...req.body, logo: logoUploadUrl ?? "", voucherCoupons };
+
+  // Run Hapi/Joi validation
+  const { error } = await createVoucherValidation.validateAsync(body);
+  if (error) {
+    return res.status(400).send({
+      success: false,
+      message: "Validation failed",
+      errMessage: error.details[0].message,
+    });
+  }
+
+  // if (req.files?.thumbnail) {
+  //   // send image to Cloudinary
+  //   thumbnail = await uploadThumbnail(req.files.thumbnail);
+  // }
+
+  // create voucher
+  const voucher = new guestVoucherModel({
+    // userId: req.user.id,
+    title,
+    backgroundStyle,
+    logo: `${logoUploadUrl}` ?? "",
+    description,
+    voucherKey,
+    specialKey: `${voucherKey}-${specialKey}`,
+    totalNumberOfVouchers,
+    amountPerVoucher,
+    totalAmount,
+    // expiry_date,
+    voucherCoupons,
+  });
+  await voucher.save();
+  console.log("🚀 ~ postCreateGuestVoucherController ~ voucher:", voucher);
+  // get user
+  // const user = await userModel.findOne({ _id: req.user._id });
+  // if (!user) {
+  //   return res.status(400).send({
+  //     success: false,
+  //     message: "Couldn't find user",
+  //   });
+  // }
+
+  // format expiry date
+  // Parse the expiry date string
+  // const expiryDate = moment(expiry_date, "YYYY-MM-DD:HH:mm:ss");
+
+  // Format the expiry date in your desired format
+  // const formattedExpiryDate = expiryDate?.format("YYYY-MMM-DD HH:mm:ss");
+
+  // // send mail to recipients
+  // if (recipients) {
+  //   recipients.map((recipient, i) => {
+  //     // Send email
+  //     const mailOptions = {
+  //       to: recipient.recipient_email,
+  //       subject: `New coupon from ${user?.name}`,
+  //       html: newVoucherMail(
+  //         user?.name,
+  //         recipient?.recipient_name ? recipient?.recipient_name : "",
+  //         voucherCoupons[i]?.couponCode,
+  //         amountPerVoucher,
+  //         formattedExpiryDate
+  //       ),
+  //     };
+
+  //     sendMail(mailOptions);
+  //   });
+  // }
+
+  // console.log(
+  //   "🚀 ~ postCreateVoucherController ~ user.walletBalance 1: ",
+  //   user.walletBalance
+  // );
+  console.log("🚀 ~ postCreateVoucherController ~ totalAmount:", totalAmount);
+  console.log("🚀 ~ postCreateVoucherController ~ cmgFee:", cmgFee);
+  console.log(
+    "🚀 ~ postCreateVoucherController ~ totalAmount + cmgFee:",
+    totalAmount + cmgFee
+  );
+  // user.walletBalance = user.walletBalance - totalAmount;
+  // console.log(
+  //   "🚀 ~ postCreateVoucherController ~ user.walletBalance 2 : ",
+  //   user.walletBalance
+  // );
+  // await user.save();
+
+  console.log(
+    "🚀 ~ file: utils.controller.js:50 ~ postCreateVoucherController:asyncHandler ~ voucher:",
+    voucher
+  );
+
+  return res.status(200).send({
+    success: true,
+    data: {
+      voucher: voucher,
+    },
+    message: "Created new voucher(s).",
+  });
+});
 
 //create voucher draft
-const postCreateVoucherDraftController = asyncHandler(
-  async (req, res, next) => {
-    const {
-      userId,
-      title,
-      description,
-      voucherKey,
-      totalNumberOfVouchers,
-      amountPerVoucher,
-      backgroundStyle,
-      logo,
-      expiryDate,
-    } = req.body;
+const postCreateVoucherDraftController = asyncHandler(async (req, res, next) => {
 
-    //   check if user exist
-    const user = await userModel.findOne({ _id: userId });
+  const {
+    userId,
+    title,
+    description,
+    voucherKey,
+    totalNumberOfVouchers,
+    amountPerVoucher,
+    backgroundStyle,
+    logo,
+    expiryDate,
+  } = req.body;
 
-    if (!user) {
-      return res.status(400).send({
-        success: false,
-        message: "Couldn't find user",
-      });
-    }
+  //   check if user exist
+  const user = await userModel.findOne({ _id: userId });
 
-    await user.save();
-
-    //Initialize empty variables
-    let logoUploadUrl = null;
-
-    // send image to Cloudinary
-    if (req.files && req.files.logo && req.files.logo[0]) {
-      logoUploadUrl = await uploadLogo(req.files?.logo[0], "logo");
-    }
-
-    const body = { ...req.body };
-
-    // Run Hapi/Joi validation
-    const { error } = await createVoucherDraftValidation.validateAsync(body);
-    if (error) {
-      return res.status(400).send({
-        success: false,
-        message: "Validation failed",
-        errMessage: error.details[0].message,
-      });
-    }
-
-    // create voucher draft
-    const voucherDraft = new voucherDraftModel({
-      userId: user._id,
-      title,
-      backgroundStyle,
-      logo,
-      description,
-      voucherKey,
-      totalNumberOfVouchers,
-      amountPerVoucher,
-      expiryDate,
-    });
-
-    await voucherDraft.save();
-
-    console.log(
-      "🚀 ~ postCreateVoucherDraftController ~ voucher:",
-      voucherDraft
-    );
-
-    // format expiry date
-    // Parse the expiry date string
-    // const expiryDate = moment(expiry_date, "YYYY-MM-DD:HH:mm:ss");
-
-    // Format the expiry date in your desired format
-    // const formattedExpiryDate = expiryDate?.format("YYYY-MMM-DD HH:mm:ss");
-
-    return res.status(200).send({
-      success: true,
-      message: "Draft sucessfully saved.",
+  if (!user) {
+    return res.status(400).send({
+      success: false,
+      message: "Couldn't find user",
     });
   }
-);
+
+  await user.save();
+
+  //Initialize empty variables
+  let logoUploadUrl = null;
+
+  // send image to Cloudinary
+  if (req.files && req.files.logo && req.files.logo[0]) {
+    logoUploadUrl = await uploadLogo(req.files?.logo[0], "logo");
+  }
+
+  const body = { ...req.body }
+
+  // Run Hapi/Joi validation
+  const { error } = await createVoucherDraftValidation.validateAsync(body);
+  if (error) {
+    return res.status(400).send({
+      success: false,
+      message: "Validation failed",
+      errMessage: error.details[0].message,
+    });
+  }
+
+  // create voucher draft
+  const voucherDraft = new voucherDraftModel({
+    userId: user._id,
+    title,
+    backgroundStyle,
+    logo,
+    description,
+    voucherKey,
+    totalNumberOfVouchers,
+    amountPerVoucher,
+    expiryDate,
+  });
+
+  await voucherDraft.save();
+
+  console.log("🚀 ~ postCreateVoucherDraftController ~ voucher:", voucherDraft);
+
+
+
+  // format expiry date
+  // Parse the expiry date string
+  // const expiryDate = moment(expiry_date, "YYYY-MM-DD:HH:mm:ss");
+
+  // Format the expiry date in your desired format
+  // const formattedExpiryDate = expiryDate?.format("YYYY-MMM-DD HH:mm:ss");
+
+  return res.status(200).send({
+    success: true,
+    message: "Draft sucessfully saved.",
+  });
+});
 
 // find one voucher draft
 const getOneVoucherDraftController = asyncHandler(async (req, res, next) => {
@@ -2119,6 +1874,7 @@ const getAllVoucherDraftsController = asyncHandler(async (req, res, next) => {
     });
   }
 });
+
 
 // update voucher
 // const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
@@ -2268,10 +2024,7 @@ const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
       }
 
       const { schedule_date, time_zone } = recipient;
-      console.log(
-        "🚀 ~ putUpdateVoucherController ~ schedule_date:",
-        schedule_date
-      );
+      console.log("🚀 ~ putUpdateVoucherController ~ schedule_date:", schedule_date);
 
       // Convert to UTC in the specified time zone
       const utcDate = fromZonedTime(schedule_date, time_zone);
@@ -2284,10 +2037,10 @@ const putUpdateVoucherController = asyncHandler(async (req, res, next) => {
           user?.name,
           // recipient?.recipient_name ? recipient?.recipient_name : "",
           foundVoucher?.voucherCoupons[i]?.couponCode,
-          foundVoucher?.amountPerVoucher,
+          foundVoucher?.description,
           foundVoucher?.logo,
           foundVoucher?.title,
-          foundVoucher?.backgroundStyle
+          foundVoucher?.backgroundStyle,
         ),
         deliveryTime: utcDate ?? "",
       };
@@ -2370,10 +2123,7 @@ const putUpdateGuestVoucherController = asyncHandler(async (req, res, next) => {
       }
 
       const { schedule_date, time_zone } = recipient;
-      console.log(
-        "🚀 ~ putUpdateGuestVoucherController ~ schedule_date:",
-        schedule_date
-      );
+      console.log("🚀 ~ putUpdateGuestVoucherController ~ schedule_date:", schedule_date);
 
       // Convert to UTC in the specified time zone
       const utcDate = fromZonedTime(schedule_date, time_zone);
@@ -2386,7 +2136,7 @@ const putUpdateGuestVoucherController = asyncHandler(async (req, res, next) => {
           "Anonymous",
           // recipient?.recipient_name ? recipient?.recipient_name : "",
           foundVoucher?.voucherCoupons[i]?.couponCode,
-          foundVoucher?.amountPerVoucher,
+          foundVoucher?.description,
           foundVoucher?.logo,
           foundVoucher?.title,
           foundVoucher?.backgroundStyle
@@ -2418,11 +2168,14 @@ const postFindVoucherController = asyncHandler(async (req, res, next) => {
     const { voucherCode } = req.body;
     console.log("🚀 ~ postFindVoucherController ~ voucherCode:", voucherCode);
 
-    // find voucher using voucherCode
-    const foundVoucher = await voucherModel.findOne({
-      // specialKey: voucherCode.slice(0, 11),
-      specialKey: `${voucherCode.split("-")[0]}-${voucherCode.split("-")[1]}`,
-    });
+    // First, try to find the voucher in voucherModel.
+    let foundVoucher = await voucherModel.findOne({ specialKey: `${voucherCode.split("-")[0]}-${voucherCode.split("-")[1]}` });
+
+    // If not found in vucherModel, search in guestVoucherModel
+    if (!foundVoucher) {
+      foundVoucher = await guestVoucherModel.findOne({ specialKey: `${voucherCode.split("-")[0]}-${voucherCode.split("-")[1]}` });
+    }
+
     console.log("🚀 ~ postFindVoucherController ~ foundVoucher:", foundVoucher);
 
     if (!foundVoucher) {
@@ -2495,10 +2248,19 @@ const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
   }
 
   // find voucher using voucherCode
-  const foundVoucher = await voucherModel.findOne({
-    // specialKey: voucherCode.slice(0, 11),
-    specialKey: `${voucherCode.split("-")[0]}-${voucherCode.split("-")[1]}`,
-  });
+  // const foundVoucher = await voucherModel.findOne({
+  //   // specialKey: voucherCode.slice(0, 11),
+  //   specialKey: `${voucherCode.split("-")[0]}-${voucherCode.split("-")[1]}`,
+  // });
+
+  // First, try to find the voucher in voucherModel.
+  let foundVoucher = await voucherModel.findOne({ specialKey: `${voucherCode.split("-")[0]}-${voucherCode.split("-")[1]}` });
+
+  // If not found in vucherModel, search in guestVoucherModel
+  if (!foundVoucher) {
+    foundVoucher = await guestVoucherModel.findOne({ specialKey: `${voucherCode.split("-")[0]}-${voucherCode.split("-")[1]}` });
+  }
+
   console.log(
     "🚀 ~ file: utils.controller.js:348 ~ postCashoutVoucherController:asyncHandler ~ foundVoucher:",
     foundVoucher
@@ -2570,17 +2332,22 @@ const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
   const creator = await userModel.findOne({ _id: foundVoucher.userId });
 
   // Send email to Voucher creator
-  const mailOptions = {
-    to: creator.email,
-    subject: "Voucher Claim Mail",
-    html: voucherClaimMail(
-      fullName,
-      voucherCode,
-      creator.name,
-      foundVoucher.title,
-      foundVoucher.amountPerVoucher
-    ),
-  };
+  if (creator) {
+    const mailOptions = {
+      to: creator.email,
+      subject: "Voucher Claim Mail",
+      html: voucherClaimMail(
+        fullName,
+        voucherCode,
+        creator.name,
+        foundVoucher.title,
+        foundVoucher.amountPerVoucher
+      ),
+    };
+
+    sendMail(mailOptions);
+
+  }
 
   // Send email to Voucher winner
   const winnerMailOptions = {
@@ -2665,7 +2432,6 @@ const postCashoutVoucherController = asyncHandler(async (req, res, next) => {
     });
   }
 
-  sendMail(mailOptions);
   sendMail(winnerMailOptions);
   await foundVoucher.save();
 
@@ -3201,7 +2967,7 @@ const getOneTransactionController = asyncHandler(async (req, res) => {
 
 // Crowd Funding
 const getCategories = asyncHandler(async (req, res, next) => {
-  const categories = ["birthday", "wedding", "others"];
+  const categories = ["Birthday", "Wedding", "Anniversary", "Baby shower", "Graduation", "Housewarming", "Holiday", "Gift", "Thank You", "Get Well Soon", "Engagement", "Corporate Gifting", "Charity/Donation", "Travel Fund", "Party/Event", "Special Occasion", "Honeymoon", "Retirement", "Bridal Shower", "Appreciation", "others"];
   return res.status(200).json({
     success: true,
     message: "Categories fetched successfully",
@@ -3257,6 +3023,7 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
   // const { amount, name, email, link } = req.body;
   const { name, email, link, amount } = req.body;
 
+
   // const findLink = await linkModel.findById(link);
   const findLink = await linkModel.findOne({ link });
   console.log("LINK: ", findLink);
@@ -3266,13 +3033,20 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
   const useLinkId = new mongoose.Types.ObjectId(findLink.id);
 
   const setAmount = req.body.amount ?? findLink.amount;
-  if (!findLink.amount) {
-    await linkModel.findByIdAndUpdate(useLinkId, { amount: setAmount });
-  }
 
+  // Ensure findLink.amount is a number (default to 0 if null)
+  const existingAmount = Number(findLink.amount) || 0;
+  const newAmount = Number(amount) || 0;
+
+  // Calculate the final amount (existing + new)
+  const finalSetAmount = existingAmount + newAmount;
+
+  if (!findLink.amount || findLink.amount < finalSetAmount) {
+    await linkModel.findByIdAndUpdate(useLinkId, { amount: finalSetAmount });
+  }
   // const setAmount = findLink.amount;
 
-  if (Number(setAmount) > Number(process.env.MAXIMUM_AMOUNT_PER_TRANSACTION))
+  if (Number(finalSetAmount) > Number(process.env.MAXIMUM_AMOUNT_PER_TRANSACTION))
     return next(
       new ErrorResponse(
         `Transaction limit per transaction is ${process.env.MAXIMUM_AMOUNT_PER_TRANSACTION}k`,
@@ -3282,7 +3056,7 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
 
   const { error } = await Validator.payToLink.validateAsync({
     ...req.body,
-    amount: setAmount,
+    amount: finalSetAmount,
   });
   if (error) {
     return next(new ErrorResponse(error.message, 400));
@@ -3312,9 +3086,9 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
   const totalSum =
     dailyTransactions.length > 0 ? dailyTransactions[0].totalAmount : 0;
   if (
-    Number(totalSum) + Number(setAmount) >
-      Number(process.env.MAXIMUM_AMOUNT_PER_DAY) ||
-    Number(totalSum) + Number(amount) > setAmount
+    Number(totalSum) + Number(finalSetAmount) >
+    Number(process.env.MAXIMUM_AMOUNT_PER_DAY) ||
+    Number(totalSum) + Number(amount) > finalSetAmount
   )
     return next(
       new ErrorResponse(
@@ -3353,7 +3127,7 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
     paymentReference: transREf,
     transactionReference: transREf,
     userId: user.id,
-    amount: setAmount,
+    amount: finalSetAmount,
     currency: "NGN",
     type: "credit",
     status: "initiated",
@@ -3975,5 +3749,5 @@ module.exports = {
   getVerifyGuestFundController,
   getFindGuestVoucherController,
   getFindGuestTransactionController,
-  putUpdateGuestVoucherController,
+  putUpdateGuestVoucherController
 };
