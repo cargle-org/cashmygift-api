@@ -33,7 +33,7 @@ const {
   createVoucherValidation,
   cashoutVoucherValidation,
   cashoutVoucherAsAirtimeValidation,
-  createVoucherDraftValidation
+  createVoucherDraftValidation,
 } = require("../middlewares/validate");
 const asyncHandler = require("../middlewares/asyncHandler");
 const { uploadImageSingle, uploadLogo } = require("../middlewares/cloudinary");
@@ -91,7 +91,7 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
 
     let response;
     if (chosenPortal === "flutterwave") {
-      console.log("flutterwave")
+      console.log("flutterwave");
       const FLW_payload = {
         tx_ref: transREf,
         amount,
@@ -207,7 +207,6 @@ const postFundWalletController = asyncHandler(async (req, res, next) => {
 
 // Guest Fund wallet
 const postGuestFundWalletController = asyncHandler(async (req, res, next) => {
-
   try {
     const { email, portal } = req.body;
     console.log("PORTAL*************", portal);
@@ -218,8 +217,8 @@ const postGuestFundWalletController = asyncHandler(async (req, res, next) => {
     let paymentReference;
     let transactionReference;
 
-    const { voucherId } = req.params
-    const voucher = await guestVoucherModel.findOne({ _id: voucherId })
+    const { voucherId } = req.params;
+    const voucher = await guestVoucherModel.findOne({ _id: voucherId });
 
     if (!voucher) {
       return res.status(404).send({
@@ -236,7 +235,7 @@ const postGuestFundWalletController = asyncHandler(async (req, res, next) => {
 
     let response;
     if (chosenPortal === "flutterwave") {
-      console.log("flutterwave")
+      console.log("flutterwave");
       const FLW_payload = {
         tx_ref: transREf,
         amount: voucher?.totalAmount,
@@ -251,7 +250,7 @@ const postGuestFundWalletController = asyncHandler(async (req, res, next) => {
           // name: req.user.name,
         },
         meta: {
-          customer_id: voucher?._id
+          customer_id: voucher?._id,
         },
         customizations: {
           title: "Pays",
@@ -300,13 +299,14 @@ const postGuestFundWalletController = asyncHandler(async (req, res, next) => {
     //add the transactionId to the voucher
     if (voucher) {
       await guestVoucherModel.findByIdAndUpdate(
-        voucher._id
-        , {
-          transactionId: transaction._id
-        }, { new: true })
+        voucher._id,
+        {
+          transactionId: transaction._id,
+        },
+        { new: true }
+      );
       // console.log("trans2", updatedVoucher)
     }
-
 
     return res.status(200).send({
       success: true,
@@ -349,30 +349,34 @@ const getFindGuestVoucherController = asyncHandler(async (req, res, next) => {
     },
     message: "Voucher fetched successfully.",
   });
-})
+});
 
 //get one Guest transaction
-const getFindGuestTransactionController = asyncHandler(async (req, res, next) => {
-  const { transactionId } = req.params;
+const getFindGuestTransactionController = asyncHandler(
+  async (req, res, next) => {
+    const { transactionId } = req.params;
 
-  // check if Transaction exist
-  const transaction = await guestTransactionModel.findOne({ _id: transactionId });
+    // check if Transaction exist
+    const transaction = await guestTransactionModel.findOne({
+      _id: transactionId,
+    });
 
-  if (!transaction) {
-    return res.status(400).send({
-      success: false,
-      message: "Transaction not found.",
+    if (!transaction) {
+      return res.status(400).send({
+        success: false,
+        message: "Transaction not found.",
+      });
+    }
+
+    return res.status(200).send({
+      success: true,
+      data: {
+        transaction: transaction,
+      },
+      message: "Transaction fetched successfully.",
     });
   }
-
-  return res.status(200).send({
-    success: true,
-    data: {
-      transaction: transaction
-    },
-    message: "Transaction fetched successfully.",
-  });
-})
+);
 
 // Verify "Fund wallet transaction"
 const getVerifyController = asyncHandler(async (req, res, next) => {
@@ -542,14 +546,14 @@ const getVerifyController = asyncHandler(async (req, res, next) => {
 
 // Verify "Fund Guest Voucher transaction"
 const getVerifyGuestFundController = asyncHandler(async (req, res, next) => {
-  const { tId } = req.query
+  const { tId } = req.query;
 
   //extract paymentReference, tx_ref and status from db
   const oneTransaction = await guestTransactionModel.findOne({ _id: tId });
 
   const tx_ref = oneTransaction.tx_ref;
   const status = oneTransaction.status;
-  const transactionId = oneTransaction.transactionReference
+  const transactionId = oneTransaction.transactionReference;
   const paymentReference = oneTransaction.paymentReference;
   console.log("🚀 ~ getVerifyController ~ req.query:", req.query);
   console.log({ paymentReference, transactionId, tx_ref });
@@ -585,8 +589,10 @@ const getVerifyGuestFundController = asyncHandler(async (req, res, next) => {
       transaction.status = "successful";
       await transaction.save();
 
-      // find voucher 
-      const voucher = await guestVoucherModel.findOne({ _id: transaction.voucherId });
+      // find voucher
+      const voucher = await guestVoucherModel.findOne({
+        _id: transaction.voucherId,
+      });
 
       if (!voucher) {
         return res.status(400).send({
@@ -3080,86 +3086,89 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
     Number(totalSum) + Number(finalSetAmount) >
     Number(process.env.MAXIMUM_AMOUNT_PER_DAY) ||
     Number(totalSum) + Number(amount) > finalSetAmount
+    Number(totalSum) + Number(setAmount) >
+      Number(process.env.MAXIMUM_AMOUNT_PER_DAY) ||
+      Number(totalSum) + Number(amount) > setAmount
   )
-    return next(
-      new ErrorResponse(
-        `Maximum transaction limit per day of ${process.env.MAXIMUM_AMOUNT_PER_DAY} cannot be exceeded`,
-        401
-      )
-    );
-  const transREf = await tx_ref.get_Tx_Ref();
+return next(
+  new ErrorResponse(
+    `Maximum transaction limit per day of ${process.env.MAXIMUM_AMOUNT_PER_DAY} cannot be exceeded`,
+    401
+  )
+);
+const transREf = await tx_ref.get_Tx_Ref();
 
-  const payload = {
-    tx_ref: transREf,
-    amount: setAmount,
-    currency: "NGN",
-    payment_options: "card",
-    // redirect_url: "https://www.usepays.co/payment/depositecompleted",
-    redirect_url: "https://www.usepays.co/dashboard/transactions",
-    customer: {
-      email: email,
-      phonenumber: " ",
-      name: name,
-    },
-    meta: {
-      customer_id: transREf,
-    },
-    customizations: {
-      title: "Pays",
-      description: "Pay with card",
-      logo: "#",
-    },
-  };
+const payload = {
+  tx_ref: transREf,
+  amount: setAmount,
+  currency: "NGN",
+  payment_options: "card",
+  // redirect_url: "https://www.usepays.co/payment/depositecompleted",
+  redirect_url: "https://www.usepays.co/dashboard/transactions",
+  customer: {
+    email: email,
+    phonenumber: " ",
+    name: name,
+  },
+  meta: {
+    customer_id: transREf,
+  },
+  customizations: {
+    title: "Pays",
+    description: "Pay with card",
+    logo: "#",
+  },
+};
 
-  const response = await FLW_services.initiateTransaction(payload);
-  // paymentReference
-  const transaction = await new transactionModel({
-    tx_ref: transREf,
-    paymentReference: transREf,
-    transactionReference: transREf,
-    userId: user.id,
-    amount: finalSetAmount,
-    currency: "NGN",
-    type: "credit",
-    status: "initiated",
-  });
-
-  await transaction.save();
-
-  // // Good Ol monnify
-  // const payload = {
-  //   amount,
-  //   name,
-  //   email,
-  //   description: "Crowd Funding Account",
-  //   tx_ref: transREf,
-  // };
-
-  // const token = await monnify.obtainAccessToken();
-  // const makePayment = await monnify.initializePaymentForLink(payload, token);
-
-  // const transaction = new transactionModel({
-  //   tx_ref: transREf,
-  //   paymentReference: makePayment.paymentReference,
-  //   transactionReference: makePayment.transactionReference,
-  //   userId: user.id,
-  //   amount,
-  //   currency: findLink.currency,
-  //   type: "credit",
-  //   status: "initiated",
-  //   name,
-  //   link: findLink.id,
-  //   fundingType: "crowdFunding",
-  // });
-
-  // await transaction.save();
-  return res.status(200).send({
-    success: true,
-    data: response,
-    message: "Payment Initiated",
-    transaction: transaction,
-  });
+const response = await FLW_services.initiateTransaction(payload);
+// paymentReference
+const transaction = await new transactionModel({
+  tx_ref: transREf,
+  paymentReference: transREf,
+  transactionReference: transREf,
+  userId: user.id,
+  amount: finalSetAmount,
+  currency: "NGN",
+  type: "credit",
+  status: "initiated",
 });
+
+await transaction.save();
+
+// // Good Ol monnify
+// const payload = {
+//   amount,
+//   name,
+//   email,
+//   description: "Crowd Funding Account",
+//   tx_ref: transREf,
+// };
+
+// const token = await monnify.obtainAccessToken();
+// const makePayment = await monnify.initializePaymentForLink(payload, token);
+
+// const transaction = new transactionModel({
+//   tx_ref: transREf,
+//   paymentReference: makePayment.paymentReference,
+//   transactionReference: makePayment.transactionReference,
+//   userId: user.id,
+//   amount,
+//   currency: findLink.currency,
+//   type: "credit",
+//   status: "initiated",
+//   name,
+//   link: findLink.id,
+//   fundingType: "crowdFunding",
+// });
+
+// await transaction.save();
+return res.status(200).send({
+  success: true,
+  data: response,
+  message: "Payment Initiated",
+  transaction: transaction,
+});
+    });
 
 // const postCrowdFundingController = asyncHandler(async (req, res, next) => {
 //   // const { amount, name, email, link } = req.body;
