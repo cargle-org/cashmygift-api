@@ -2168,11 +2168,14 @@ const postFindVoucherController = asyncHandler(async (req, res, next) => {
     const { voucherCode } = req.body;
     console.log("🚀 ~ postFindVoucherController ~ voucherCode:", voucherCode);
 
-    // find voucher using voucherCode
-    const foundVoucher = await guestVoucherModel.findOne({
-      // specialKey: "TRUSB-j9wo"
-      specialKey: `${voucherCode.split("-")[0]}-${voucherCode.split("-")[1]}`,
-    });
+    // First, try to find the voucher in voucherModel.
+    let foundVoucher = await voucherModel.findOne({ specialKey: `${voucherCode.split("-")[0]}-${voucherCode.split("-")[1]}` });
+
+    // If not found in vucherModel, search in guestVoucherModel
+    if (!foundVoucher) {
+      foundVoucher = await guestVoucherModel.findOne({ specialKey: `${voucherCode.split("-")[0]}-${voucherCode.split("-")[1]}` });
+    }
+
     console.log("🚀 ~ postFindVoucherController ~ foundVoucher:", foundVoucher);
 
     if (!foundVoucher) {
