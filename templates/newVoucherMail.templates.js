@@ -1,4 +1,4 @@
-const newVoucherMail = (owner_name, code, amount, logo, title, backgroundStyle) => {
+const newVoucherMail = (owner_name, code, description, logo, title, backgroundStyle) => {
   const bgType = `${backgroundStyle.includes(".png")}`
   console.log(bgType === false)
   return `
@@ -48,6 +48,9 @@ const newVoucherMail = (owner_name, code, amount, logo, title, backgroundStyle) 
                   <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.5; color: #333;">Hi there,</p>
                   <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.5; color: #333;">
                     You’ve received a voucher from ${owner_name} — "${title}" Voucher!
+                  </p>
+                  <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.5; color: #333;">
+                   Description: "${description}"
                   </p>
                 </td>
               </tr>
