@@ -475,6 +475,14 @@ module.exports = {
         });
       }
 
+      // Check if password matches
+      if (newPassword.length < 6 || confirmPassword.length < 6) {
+        return res.status(400).send({
+          success: false,
+          message: "Password too short!",
+        });
+      }
+
       //   Hash password
       const hashedPassword = await bcrypt.hash(newPassword, 12);
 
