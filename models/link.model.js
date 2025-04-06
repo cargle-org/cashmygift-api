@@ -12,7 +12,7 @@ const linkSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ["wedding", "birthday", "others"],
+      // enum: ["wedding", "birthday", "others"],
       required: true,
     },
     currency: {
@@ -26,7 +26,7 @@ const linkSchema = new mongoose.Schema(
     },
     amount: {
       type: Number,
-      required: false
+      required: true
     },
     description: {
       type: String,
