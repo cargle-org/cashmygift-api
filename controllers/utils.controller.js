@@ -3021,7 +3021,7 @@ const getCategories = asyncHandler(async (req, res, next) => {
 // @access  Public
 const postCrowdFundingController = asyncHandler(async (req, res, next) => {
   // const { amount, name, email, link } = req.body;
-  const { name, email, link, amount } = req.body;
+  const { name, email, link } = req.body;
 
 
   // const findLink = await linkModel.findById(link);
@@ -3032,21 +3032,13 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
   if (!user) return next("Invalid Link", 404);
   const useLinkId = new mongoose.Types.ObjectId(findLink.id);
 
-  const setAmount = req.body.amount ?? findLink.amount;
 
-  // Ensure findLink.amount is a number (default to 0 if null)
-  const existingAmount = Number(findLink.amount) || 0;
-  const newAmount = Number(amount) || 0;
+  // if (!findLink.amount) {
+  //   await linkModel.findByIdAndUpdate(useLinkId, { amount });
+  // }
+  const amount = findLink.amount;
 
-  // Calculate the final amount (existing + new)
-  const finalSetAmount = existingAmount + newAmount;
-
-  if (!findLink.amount || findLink.amount < finalSetAmount) {
-    await linkModel.findByIdAndUpdate(useLinkId, { amount: finalSetAmount });
-  }
-  // const setAmount = findLink.amount;
-
-  if (Number(finalSetAmount) > Number(process.env.MAXIMUM_AMOUNT_PER_TRANSACTION))
+  if (Number(amount) > Number(process.env.MAXIMUM_AMOUNT_PER_TRANSACTION))
     return next(
       new ErrorResponse(
         `Transaction limit per transaction is ${process.env.MAXIMUM_AMOUNT_PER_TRANSACTION}k`,
@@ -3056,7 +3048,6 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
 
   const { error } = await Validator.payToLink.validateAsync({
     ...req.body,
-    amount: finalSetAmount,
   });
   if (error) {
     return next(new ErrorResponse(error.message, 400));
@@ -3086,9 +3077,9 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
   const totalSum =
     dailyTransactions.length > 0 ? dailyTransactions[0].totalAmount : 0;
   if (
-    Number(totalSum) + Number(finalSetAmount) >
+    Number(totalSum) + Number(amount) >
     Number(process.env.MAXIMUM_AMOUNT_PER_DAY) ||
-    Number(totalSum) + Number(amount) > finalSetAmount
+    Number(totalSum) + Number(amount) > amount
   )
     return next(
       new ErrorResponse(
@@ -3100,7 +3091,7 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
 
   const payload = {
     tx_ref: transREf,
-    amount: setAmount,
+    amount,
     currency: "NGN",
     payment_options: "card",
     // redirect_url: "https://www.usepays.co/payment/depositecompleted",
@@ -3127,7 +3118,7 @@ const postCrowdFundingController = asyncHandler(async (req, res, next) => {
     paymentReference: transREf,
     transactionReference: transREf,
     userId: user.id,
-    amount: finalSetAmount,
+    amount,
     currency: "NGN",
     type: "credit",
     status: "initiated",
