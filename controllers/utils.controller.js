@@ -2730,6 +2730,32 @@ const getAllBanksMonnifyController = asyncHandler(async (req, res, next) => {
   }
 });
 
+const getOneBankMonnifyController = asyncHandler(async (req, res, next) => {
+  const { accountNumber, bankCode } = req.query;
+  // console.log("🚀 ~ accountNumber:", accountNumber, bankCode);
+  try {
+    console.log("Get all banks first ping");
+    const token = await monnify.obtainAccessToken();
+    const bank = await monnify.validateBankAccount(accountNumber, bankCode, token);
+
+    return res.status(200).send({
+      success: true,
+      data: bank,
+      message: "Account info fetched successflly",
+    });
+  } catch (err) {
+    console.log(
+      "🚀 ~ file: utils.controller.js:453 ~ getOneBankController:asyncHandler ~ err:",
+      err
+    );
+    return res.status(500).send({
+      success: false,
+      message: "Couldn't fetch banks",
+      errMessage: err,
+    });
+  }
+});
+
 // Fetch all banks in Nigeria {{FOR FLUTTERWAVE}}
 // getAllBanksController: asyncHandler(async (req, res, next) => {
 //   const options = {
@@ -3740,5 +3766,6 @@ module.exports = {
   getVerifyGuestFundController,
   getFindGuestVoucherController,
   getFindGuestTransactionController,
-  putUpdateGuestVoucherController
+  putUpdateGuestVoucherController,
+  getOneBankMonnifyController
 };
