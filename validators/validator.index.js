@@ -7,7 +7,7 @@ const createLink = Joi.object({
   description: Joi.string().required(),
   link: Joi.string().uri().required(),
   linkExpiry: Joi.string().allow(''),
-  amount: Joi.number().positive().max(200000).required
+  amount: Joi.number().positive().max(200000).required()
 });
 
 const payToLink = Joi.object({
